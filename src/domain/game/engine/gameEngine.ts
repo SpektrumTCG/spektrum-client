@@ -5,7 +5,11 @@ const INITIAL_HAND_SIZE = 5
 const INITIAL_LIFE_CARDS = 4
 
 function createPlayer(id: string, name: string, deck: Card[], isActive: boolean): Player {
-  const shuffled = [...deck].sort(() => Math.random() - 0.5)
+  const shuffled = [...deck]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
   return {
     id,
     name,
@@ -76,10 +80,10 @@ export function playAvatar(
   slot: 'active' | number
 ): GameState {
   const player = state.players[playerIndex]
-  const card = player.hand.find(c => c.id === cardId) as AvatarCard | undefined
+  const card = player.hand.find(c => c.id === cardId)
   if (!card || card.type !== 'avatar') return state
 
-  const placed: AvatarCard = { ...card, turnPlayed: state.currentTurn, isTapped: false }
+  const placed: AvatarCard = { ...(card as AvatarCard), turnPlayed: state.currentTurn, isTapped: false }
 
   if (slot === 'active') {
     return updatePlayer(state, playerIndex, {
@@ -99,9 +103,10 @@ export function playAvatar(
 }
 
 export function endPhase(state: GameState): GameState {
+  if (state.phase === 'end') return nextTurn(state)
   const order: Array<GameState['phase']> = ['draw', 'main', 'battle', 'end']
   const idx = order.indexOf(state.phase)
-  if (state.phase === 'end') return nextTurn(state)
+  if (idx === -1) return state  // phase not in turn sequence, no-op
   return { ...state, phase: order[idx + 1] ?? 'end' }
 }
 

@@ -35,5 +35,12 @@ export const cardRegistry = {
   getCardById: (id: string): Card | undefined => uniqueCards.find(c => c.id === id),
   getCardsByElement: (element: ElementType): Card[] => uniqueCards.filter(c => c.element === element),
   getCardsByType: (type: CardCategory): Card[] => uniqueCards.filter(c => c.type === type),
-  shuffleDeck: (deck: Card[]): Card[] => [...deck].sort(() => Math.random() - 0.5),
+  shuffleDeck: (deck: Card[]): Card[] => {
+    const shuffled = [...deck]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+  },
 }
