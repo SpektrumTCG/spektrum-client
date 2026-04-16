@@ -37,7 +37,7 @@ export interface Player {
 
 export interface GameState {
   currentTurn: number;
-  phase: 'setup' | 'main' | 'battle' | 'end' | 'game_over';
+  phase: 'setup' | 'draw' | 'main' | 'battle' | 'end' | 'game_over';
   players: [Player, Player];
   currentPlayerIndex: 0 | 1;
   winner: string | null;
