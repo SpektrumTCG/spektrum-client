@@ -5,7 +5,7 @@
 
 export type {
   ElementType, SubType, CardCategory, RarityType, PassiveSkillScope,
-  EffectType, ModifierType, FieldTriggerType, TriggerEffectType,
+  EffectType, ModifierType, FieldTriggerType, FieldTrigger, TriggerEffectType,
   ConditionType, HPThresholdOperator, ActivationType, EffectTargetType,
   ConditionalDamage, Skill, BaseCard, AvatarCard, FieldCard, ActionCard, Card,
   GamePhase, SkillConditionType, StructuredCondition, GamePlayerState,
