@@ -31,8 +31,15 @@ export class NewbieAI extends BaseAI {
     }
 
     // Use random affordable skill
-    if (this.hasAffordableSkill(state, playerIndex)) {
-      return { type: 'useSkill', skillIndex: 0, reasoning: 'Use skill', priority: 60 }
+    const avatar = player.activeAvatar
+    if (avatar && !avatar.isTapped) {
+      const skills = avatar.skills ?? [avatar.skill1, avatar.skill2].filter(Boolean)
+      const affordableIdx = skills.findIndex(
+        (s): s is NonNullable<typeof s> => !!s && this.canAffordSpektra(s.spektraCost, player.spektraPile)
+      )
+      if (affordableIdx >= 0) {
+        return { type: 'useSkill', skillIndex: affordableIdx as 0 | 1, reasoning: 'Use skill', priority: 60 }
+      }
     }
 
     return this.endPhase('No good plays')

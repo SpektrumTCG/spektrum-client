@@ -1,6 +1,6 @@
 import type { GameState } from '../types/game'
 import type { AIDecision } from '../types/ai'
-import type { AvatarCard } from '../types/card'
+import type { AvatarCard, Skill } from '../types/card'
 import { BaseAI } from './BaseAI'
 
 export class EnhancedAI extends BaseAI {
@@ -65,12 +65,13 @@ export class EnhancedAI extends BaseAI {
     if (candidates.length === 0) return this.endPhase('No beneficial actions')
 
     // Sort by priority with personality jitter for imperfect play
-    candidates.sort((a, b) => {
-      const jitter = (Math.random() - 0.5) * (this.personality.mistakeChance / 100) * 20
-      return (b.priority + jitter) - a.priority
-    })
-
-    return candidates[0]
+    const jitterScale = (this.personality.mistakeChance / 100) * 20
+    const jittered = candidates.map(d => ({
+      decision: d,
+      score: d.priority + (Math.random() - 0.5) * jitterScale,
+    }))
+    jittered.sort((a, b) => b.score - a.score)
+    return jittered[0].decision
   }
 
   private scoreAvatar(avatar: AvatarCard): number {
@@ -84,8 +85,7 @@ export class EnhancedAI extends BaseAI {
     return Math.max(0, ideal - player.spektraPile.length) * 10 * (this.personality.efficiency / 100)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private scoreSkill(skill: any, player: GameState['players'][0], opponent: GameState['players'][0]): number {
+  private scoreSkill(skill: Skill, player: GameState['players'][0], opponent: GameState['players'][0]): number {
     const damage = skill.damage ?? 0
     let score = 0
 
