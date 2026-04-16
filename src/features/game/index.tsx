@@ -7,3 +7,14 @@ export function GameFeature() {
     </div>
   )
 }
+
+export { useGameStore } from './store'
+export { useGame } from './hooks/useGame'
+export {
+  useGameState,
+  useCurrentPlayer,
+  useOpponent,
+  useGamePhase,
+  useIsAIThinking,
+} from './hooks/useGameState'
+export type { GameState, Player, Card, AvatarCard, AIDifficulty } from './types'
