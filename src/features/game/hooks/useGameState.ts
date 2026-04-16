@@ -14,11 +14,8 @@ export function useCurrentPlayer() {
 }
 
 export function useOpponent() {
-  return useGameStore(s => {
-    if (!s.game) return null
-    const opponentIndex = s.game.currentPlayerIndex === 0 ? 1 : 0
-    return s.game.players[opponentIndex]
-  })
+  // Human player is always index 0; opponent is always index 1
+  return useGameStore(s => s.game?.players[1] ?? null)
 }
 
 export function useGamePhase() {

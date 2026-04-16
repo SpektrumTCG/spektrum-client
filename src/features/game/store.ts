@@ -3,7 +3,6 @@
 import { create } from 'zustand'
 import {
   startGame,
-  drawCard,
   addToSpektra,
   playAvatar,
   endPhase,
@@ -60,8 +59,9 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     // Spell effects: to be wired to effectProcessor in a future task
 
     const winner = checkWinner(next)
-    set({ game: winner ? { ...next, winner } : next })
-    if (!winner) get()._maybeRunAI(next)
+    const committed = winner ? { ...next, winner } : next
+    set({ game: committed })
+    if (!winner) get()._maybeRunAI(committed)
   },
 
   addToSpektra: (cardId) => {
@@ -69,6 +69,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     if (!game) return
     const next = addToSpektra(game, game.currentPlayerIndex, cardId)
     set({ game: next })
+    get()._maybeRunAI(next)
   },
 
   useSkill: (avatarId, skillIndex) => {
@@ -96,8 +97,9 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     if (!game) return
     const next = endPhase(game)
     const winner = checkWinner(next)
-    set({ game: winner ? { ...next, winner } : next })
-    if (!winner) get()._maybeRunAI(next)
+    const committed = winner ? { ...next, winner } : next
+    set({ game: committed })
+    if (!winner) get()._maybeRunAI(committed)
   },
 
   resetGame: () => set({ game: null, isAIThinking: false }),
@@ -142,6 +144,10 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         }
         break
       case 'endPhase':
+        store.endPhase()
+        break
+      default:
+        // Unhandled AI action type — end phase to prevent game freeze
         store.endPhase()
         break
     }
