@@ -1,98 +1,46 @@
 "use client"
 
-import { useState, useMemo } from "react"
-
 interface SafeCardImageProps {
-  src: string
+  src?: string | null
   alt: string
   className?: string
-  fallbackClassName?: string
-  cardId?: string
-  cardNumber?: string
+  style?: React.CSSProperties
+  onError?: () => void
 }
 
-const normalizeImagePath = (src: string): string => {
-  if (!src) return "/textures/cards/default_avatar.svg"
+export function SafeCardImage({ src, alt, className, style, onError }: SafeCardImageProps) {
+  const fallbackSrc = "/attached_assets/card-placeholder.png"
 
-  if (src.includes("/attached_assets/card_images/") && src.endsWith(".webp")) {
-    return src
-  }
-
-  const filename = src.split("/").pop() || ""
-  let cardName = ""
-
-  const avatarMatch = filename.match(/Avatar[^_]*_Ava\s*-\s*(.+?)\.(?:png|webp)$/i)
-  if (avatarMatch) {
-    cardName = avatarMatch[1].trim()
-  }
-
-  const spellMatch = filename.match(/Spell[^_]*_Spell\s*-\s*(.+?)\.(?:png|webp)$/i)
-  if (spellMatch) {
-    cardName = spellMatch[1].trim()
-  }
-
-  if (cardName) {
-    // Card catalog lookup is handled via the cardId/cardNumber props below
-    return src
-  }
-
-  return src
-}
-
-const encodeImagePath = (path: string): string => {
-  if (!path) return path
-
-  try {
-    const decoded = decodeURI(path)
-    if (decoded === path) {
-      const parts = path.split("/")
-      const filename = parts[parts.length - 1]
-      const directory = parts.slice(0, -1).join("/")
-
-      const encodedFilename = filename
-        .replace(/,/g, "%2C")
-        .replace(/ /g, "%20")
-
-      return directory + "/" + encodedFilename
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    if (img.src !== window.location.origin + fallbackSrc) {
+      img.src = fallbackSrc
     }
-    return path
-  } catch {
-    return path
+    onError?.()
   }
-}
 
-export function SafeCardImage({
-  src,
-  alt,
-  className = "",
-  fallbackClassName = "",
-  cardId: _cardId,
-  cardNumber: _cardNumber,
-}: SafeCardImageProps) {
-  const [error, setError] = useState(false)
-
-  const imageSrc = useMemo(() => {
-    const normalized = normalizeImagePath(src)
-    return encodeImagePath(normalized)
-  }, [src])
-
-  if (error) {
+  if (!src) {
     return (
-      <div className={`${fallbackClassName || className} bg-gray-900 border-2 border-orange-500/50 rounded-lg flex items-center justify-center`}>
-        <div className="text-orange-400 text-xs text-center p-1">
-          <div>{alt}</div>
-        </div>
+      <div
+        className={className}
+        style={{ ...style, backgroundColor: "#1f2937", display: "flex", alignItems: "center", justifyContent: "center" }}
+        aria-label={alt}
+      >
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="2"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
       </div>
     )
   }
 
   return (
     <img
-      src={imageSrc}
+      src={src}
       alt={alt}
       className={className}
-      onError={() => setError(true)}
-      loading="lazy"
+      style={style}
+      onError={handleError}
     />
   )
 }

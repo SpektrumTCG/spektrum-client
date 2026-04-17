@@ -28,7 +28,6 @@ export function WalletSelectorModal({
       const updateWallets = (wallets: DetectedWallets) => {
         setAvailableWallets(wallets)
         setHasWallets(Object.keys(wallets).some(key => wallets[key]?.isInstalled))
-        console.log("Detected Wallets:", Object.keys(wallets).filter(k => wallets[k]?.isInstalled))
       }
 
       updateWallets(detectSolanaWallets())
@@ -36,11 +35,8 @@ export function WalletSelectorModal({
       const unsubscribe = listenForNewWallets(updateWallets)
 
       const retryTimer = setTimeout(() => {
-        console.log("Re-scanning for late-registering wallets...")
         updateWallets(detectSolanaWallets())
       }, 1000)
-
-      console.log("PWA Standalone Mode:", inPWA)
 
       return () => {
         unsubscribe()
@@ -91,7 +87,6 @@ export function WalletSelectorModal({
 
         <div className="mb-4 md:mb-6 p-3 bg-yellow-900/20 rounded-lg border border-yellow-600/50">
           <div className="flex items-start gap-2">
-            <span className="text-lg">⚠️</span>
             <div className="flex-1">
               <p className="text-xs md:text-sm font-semibold text-yellow-300 mb-1">
                 Important: Switch to Devnet
@@ -141,7 +136,6 @@ export function WalletSelectorModal({
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className="text-4xl mb-4">💳</div>
             <h3 className="text-lg font-semibold text-white mb-2">
               No Wallet Detected
             </h3>
@@ -187,7 +181,7 @@ export function WalletSelectorModal({
           <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-500/70">
             <div className="space-y-2">
               <div className="text-xs text-blue-300">
-                <strong>ℹ️ App Shortcut Mode:</strong> Connecting via wallet app deeplink.
+                <strong>App Shortcut Mode:</strong> Connecting via wallet app deeplink.
               </div>
               <p className="text-xs text-blue-200">
                 Select your wallet below to open the wallet app and complete the connection.
@@ -199,7 +193,7 @@ export function WalletSelectorModal({
         {!isInStandalonePWA && (
           <div className="mt-6 p-4 bg-blue-900/20 rounded-lg border border-blue-600/50">
             <div className="text-xs text-blue-300">
-              <strong>📱 Mobile Users:</strong> For the best experience, open this page in your wallet&apos;s built-in browser (e.g. Phantom, Solflare, or Seeker browser).
+              <strong>Mobile Users:</strong> For the best experience, open this page in your wallet&apos;s built-in browser (e.g. Phantom, Solflare, or Seeker browser).
             </div>
           </div>
         )}

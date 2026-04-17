@@ -69,7 +69,7 @@ export function SolanaWalletConnect({ onConnected }: SolanaWalletConnectProps) {
       {isPWAStandalone && !isConnected && (
         <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/70">
           <div className="text-xs text-blue-300">
-            <strong>ℹ️ Using App Shortcut:</strong> Click connect and select your wallet to open the wallet app.
+            <strong>Info: Using App Shortcut:</strong> Click connect and select your wallet to open the wallet app.
           </div>
         </div>
       )}
