@@ -14,7 +14,7 @@ interface SeekerState {
   reset: () => void
 }
 
-export const useSeekerStore = create<SeekerState>((set, get) => ({
+export const useSeekerStore = create<SeekerState>()((set) => ({
   isSeekerVerified: false,
   seekerVerifiedAt: null,
   seekerTokenMint: null,
@@ -34,8 +34,8 @@ export const useSeekerStore = create<SeekerState>((set, get) => ({
           seekerRewardClaimed: data.seekerRewardClaimed || false,
         })
       }
-    } catch (err) {
-      console.warn('Failed to fetch Seeker status:', err)
+    } catch {
+      // silently ignore fetch errors
     }
   },
 
@@ -114,6 +114,8 @@ export const useSeekerStore = create<SeekerState>((set, get) => ({
       set({ seekerRewardClaimed: true })
       return { success: true, packId: data.reward?.packId }
     } catch (err: any) {
+      const msg = err?.message ?? 'Unknown error'
+      set({ verificationError: msg, isVerifying: false })
       return { success: false }
     }
   },

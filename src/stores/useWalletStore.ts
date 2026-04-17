@@ -71,20 +71,17 @@ function attachWalletListeners(
 ): (() => void) | null {
   if (!provider || typeof provider.on !== 'function') return null;
 
-  const handleAccountChanged = (newPubkey: any) => {
-    console.warn(`⚠️ ${walletType} account changed externally — disconnecting`);
+  const handleAccountChanged = (_newPubkey: any) => {
     onExternalChange();
   };
 
   const handleDisconnect = () => {
-    console.warn(`⚠️ ${walletType} disconnected externally`);
     onExternalChange();
   };
 
   try {
     provider.on('accountChanged', handleAccountChanged);
     provider.on('disconnect', handleDisconnect);
-    console.log(`✅ Wallet event listeners attached for ${walletType}`);
 
     return () => {
       try {
@@ -94,8 +91,7 @@ function attachWalletListeners(
         provider.removeListener?.('disconnect', handleDisconnect);
       } catch {}
     };
-  } catch (err) {
-    console.warn('Could not attach wallet event listeners:', err);
+  } catch {
     return null;
   }
 }
@@ -123,12 +119,10 @@ export const useWalletStore = create<WalletStore>()(
       connectWallet: async (walletName?: string) => {
         try {
           set({ connectionStatus: 'connecting', lastConnectionError: null });
-          console.log(`Attempting wallet connection${walletName ? ` to ${walletName}` : ''}...`);
 
           const clearAccountData = async (newAddress: string) => {
             const previousAddress = get().savedWalletAddress;
             if (previousAddress && previousAddress !== newAddress) {
-              console.log(`🔄 Wallet changed from ${previousAddress.substring(0, 8)}... to ${newAddress.substring(0, 8)}... - clearing account data`);
               localStorage.removeItem('spektrum-collection-storage');
               localStorage.removeItem('deck-store');
               localStorage.removeItem('inventory-storage');
@@ -149,10 +143,10 @@ export const useWalletStore = create<WalletStore>()(
           if (walletName === 'phantom' || !walletName) {
             const phantomCallback = parsePhantomCallback();
             if (phantomCallback) {
-              console.log('✅ Phantom deeplink callback received:', phantomCallback);
               await clearAccountData(phantomCallback.publicKey);
               set({
                 isConnected: true,
+                isReconnecting: false,
                 walletAddress: phantomCallback.publicKey,
                 walletType: 'phantom',
                 savedWalletAddress: phantomCallback.publicKey,
@@ -170,9 +164,6 @@ export const useWalletStore = create<WalletStore>()(
                 if (response.ok) {
                   const data = await response.json();
                   set({ isNewPlayer: !!data.isNewPlayer });
-                  if (data.isNewPlayer) {
-                    console.log('🆕 New player detected - local data will be preserved');
-                  }
                   if (data.player) {
                     set({
                       playerProfile: {
@@ -185,14 +176,10 @@ export const useWalletStore = create<WalletStore>()(
                       }
                     });
                   }
-                  console.log('✅ Wallet associated with HTTP session via player connect');
-                } else {
-                  console.warn('⚠️ Failed to register player:', response.status);
                 }
-              } catch (sessionError) {
-                console.warn('⚠️ Failed to associate wallet with session:', sessionError);
-              }
+              } catch {}
 
+              window.history.replaceState(null, '', window.location.pathname);
               return true;
             }
           }
@@ -201,10 +188,10 @@ export const useWalletStore = create<WalletStore>()(
           if (walletName === 'solflare' || !walletName) {
             const solflareCallback = parseSolflareCallback();
             if (solflareCallback) {
-              console.log('✅ Solflare deeplink callback received:', solflareCallback);
               await clearAccountData(solflareCallback.publicKey);
               set({
                 isConnected: true,
+                isReconnecting: false,
                 walletAddress: solflareCallback.publicKey,
                 walletType: 'solflare',
                 savedWalletAddress: solflareCallback.publicKey,
@@ -222,9 +209,6 @@ export const useWalletStore = create<WalletStore>()(
                 if (response.ok) {
                   const data = await response.json();
                   set({ isNewPlayer: !!data.isNewPlayer });
-                  if (data.isNewPlayer) {
-                    console.log('🆕 New player detected - local data will be preserved');
-                  }
                   if (data.player) {
                     set({
                       playerProfile: {
@@ -237,15 +221,10 @@ export const useWalletStore = create<WalletStore>()(
                       }
                     });
                   }
-                  console.log('✅ Wallet associated with HTTP session via Solflare connect');
-                } else {
-                  console.warn('⚠️ Failed to register player:', response.status);
                 }
-              } catch (sessionError) {
-                console.warn('⚠️ Failed to associate wallet with session:', sessionError);
-              }
+              } catch {}
 
-              window.history.replaceState({}, document.title, window.location.pathname);
+              window.history.replaceState(null, '', window.location.pathname);
               return true;
             }
           }
@@ -253,10 +232,10 @@ export const useWalletStore = create<WalletStore>()(
           if (walletName === 'backpack' || !walletName) {
             const backpackCallback = parseBackpackCallback();
             if (backpackCallback) {
-              console.log('✅ Backpack deeplink callback received:', backpackCallback);
               await clearAccountData(backpackCallback.publicKey);
               set({
                 isConnected: true,
+                isReconnecting: false,
                 walletAddress: backpackCallback.publicKey,
                 walletType: 'backpack',
                 savedWalletAddress: backpackCallback.publicKey,
@@ -274,9 +253,6 @@ export const useWalletStore = create<WalletStore>()(
                 if (response.ok) {
                   const data = await response.json();
                   set({ isNewPlayer: !!data.isNewPlayer });
-                  if (data.isNewPlayer) {
-                    console.log('🆕 New player detected - local data will be preserved');
-                  }
                   if (data.player) {
                     set({
                       playerProfile: {
@@ -289,15 +265,10 @@ export const useWalletStore = create<WalletStore>()(
                       }
                     });
                   }
-                  console.log('✅ Wallet associated with HTTP session via Backpack connect');
-                } else {
-                  console.warn('⚠️ Failed to register player:', response.status);
                 }
-              } catch (sessionError) {
-                console.warn('⚠️ Failed to associate wallet with session:', sessionError);
-              }
+              } catch {}
 
-              window.history.replaceState({}, document.title, window.location.pathname);
+              window.history.replaceState(null, '', window.location.pathname);
               return true;
             }
           }
@@ -308,6 +279,7 @@ export const useWalletStore = create<WalletStore>()(
             await clearAccountData(walletStatus.address);
             set({
               isConnected: true,
+              isReconnecting: false,
               walletAddress: walletStatus.address,
               walletType: walletName || 'default',
               savedWalletAddress: walletStatus.address, // Save for auto-reconnect
@@ -329,7 +301,6 @@ export const useWalletStore = create<WalletStore>()(
             // Must happen BEFORE any other API calls that need session authentication
             if (walletStatus.address) {
               try {
-                console.log('📡 Registering player with server:', walletStatus.address.substring(0, 8) + '...');
                 const response = await fetch('/api/player/connect', {
                   method: 'POST',
                   headers: {
@@ -342,12 +313,8 @@ export const useWalletStore = create<WalletStore>()(
                 });
 
                 const data = await response.json();
-                console.log('✅ Player registered with server analytics:', data);
 
                 set({ isNewPlayer: !!data.isNewPlayer });
-                if (data.isNewPlayer) {
-                  console.log('🆕 New player detected - local data will be preserved');
-                }
 
                 if (data.player) {
                   set({
@@ -360,10 +327,8 @@ export const useWalletStore = create<WalletStore>()(
                       region: data.player.region || null,
                     }
                   });
-                  console.log('✅ Player profile loaded:', data.player.displayName || 'No display name set');
                 }
-              } catch (trackingError) {
-                console.error('❌ Player registration failed:', trackingError);
+              } catch {
                 // Don't fail the connection if registration fails
               }
             }
@@ -371,8 +336,7 @@ export const useWalletStore = create<WalletStore>()(
             // SECOND: Sync NFT cards after player registration
             try {
               await get().syncNftCards();
-            } catch (syncError) {
-              console.warn('NFT sync failed during connection, continuing without NFTs:', syncError);
+            } catch {
               // Don't fail the connection if NFT sync fails
             }
 
@@ -380,8 +344,7 @@ export const useWalletStore = create<WalletStore>()(
             try {
               const { useDeckStore } = await import('./useDeckStore');
               await useDeckStore.getState().syncCardsFromDatabase();
-            } catch (dbSyncError) {
-              console.warn('Database card sync failed during connection, continuing:', dbSyncError);
+            } catch {
               // Don't fail the connection if database sync fails
             }
 
@@ -389,30 +352,20 @@ export const useWalletStore = create<WalletStore>()(
             try {
               const { useDeckStore } = await import('./useDeckStore');
               await useDeckStore.getState().syncDecksFromDatabase();
-              console.log('✅ Decks synced from database');
-            } catch (deckSyncError) {
-              console.warn('Deck sync failed:', deckSyncError);
-            }
+            } catch {}
 
             // FIFTH: Sync booster packs from database
             try {
               const { useInventoryStore } = await import('./useInventoryStore');
               await useInventoryStore.getState().syncPacksFromDatabase();
-              console.log('✅ Booster packs synced from database');
-            } catch (packSyncError) {
-              console.warn('Booster pack sync failed:', packSyncError);
-            }
+            } catch {}
 
             // SIXTH: Fetch Seeker verification status
             try {
               const { useSeekerStore } = await import('./useSeekerStore');
               await useSeekerStore.getState().fetchSeekerStatus(walletStatus.address);
-              console.log('✅ Seeker status fetched');
-            } catch (seekerError) {
-              console.warn('Seeker status fetch failed:', seekerError);
-            }
+            } catch {}
 
-            console.log(`Wallet connected: ${walletStatus.address}`);
             return true;
           } else {
             set({
@@ -422,7 +375,6 @@ export const useWalletStore = create<WalletStore>()(
             return false;
           }
         } catch (error) {
-          console.error('Wallet connection error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Unknown connection error';
           set({
             connectionStatus: 'error',
@@ -480,9 +432,7 @@ export const useWalletStore = create<WalletStore>()(
             useSeekerStore.getState().reset();
           } catch {}
 
-          console.log('Wallet disconnected - account data cleared');
         } catch (error) {
-          console.error('Wallet disconnection error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Unknown disconnection error';
           set({ lastConnectionError: errorMessage });
         }
@@ -491,7 +441,6 @@ export const useWalletStore = create<WalletStore>()(
       refreshWalletData: async () => {
         try {
           if (!get().isConnected) {
-            console.warn('Cannot refresh wallet data: wallet not connected');
             return;
           }
 
@@ -506,18 +455,14 @@ export const useWalletStore = create<WalletStore>()(
             // Also refresh NFT cards
             try {
               await get().syncNftCards();
-            } catch (syncError) {
-              console.warn('NFT sync failed during refresh, continuing without NFTs:', syncError);
+            } catch {
               // Don't fail the refresh if NFT sync fails
             }
-
-            console.log('Wallet data refreshed');
           } else {
             // Wallet got disconnected
             await get().disconnectWallet();
           }
         } catch (error) {
-          console.error('Error refreshing wallet data:', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to refresh wallet data';
           set({ lastConnectionError: errorMessage });
         }
@@ -526,18 +471,13 @@ export const useWalletStore = create<WalletStore>()(
       syncNftCards: async () => {
         try {
           if (!get().isConnected) {
-            console.warn('Cannot sync NFT cards: wallet not connected');
             return;
           }
 
-          console.log('Syncing NFT cards from wallet...');
           const nftCards = await cardNftService.getOwnedCards();
-
           set({ nftCards });
-          console.log(`Synced ${nftCards.length} NFT cards from wallet`);
 
         } catch (error) {
-          console.error('Error syncing NFT cards:', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to sync NFT cards';
           set({ lastConnectionError: errorMessage });
         }
@@ -546,8 +486,7 @@ export const useWalletStore = create<WalletStore>()(
       getWalletStatus: async () => {
         try {
           return await cardNftService.getWalletStatus();
-        } catch (error) {
-          console.error('Error getting wallet status:', error);
+        } catch {
           return {
             connected: false,
             address: null,
@@ -560,26 +499,22 @@ export const useWalletStore = create<WalletStore>()(
         const { savedWalletAddress, savedWalletType, isConnected, connectionStatus } = get();
 
         if (isConnected) {
-          console.log('🔗 Wallet already connected, skipping auto-reconnect');
           set({ isReconnecting: false });
           return true;
         }
 
         if (connectionStatus === 'connecting') {
-          console.log('🔗 Connection in progress, skipping auto-reconnect');
           set({ isReconnecting: false });
           return false;
         }
 
         if (!savedWalletAddress) {
-          console.log('🔗 No saved wallet address found in storage, skipping auto-reconnect');
           set({ isReconnecting: false });
           return false;
         }
 
         // --- EMAIL AUTH auto-reconnect (removable) ---
         if (get().isEmailAuth && savedWalletAddress.startsWith('email_')) {
-          console.log('🔗 Email-auth user — restoring session via server...');
           try {
             set({ connectionStatus: 'connecting' });
             const res = await fetch('/api/player/connect', {
@@ -611,23 +546,18 @@ export const useWalletStore = create<WalletStore>()(
                 const { useDeckStore } = await import('./useDeckStore');
                 await useDeckStore.getState().syncCardsFromDatabase();
                 await useDeckStore.getState().syncDecksFromDatabase();
-              } catch (e) { console.warn('Email auth deck sync failed:', e); }
-              console.log('✅ Email-auth auto-reconnect successful');
+              } catch {}
               return true;
             } else {
-              console.warn('⚠️ Email-auth session invalid — clearing saved address');
               set({ savedWalletAddress: null, savedWalletType: null, isEmailAuth: false, isReconnecting: false, connectionStatus: 'disconnected' });
               return false;
             }
-          } catch (err) {
-            console.error('❌ Email-auth auto-reconnect error:', err);
+          } catch {
             set({ connectionStatus: 'disconnected', isReconnecting: false });
             return false;
           }
         }
         // --- END EMAIL AUTH auto-reconnect ---
-
-        console.log(`🔗 Attempting auto-reconnect for ${savedWalletType || 'phantom'} wallet: ${savedWalletAddress.substring(0, 8)}...`);
 
         try {
           set({ connectionStatus: 'connecting' });
@@ -646,7 +576,6 @@ export const useWalletStore = create<WalletStore>()(
 
             if (!sessionPresent) {
               if (!navigator.onLine) {
-                console.warn('📵 Network offline — preserving saved wallet address, will retry when online');
                 set({
                   isConnected: false,
                   isReconnecting: false,
@@ -655,7 +584,6 @@ export const useWalletStore = create<WalletStore>()(
                 });
                 return false;
               }
-              console.warn(`⚠️ Deep link session for "${walletKey}" is gone (storage was cleared) — clearing stale address`);
               set({
                 savedWalletAddress: null,
                 savedWalletType: null,
@@ -665,8 +593,6 @@ export const useWalletStore = create<WalletStore>()(
               });
               return false;
             }
-
-            console.log(`📱 Saved wallet "${walletKey}" deep link session is valid — restoring`);
 
             localStorage.setItem('wallet-reconnect-ts', String(Date.now()));
 
@@ -702,20 +628,14 @@ export const useWalletStore = create<WalletStore>()(
                     }
                   });
                 }
-                console.log('✅ Player profile synced after deep link auto-reconnect');
               }
-            } catch (profileError) {
-              console.warn('Player profile sync failed during deep link auto-reconnect:', profileError);
-            }
+            } catch {}
 
             try {
               const { useDeckStore } = await import('./useDeckStore');
               await useDeckStore.getState().syncCardsFromDatabase();
               await useDeckStore.getState().syncDecksFromDatabase();
-              console.log('✅ Cards and decks synced after deep link auto-reconnect');
-            } catch (dbSyncError) {
-              console.warn('Database sync failed during deep link auto-reconnect:', dbSyncError);
-            }
+            } catch {}
 
             return true;
           }
@@ -723,7 +643,6 @@ export const useWalletStore = create<WalletStore>()(
           const walletStatus = await cardNftService.connect(savedWalletType || 'phantom');
 
           if (walletStatus.connected && walletStatus.address === savedWalletAddress) {
-            console.log('✅ Auto-reconnect successful - address verified!');
             set({
               isConnected: true,
               isReconnecting: false,
@@ -754,36 +673,26 @@ export const useWalletStore = create<WalletStore>()(
                       region: data.player.region || null,
                     }
                   });
-                  console.log('✅ Player profile synced after auto-reconnect');
                 }
               }
-            } catch (profileError) {
-              console.warn('Player profile sync failed during auto-reconnect:', profileError);
-            }
+            } catch {}
 
             try {
               const { useDeckStore } = await import('./useDeckStore');
               await useDeckStore.getState().syncCardsFromDatabase();
               await useDeckStore.getState().syncDecksFromDatabase();
-              console.log('✅ Cards and decks synced from database after auto-reconnect');
-            } catch (dbSyncError) {
-              console.warn('Database sync failed during auto-reconnect:', dbSyncError);
-            }
+            } catch {}
 
             return true;
           } else if (walletStatus.connected && walletStatus.address !== savedWalletAddress) {
-            console.warn(`⚠️ Auto-reconnect rejected: Address mismatch. Expected ${savedWalletAddress.substring(0, 8)}..., got ${walletStatus.address?.substring(0, 8) || 'null'}...`);
-            console.log('ℹ️ User should manually connect wallet to update account');
             await cardNftService.disconnect();
             set({ connectionStatus: 'disconnected', isReconnecting: false });
             return false;
           } else {
-            console.log('⚠️ Auto-reconnect failed - wallet not available');
             set({ connectionStatus: 'disconnected', isReconnecting: false });
             return false;
           }
-        } catch (error) {
-          console.error('❌ Auto-reconnect error:', error);
+        } catch {
           set({ connectionStatus: 'disconnected', isReconnecting: false });
           return false;
         }
@@ -854,9 +763,9 @@ export const useWalletStore = create<WalletStore>()(
             const { useDeckStore } = await import('./useDeckStore');
             await useDeckStore.getState().syncCardsFromDatabase();
             await useDeckStore.getState().syncDecksFromDatabase();
-          } catch (e) { console.warn('Deck sync after email login failed:', e); }
+          } catch {}
           return true;
-        } catch (err) {
+        } catch {
           set({ connectionStatus: 'disconnected', lastConnectionError: 'Network error.' });
           return false;
         }
@@ -903,7 +812,7 @@ export const useWalletStore = create<WalletStore>()(
             playerProfile: { displayName: dName || null, gamesPlayed: gamesPlayed || 0, gamesWon: gamesWon || 0, gamesLost: gamesLost || 0, country: country || null, region: region || null },
           });
           return true;
-        } catch (err) {
+        } catch {
           set({ connectionStatus: 'disconnected', lastConnectionError: 'Network error.' });
           return false;
         }
