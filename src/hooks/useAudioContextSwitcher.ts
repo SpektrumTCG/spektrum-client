@@ -1,18 +1,16 @@
 // src/hooks/useAudioContextSwitcher.ts
 import { useEffect } from "react"
-import { useAudioStore } from "@/stores/useAudioStore"
+import { useAudio } from "@/stores/useAudioStore"
 
 // Resumes AudioContext on first user interaction (required by browsers).
 export function useAudioContextSwitcher() {
-  const isMuted = useAudioStore((s) => s.isMuted)
+  const initializeAudio = useAudio((s) => s.initializeAudio)
 
   useEffect(() => {
-    if (isMuted) return
     const resume = () => {
-      // Resume any suspended AudioContext instances here
-      // Wire up to your audio engine in later tasks
+      initializeAudio()
     }
     window.addEventListener("pointerdown", resume, { once: true })
     return () => window.removeEventListener("pointerdown", resume)
-  }, [isMuted])
+  }, [initializeAudio])
 }
