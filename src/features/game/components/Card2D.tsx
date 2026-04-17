@@ -8,11 +8,6 @@ import { toast } from 'sonner'
 import { PreviewButton } from './PreviewButton'
 import { getFixedCardImagePath, handleCardImageError } from '@/lib/cardImageFixer'
 
-declare global {
-  interface Window {
-    gameStore?: any
-  }
-}
 
 interface Card2DProps {
   card: any
@@ -93,7 +88,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
 }) => {
   const [showActions, setShowActions] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
-  const [showSetupModal, setShowSetupModal] = useState(false)
   const playHitSound = useAudio((state) => state.playHit)
   const playCard = useAudio((state) => state.playCard)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -240,8 +234,7 @@ const Card2DInner: React.FC<Card2DProps> = ({
   const [visualRefreshCounter, setVisualRefreshCounter] = useState(0)
 
   useEffect(() => {
-    const gameStore = window.gameStore
-    if (gameStore && card.type === 'avatar') {
+    if (card.type === 'avatar') {
       const checkPhase = () => {
         setVisualRefreshCounter((prev) => prev + 1)
       }
@@ -277,25 +270,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
 
   const handleClick = () => {
     if (isPlayable && isInHand) {
-      const gameStore = window.gameStore
-
-      if (
-        gameStore &&
-        gameStore.gamePhase === 'recheck' &&
-        gameStore.currentPlayer === 'player' &&
-        gameStore.player.hand.length > 8
-      ) {
-        setShowActions(!showActions)
-        return
-      }
-
-      if (card.type === 'avatar') {
-        if (gameStore && gameStore.gamePhase === 'setup' && !gameStore.player.activeAvatar) {
-          setShowSetupModal(true)
-          return
-        }
-      }
-
       setShowActions(!showActions)
     } else if (onClick) {
       onClick()
@@ -407,54 +381,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
           document.body
         )}
 
-      {showSetupModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-2">
-            <div
-              className="bg-gradient-to-b from-gray-900 to-gray-800 rounded-xl shadow-lg max-w-sm w-full p-6 border-2 border-orange-500"
-              style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}
-            >
-              <h2 className="text-xl font-bold text-white mb-4 text-center text-orange-400">
-                {card.name}
-              </h2>
-
-              {(card.imagePath || card.art) && (
-                <div
-                  className="mb-6 rounded-lg overflow-hidden bg-gray-900 flex items-center justify-center"
-                  style={{ height: '300px' }}
-                >
-                  <img
-                    src={getFixedCardImagePath(card)}
-                    alt={card.name}
-                    className="w-full h-full object-contain"
-                    onError={(e) => handleCardImageError(e, card)}
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowSetupModal(false)
-                    handleAction('active')
-                  }}
-                  className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-3 px-4 rounded-lg transition-all border border-orange-400"
-                  style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.4)' }}
-                >
-                  Place as Active
-                </button>
-                <button
-                  onClick={() => setShowSetupModal(false)}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors border border-gray-600"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-
       <div
         ref={cardRef}
         className="relative"
@@ -557,40 +483,14 @@ const Card2DInner: React.FC<Card2DProps> = ({
                     </button>
                   )}
 
-                  {(() => {
-                    const gameStore = window.gameStore
-                    const needsToDiscard = gameStore?.player?.needsToDiscardCards
-                    const gamePhase = gameStore?.gamePhase
-                    const currentPlayer = gameStore?.currentPlayer
-                    const playerHandSize = gameStore?.player?.hand?.length || 0
-
-                    const shouldShowDiscard =
-                      needsToDiscard ||
-                      (gamePhase === 'recheck' &&
-                        currentPlayer === 'player' &&
-                        playerHandSize > 8)
-
-                    if (shouldShowDiscard) {
-                      return (
-                        <button
-                          className="bg-gradient-to-r from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 text-white rounded p-1 text-xs font-bold border border-red-500"
-                          onClick={() => handleAction('discard')}
-                        >
-                          Discard Card
-                        </button>
-                      )
-                    } else if (card.type === 'avatar') {
-                      return (
-                        <button
-                          className="bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white rounded p-1 text-xs font-bold border border-amber-500"
-                          onClick={() => handleAction('toSpektra')}
-                        >
-                          Use as Spektra
-                        </button>
-                      )
-                    }
-                    return null
-                  })()}
+                  {card.type === 'avatar' && (
+                    <button
+                      className="bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white rounded p-1 text-xs font-bold border border-amber-500"
+                      onClick={() => handleAction('toSpektra')}
+                    >
+                      Use as Spektra
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
