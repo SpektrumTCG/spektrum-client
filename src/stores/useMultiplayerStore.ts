@@ -88,8 +88,6 @@ const getSocketURL = () => {
   return `${protocol}//${host}`;
 };
 
-const SOCKET_URL = getSocketURL();
-
 export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   // Initial state
   socket: null,
@@ -114,7 +112,8 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
     set({ connectionStatus: 'connecting' });
 
     try {
-      const socket = io(SOCKET_URL, {
+      const socketUrl = getSocketURL();
+      const socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         timeout: 10000,
         autoConnect: true,
