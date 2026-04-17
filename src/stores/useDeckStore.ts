@@ -4,7 +4,7 @@ import type { Card, AvatarCard, ActionCard } from '@/domain/game/types';
 import { cardRegistry } from '@/domain/game/data/cardRegistry';
 import { cardNftService } from '@/features/blockchain/solana/cardNftService';
 import { toast } from 'sonner';
-import { isSameBaseCard, getBaseCardId } from '@/lib/rarityUtils';
+import { getBaseCardId } from '@/lib/rarityUtils';
 import { useAchievementsStore } from '@/stores/useAchievementsStore';
 import { useCardCatalogStore } from '@/stores/useCardCatalogStore';
 
