@@ -1,23 +1,51 @@
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-interface UIStore {
-  scale: number
-  setScale: (scale: number) => void
-  activeModal: string | null
-  openModal: (id: string) => void
-  closeModal: () => void
+interface UIScaleState {
+  scale: number;
+  setScale: (scale: number) => void;
 }
 
-export const useUIStore = create<UIStore>()(
+const getDefaultScale = (): number => {
+  if (typeof window === 'undefined') return 100;
+
+  const width = window.innerWidth;
+
+  // Auto-detect based on screen size
+  if (width < 640) {
+    // Mobile
+    return 60;
+  } else if (width < 1024) {
+    // Tablet
+    return 90;
+  } else if (width < 1920) {
+    // Desktop
+    return 100;
+  } else {
+    // Large screens
+    return 110;
+  }
+};
+
+export const useUIScale = create<UIScaleState>()(
   persist(
     (set) => ({
-      scale: 100,
-      setScale: (scale) => set({ scale }),
-      activeModal: null,
-      openModal: (id) => set({ activeModal: id }),
-      closeModal: () => set({ activeModal: null }),
+      scale: getDefaultScale(),
+      setScale: (scale: number) => {
+        set({ scale });
+        // Apply scale to document root
+        document.documentElement.style.fontSize = `${(scale / 100) * 16}px`;
+      },
     }),
-    { name: "ui-store" }
+    {
+      name: 'ui-scale-storage',
+      onRehydrateStorage: () => (state) => {
+        // Apply persisted scale on load, or detect default if first time
+        const scaleToApply = state?.scale ?? getDefaultScale();
+        document.documentElement.style.fontSize = `${(scaleToApply / 100) * 16}px`;
+      },
+    }
   )
-)
+);
+
+export { useUIScale as useUIStore };
