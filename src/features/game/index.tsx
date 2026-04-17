@@ -1,11 +1,9 @@
 'use client'
 
+import { GameBoard2D } from './components/GameBoard2D'
+
 export function GameFeature() {
-  return (
-    <div className="flex flex-col items-center gap-4 p-4">
-      <p className="text-sm text-muted-foreground">Game board loads here</p>
-    </div>
-  )
+  return <GameBoard2D />
 }
 
 export { useGameStore } from './store'
