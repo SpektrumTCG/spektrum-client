@@ -15,7 +15,7 @@ interface AnteBattleState {
   resetAnteMode: () => void;
 }
 
-export const useAnteBattleStore = create<AnteBattleState>((set, get) => ({
+export const useAnteBattleStore = create<AnteBattleState>()((set, get) => ({
   isAnteMode: false,
   battleId: null,
   playerWageredCard: null,
