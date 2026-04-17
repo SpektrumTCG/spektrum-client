@@ -1,10 +1,5 @@
-import { Shell } from "@/components/layout/Shell"
+import { AchievementsFeature } from "@/features/achievements"
 
 export default function AchievementsPage() {
-  return (
-    <Shell>
-      <h1 className="text-xl font-bold mb-4">Achievements</h1>
-      <p className="text-sm text-muted-foreground">Coming soon</p>
-    </Shell>
-  )
+  return <AchievementsFeature />
 }
