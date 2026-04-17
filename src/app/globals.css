@@ -88,6 +88,18 @@
   --keyboard-height: 0px;
 }
 
+/* Dark sci-fi palette */
+:root {
+  --spektrum-bg: #111827;
+  --spektrum-surface: #1f2937;
+  --spektrum-surface-2: #374151;
+  --spektrum-accent: #f97316;
+  --spektrum-accent-hover: #fb923c;
+  --spektrum-accent-glow: rgba(249, 115, 22, 0.3);
+  --spektrum-text: #f9fafb;
+  --spektrum-text-muted: #9ca3af;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -138,6 +150,9 @@
 
   body {
     @apply bg-background text-foreground;
+    background-color: var(--spektrum-bg);
+    color: var(--spektrum-text);
+    font-family: 'Noto Sans', Inter, sans-serif;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
