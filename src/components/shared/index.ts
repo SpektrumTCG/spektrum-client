@@ -1,6 +1,8 @@
 export { AppBootstrap } from "./AppBootstrap"
 export { BackButton } from "./BackButton"
+export { FirstTimeWelcomePopup } from "./FirstTimeWelcomePopup"
 export { LoadingScreen } from "./LoadingScreen"
+export { ProgressTracker } from "./ProgressTracker"
 export { SafeCardImage } from "./SafeCardImage"
 export { SolanaWalletConnect } from "./SolanaWalletConnect"
 export { WalletSelectorModal } from "./WalletSelectorModal"
