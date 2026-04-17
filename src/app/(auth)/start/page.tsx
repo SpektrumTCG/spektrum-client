@@ -1,3 +1,5 @@
+import { StartFeature } from "@/features/start"
+
 export default function StartPage() {
-  return <div />
+  return <StartFeature />
 }
