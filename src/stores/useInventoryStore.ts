@@ -104,7 +104,7 @@ export const useInventoryStore = create<InventoryStore>()(
                 })
               ]);
             } catch {
-              // Fire-and-forget: failures are non-blocking
+              toast.error('Failed to record purchase — please try again')
             }
           })();
         }
