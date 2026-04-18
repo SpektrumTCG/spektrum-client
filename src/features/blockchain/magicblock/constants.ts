@@ -2,7 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 
 // TODO: Replace with actual deployed program ID after `anchor deploy --provider.cluster devnet`
 // See docs/DEVNET_DEPLOYMENT.md for deployment steps
-const GACHA_PROGRAM_ID_STRING = import.meta.env.VITE_GACHA_PROGRAM_ID || '11111111111111111111111111111111';
+const GACHA_PROGRAM_ID_STRING = process.env.NEXT_PUBLIC_GACHA_PROGRAM_ID || '11111111111111111111111111111111';
 export const GACHA_PROGRAM_ID = new PublicKey(GACHA_PROGRAM_ID_STRING);
 
 // MagicBlock Delegation Program - official program ID (do not change)
@@ -52,7 +52,7 @@ export const SOL_PRICES = {
   premadeDeck: 0.05,
 } as const;
 
-export const CURRENT_NETWORK = (import.meta.env.VITE_SOLANA_NETWORK || 'devnet') as 'devnet' | 'mainnet-beta';
+export const CURRENT_NETWORK = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet') as 'devnet' | 'mainnet-beta';
 
 export const GACHA_TREASURY = new PublicKey('7N57HGeEuVnzveE2G4vanJodnfXBGbAQdwFkwLPAUXnb');
 

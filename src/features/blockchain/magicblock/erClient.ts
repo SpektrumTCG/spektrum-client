@@ -130,11 +130,11 @@ export function getERClient(config?: ERClientConfig): ERClient {
     erClientInstance = new ERClient(config);
   }
   if (!erClientInstance) {
-    const networkEnv = import.meta.env?.VITE_SOLANA_NETWORK || 'devnet';
+    const networkEnv = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
     const network: ERNetwork = networkEnv === 'mainnet' ? 'mainnet' : 'devnet';
     const solanaRpcUrl = networkEnv === 'mainnet-beta' || networkEnv === 'mainnet'
-      ? (import.meta.env?.VITE_HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com')
-      : (import.meta.env?.VITE_HELIUS_DEVNET_URL || 'https://api.devnet.solana.com');
+      ? (process.env.NEXT_PUBLIC_HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com')
+      : (process.env.NEXT_PUBLIC_HELIUS_DEVNET_URL || 'https://api.devnet.solana.com');
     erClientInstance = new ERClient({
       network,
       region: 'us',

@@ -329,8 +329,8 @@ class SolanaCardNftService implements CardNftService {
 
   private async initializeConnection() {
     try {
-      const network = process.env.VITE_SOLANA_NETWORK || 'devnet';
-      const rpcUrl = process.env.VITE_SOLANA_RPC_URL || SolanaCardNftService.getClusterUrl(network);
+      const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
+      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || SolanaCardNftService.getClusterUrl(network);
       
       this.rpc = createSolanaRpc(rpcUrl);
       
@@ -776,7 +776,7 @@ class SolanaCardNftService implements CardNftService {
   
   private initializeMockNfts() {
     // Only populate mock NFTs if explicitly enabled via environment variable
-    const enableMockNfts = process.env.VITE_ENABLE_MOCK_NFTS === 'true';
+    const enableMockNfts = process.env.NEXT_PUBLIC_ENABLE_MOCK_NFTS === 'true';
     
     if (!enableMockNfts) {
       this.mockNfts = [];
@@ -794,7 +794,7 @@ class SolanaCardNftService implements CardNftService {
 export const mockCardNftService = new MockCardNftService();
 
 // Determine which service to use based on explicit opt-in
-const USE_REAL_BLOCKCHAIN = process.env.VITE_USE_REAL_BLOCKCHAIN === 'true';
+const USE_REAL_BLOCKCHAIN = process.env.NEXT_PUBLIC_USE_REAL_BLOCKCHAIN === 'true';
 
 // Export the appropriate service
 export const cardNftService = USE_REAL_BLOCKCHAIN ? new SolanaCardNftService() : mockCardNftService;

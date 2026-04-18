@@ -72,18 +72,18 @@ const MoreGridIcon = () => (
 
 const PRIMARY_NAV = [
   { path: "/home", label: "Home", icon: <HomeIcon /> },
-  { path: "/game", label: "Play", icon: <GameIcon /> },
+  { path: "/game-mode", label: "Play", icon: <GameIcon /> },
   { path: "/shop", label: "Shop", icon: <ShopIcon /> },
   { path: "/deck-builder", label: "Deck", icon: <DeckIcon /> },
 ]
 
+const isDev = process.env.NODE_ENV === "development"
+
 const MORE_NAV = [
-  { path: "/inventory", label: "Inventory", icon: <ShopIcon /> },
   { path: "/library", label: "Library", icon: <LibraryIcon /> },
   { path: "/achievements", label: "Achievements", icon: <AchievementsIcon /> },
-  { path: "/multiplayer", label: "Multiplayer", icon: <GameIcon /> },
-  { path: "/trading", label: "Trading", icon: <ShopIcon /> },
   { path: "/settings", label: "Settings", icon: <SettingsIcon /> },
+  ...(isDev ? [{ path: "/dev-tools", label: "Dev Tools", icon: <SettingsIcon /> }] : []),
 ]
 
 export function NavigationBar() {
