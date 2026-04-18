@@ -46,12 +46,12 @@ export function InventoryFeature() {
   const getPackImageUrl = (pack: InventoryBoosterPack): string => {
     if (pack.artUrl) return pack.artUrl;
     const artUrlMap: Record<string, string> = {
-      'Beginner': '/attached_assets/Stocks-01Beginner-Pack_1761682038195.png',
-      'Advanced': '/attached_assets/Stocks-01Advanced-Pack_1761682038195.png',
-      'Expert': '/attached_assets/Stocks-01Expert-Pack_1761682038194.png'
+      'Beginner': '/boosters/beginner.png',
+      'Advanced': '/boosters/advanced.png',
+      'Expert': '/boosters/expert.png'
     };
     const rarity = pack.name.split(' ')[0];
-    return artUrlMap[rarity] || '/attached_assets/Stocks-01Beginner-Pack_1761682038195.png';
+    return artUrlMap[rarity] || '/boosters/beginner.png';
   };
 
   const handleOpenPack = async (pack: InventoryBoosterPack) => {

@@ -24,7 +24,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
 
   fetchSeekerStatus: async (walletAddress: string) => {
     try {
-      const response = await fetch(`/api/seeker/status/${walletAddress}`)
+      const response = await fetch(`/api/seeker/status/${walletAddress}`, { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         set({
@@ -45,6 +45,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
       const nonceResponse = await fetch('/api/seeker/nonce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress }),
       })
       if (!nonceResponse.ok) throw new Error('Failed to get verification message')
@@ -64,6 +65,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
       const verifyResponse = await fetch('/api/seeker/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress, message, signature: Array.from(signatureBytes) }),
       })
       if (!verifyResponse.ok) {
@@ -89,6 +91,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
       const nonceResponse = await fetch('/api/seeker/claim-nonce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress }),
       })
       if (!nonceResponse.ok) throw new Error('Failed to get claim nonce')
@@ -104,6 +107,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
       const response = await fetch('/api/seeker/claim-reward', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress, message, signature: Array.from(signatureBytes) }),
       })
       if (!response.ok) {

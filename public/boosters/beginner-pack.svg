@@ -1,0 +1,48 @@
+<svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="280" rx="12" fill="url(#beginnerGradient)"/>
+  
+  <!-- Definitions -->
+  <defs>
+    <linearGradient id="beginnerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Border -->
+  <rect x="4" y="4" width="192" height="272" rx="8" fill="none" stroke="#fff" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Content Area -->
+  <rect x="12" y="20" width="176" height="240" rx="8" fill="#000" opacity="0.2"/>
+  
+  <!-- Title Background -->
+  <rect x="20" y="30" width="160" height="40" rx="6" fill="#000" opacity="0.3"/>
+  
+  <!-- Title Text -->
+  <text x="100" y="55" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="18" font-weight="bold">BEGINNER</text>
+  <text x="100" y="75" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="12">PACK</text>
+  
+  <!-- Central Icon Area -->
+  <circle cx="100" cy="140" r="35" fill="#fff" opacity="0.1"/>
+  <circle cx="100" cy="140" r="30" fill="none" stroke="#fff" stroke-width="2" opacity="0.7"/>
+  
+  <!-- Card Icon -->
+  <rect x="85" y="125" width="12" height="16" rx="1" fill="#fff" opacity="0.9"/>
+  <rect x="90" y="130" width="12" height="16" rx="1" fill="#fff" opacity="0.7"/>
+  <rect x="95" y="135" width="12" height="16" rx="1" fill="#fff" opacity="0.5"/>
+  <rect x="100" y="140" width="12" height="16" rx="1" fill="#fff"/>
+  
+  <!-- Stats -->
+  <text x="100" y="185" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="11" font-weight="bold">5 CARDS</text>
+  <text x="100" y="200" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="9">80% Common</text>
+  <text x="100" y="215" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="9">15% Uncommon</text>
+  <text x="100" y="230" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="9">5% Rare+</text>
+  
+  <!-- Shine Effect -->
+  <rect width="200" height="280" rx="12" fill="url(#shineGradient)"/>
+</svg>

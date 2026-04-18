@@ -8,11 +8,11 @@ interface LoadingScreenProps {
 }
 
 const CHARACTER_IMAGES = [
-  "/attached_assets/Alpha-Loading-ScreenCrimson-Loading-Screen_1755442684371.png",
-  "/attached_assets/Alpha-Loading-ScreenMaya-Loading-Screen_1755442684373.png",
-  "/attached_assets/Alpha-Loading-ScreenMustard-Loading-Screen_1755442684373.png",
-  "/attached_assets/Alpha-Loading-ScreenPine-Loading-Screen_1755442684374.png",
-  "/attached_assets/Alpha-Loading-ScreenRadja-Loading-Screen_1755442684374.png",
+  "/ui/loading/crimson.png",
+  "/ui/loading/maya.png",
+  "/ui/loading/mustard.png",
+  "/ui/loading/pine.png",
+  "/ui/loading/radja.png",
 ]
 
 export function LoadingScreen({ message = "Loading...", backgroundImage }: LoadingScreenProps) {
@@ -31,7 +31,7 @@ export function LoadingScreen({ message = "Loading...", backgroundImage }: Loadi
       <div className="relative z-10 text-center px-4">
         <div className="mb-6">
           <img
-            src="/attached_assets/Logo Spektrum_1760084011907.png"
+            src="/ui/logo.png"
             alt="Spektrum"
             className="w-48 h-auto mx-auto opacity-95"
             onError={e => { e.currentTarget.style.display = "none" }}

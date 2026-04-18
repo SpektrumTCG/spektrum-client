@@ -30,7 +30,7 @@ export function StartFeature() {
       <div className="max-w-md w-full mx-auto text-center flex flex-col items-center">
         <div className="mb-12">
           <img
-            src="/attached_assets/Logo Spektrum_1760084011907.png"
+            src="/ui/logo.png"
             alt="Spektrum Trading Card Game"
             className="w-full max-w-md mx-auto h-auto drop-shadow-lg"
             onError={e => { e.currentTarget.style.display = "none" }}

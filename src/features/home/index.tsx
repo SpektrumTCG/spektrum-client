@@ -9,10 +9,10 @@ import { ProgressTracker } from "@/components/shared/ProgressTracker"
 import { FirstTimeWelcomePopup } from "@/components/shared/FirstTimeWelcomePopup"
 
 const ROLLING_IMAGES = [
-  "/textures/cards/Home Screen_1.webp",
-  "/textures/cards/Home Screen_2.webp",
-  "/textures/cards/Home Screen_3.webp",
-  "/textures/cards/Home Screen_4.webp",
+  "/ui/home/1.webp",
+  "/ui/home/2.webp",
+  "/ui/home/3.webp",
+  "/ui/home/4.webp",
 ]
 
 export function HomeFeature() {
@@ -36,7 +36,7 @@ export function HomeFeature() {
     const check = async () => {
       if (!isConnected || !walletAddress || welcomeCheckDone) return
       try {
-        const res = await fetch(`/api/player/welcome-status/${walletAddress}`)
+        const res = await fetch(`/api/player/welcome-status/${walletAddress}`, { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
           if (!data.hasSeenWelcome) setShowWelcomePopup(true)
@@ -53,6 +53,7 @@ export function HomeFeature() {
       await fetch("/api/player/welcome-seen", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ walletAddress }),
       })
     } catch {}
@@ -77,7 +78,7 @@ export function HomeFeature() {
       <motion.div className="max-w-md mx-auto p-4" initial={{ opacity: 1, y: 0 }}>
         <div className="text-center mb-6">
           <img
-            src="/attached_assets/Logo Spektrum_1760084011907.png"
+            src="/ui/logo.png"
             alt="Spektrum Trading Card Game"
             className="w-full max-w-sm mx-auto h-auto"
             onError={e => { e.currentTarget.style.display = "none" }}

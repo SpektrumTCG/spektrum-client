@@ -18,7 +18,7 @@ export const useCardCatalogStore = create<CardCatalogStore>()((set) => ({
   isLoaded: false,
   loadCatalog: async () => {
     try {
-      const res = await fetch('/api/card-catalog')
+      const res = await fetch('/api/card-catalog', { credentials: 'include' })
       if (!res.ok) return
       const data = await res.json()
       const catalog = new Map<string, CardCatalogEntry>()

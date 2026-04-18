@@ -1,0 +1,7 @@
+<svg width="200" height="280" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="280" fill="#1a1a1a" stroke="#444" stroke-width="2" rx="12"/>
+  <circle cx="100" cy="80" r="25" fill="#666"/>
+  <rect x="75" y="120" width="50" height="60" fill="#666" rx="5"/>
+  <text x="100" y="200" text-anchor="middle" fill="#888" font-family="Arial" font-size="12">Default Avatar</text>
+  <text x="100" y="220" text-anchor="middle" fill="#666" font-family="Arial" font-size="10">Missing Image</text>
+</svg>

@@ -183,7 +183,7 @@ export function DeckBuilderFeature() {
       if (!walletAddress) return;
 
       try {
-        await fetch(`/api/decks/${deckId}`, { method: 'DELETE' });
+        await fetch(`/api/decks/${deckId}`, { method: 'DELETE', credentials: 'include' });
       } catch {
         // database delete is supplementary
       }

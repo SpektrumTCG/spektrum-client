@@ -78,15 +78,9 @@ interface MultiplayerState {
   setIsMultiplayerSession: (isSession: boolean) => void;
 }
 
-// Dynamic socket URL based on current host
-const getSocketURL = () => {
-  if (typeof window === 'undefined') return 'ws://localhost:5000';
-
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-
-  return `${protocol}//${host}`;
-};
+// Socket URL — points directly to the Express server (not Next.js dev port)
+const getSocketURL = () =>
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000';
 
 export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   // Initial state

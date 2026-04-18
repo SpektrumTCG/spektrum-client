@@ -141,6 +141,7 @@ export const useDeckStore = create<DeckStore>()(
             await fetch('/api/decks/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({
                 deckId: newDeck.id,
                 deckName: name,
@@ -190,6 +191,7 @@ export const useDeckStore = create<DeckStore>()(
               await fetch('/api/decks/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({
                   deckId: updatedDeck.id,
                   deckName: updatedDeck.name,
@@ -237,6 +239,7 @@ export const useDeckStore = create<DeckStore>()(
             await fetch('/api/decks/set-active', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ deckId: id })
             });
             toastInner.success(`Active deck: ${deck.name}`, { duration: 2000 });
@@ -365,7 +368,7 @@ export const useDeckStore = create<DeckStore>()(
             return;
           }
 
-          const response = await fetch(`/api/cards/${walletAddress}`);
+          const response = await fetch(`/api/cards/${walletAddress}`, { credentials: 'include' });
           const data = await response.json();
           const dbCards = data.cards || [];
 
@@ -479,7 +482,7 @@ export const useDeckStore = create<DeckStore>()(
             return;
           }
 
-          const response = await fetch(`/api/decks/${walletAddress}`);
+          const response = await fetch(`/api/decks/${walletAddress}`, { credentials: 'include' });
           if (!response.ok) {
             return;
           }

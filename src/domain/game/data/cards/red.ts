@@ -46,7 +46,7 @@ export const borahTraineeA: AvatarCard = {
       damage: 1
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Borah Trainee A.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee A.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-001'
 };
@@ -71,7 +71,7 @@ export const borahTraineeB: AvatarCard = {
       damage: 2
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Borah Trainee B.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee B.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-002'
 };
@@ -97,7 +97,7 @@ export const borahTraineeC: AvatarCard = {
       effect: 'If opponent Active Avatar has Bleed Counter, this Skill1 Damage become 3'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Borah Trainee C.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee C.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-003'
 };
@@ -122,7 +122,7 @@ export const kobarTraineeA: AvatarCard = {
       damage: 1
     }
   ],
-  imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee A.webp',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee A.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-004'
 };
@@ -147,7 +147,7 @@ export const kobarTraineeB: AvatarCard = {
       damage: 2
     }
   ],
-  imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee B.webp',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee B.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-005'
 };
@@ -175,7 +175,7 @@ export const kobarTraineeC: AvatarCard = {
       effectTarget: 'opponent_active'
     }
   ],
-  imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee C.webp',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee C.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-006'
 };
@@ -200,7 +200,7 @@ export const repoGirl: AvatarCard = {
       damage: 2
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Repo Girl.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Repo Girl.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-007'
 };
@@ -228,7 +228,7 @@ export const shamanKuhaka: AvatarCard = {
       effectTarget: 'opponent_active'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Shaman A.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman A.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-008'
 };
@@ -256,7 +256,7 @@ export const shamanKujana: AvatarCard = {
       effectTarget: 'select_opponent_avatar'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar Modified_Ava - Shaman B_1754323977840.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman B.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-009'
 };
@@ -281,7 +281,7 @@ export const thug: AvatarCard = {
       damage: 1
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Thug A.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Thug A.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-010'
 };
@@ -307,7 +307,7 @@ export const witchTrainee: AvatarCard = {
       effect: 'Flip a coin, if head, opponent defending Avatar get 2 Bleed Counters'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Witch Trainee.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Witch Trainee.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-011'
 };
@@ -343,7 +343,7 @@ export const banaspati: AvatarCard = {
       effect: 'If opponent Active Avatar has Bleed Counter, heal 2 damage to one of your Reserve Avatar.'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Banaspati.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-012'
 };
@@ -378,7 +378,7 @@ export const banaspatiFemale: AvatarCard = {
       effect: 'If opponent Active Avatar is wind Element Avatar, this Skill2 Damage become 11'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar Modified_Ava - Banaspati_1754324548027.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-013'
 };
@@ -413,7 +413,7 @@ export const boarBerserker: AvatarCard = {
       effect: 'Player may discard a spektra card from spektra pile or used spektra pile. If the player does that, this Skill2Damage become 23'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Boar Berserker.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Berserker.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-014'
 };
@@ -440,7 +440,7 @@ export const boarWitch: AvatarCard = {
       effect: 'After attack, heal 2 damage from this Avatar'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Boar Witch.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-015'
 };
@@ -467,7 +467,7 @@ export const boarWitchMythic: AvatarCard = {
       effect: 'After attack, heal 2 damage from this Avatar'
     }
   ],
-  imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch, Super Rare.webp',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch, Super Rare.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-015-MYTHIC'
 };
@@ -504,7 +504,7 @@ export const crimson: AvatarCard = {
       effect: 'Player may discard a spektra card from spektra pile or used spektra pile. If the player does that, this Skill2Damage become 19'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Crimson.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Crimson.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-016'
 };
@@ -539,7 +539,7 @@ export const scarlet: AvatarCard = {
       effect: 'Player may discard a spektra card from spektra pile or used spektra pile. If the player does that, this Skill2Damage become 19'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Scarlet.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Scarlet.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-017'
 };
@@ -574,7 +574,7 @@ export const daisy: AvatarCard = {
       effect: 'If opponent Active Avatar is wind Element Avatar, this Skill2 Damage become 13'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Daisy.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-018'
 };
@@ -609,7 +609,7 @@ export const daisyMythic: AvatarCard = {
       effect: 'If opponent Active Avatar is wind Element Avatar, this Skill2 Damage become 13'
     }
   ],
-  imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy, Super Rare.webp',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy, Super Rare.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-018-MYTHIC'
 };
@@ -644,7 +644,7 @@ export const radja: AvatarCard = {
       effect: 'If opponent Active Avatar is wind Element Avatar, this Skill2 Damage become 111'
     }
   ],
-  imagePath: '/attached_assets/Red Elemental Avatar_Ava - Radja.png',
+  imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Radja.webp',
   expansion: 'Fire and Water',
   cardNumber: 'RED-019'
 };

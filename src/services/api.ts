@@ -1,16 +1,15 @@
 // src/services/api.ts
-// Base API service — all backend calls go through here.
-// Replace BASE_URL with your Express server URL.
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"
+// All HTTP API calls go through here.
+// Relative /api/* paths are proxied by Next.js to the Express server (next.config.ts rewrites).
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(path, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options,
-  })
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`)
-  return res.json() as Promise<T>
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
+  return res.json() as Promise<T>;
 }
 
 export const api = {
@@ -20,4 +19,4 @@ export const api = {
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
-}
+};

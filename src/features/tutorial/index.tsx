@@ -34,8 +34,8 @@ export function TutorialFeature() {
       setRitualCompleted(false);
 
       Promise.all([
-        fetch(`/api/player/ritual-status/${walletAddress}`).then(r => r.ok ? r.json() : null),
-        fetch(`/api/player/tutorial-status/${walletAddress}`).then(r => r.ok ? r.json() : null)
+        fetch(`/api/player/ritual-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+        fetch(`/api/player/tutorial-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
       ]).then(([ritualData, tutorialData]) => {
         if (ritualData) {
           setRitualCompleted(ritualData.hasCompletedRitual === true);
@@ -69,6 +69,7 @@ export function TutorialFeature() {
       fetch('/api/player/tutorial-progress', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress, currentStep: step, completedSteps: Array.from(completed) })
       }).catch(() => {});
     }
@@ -111,6 +112,7 @@ export function TutorialFeature() {
       fetch('/api/player/tutorial-progress', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ walletAddress, completed: true })
       }).catch(() => {});
     }
@@ -136,6 +138,7 @@ export function TutorialFeature() {
         await fetch('/api/player/complete-ritual', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ walletAddress, faction, element, starterDeckId: deckId })
         });
       } catch { /* silently fail */ }

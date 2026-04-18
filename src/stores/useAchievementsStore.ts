@@ -240,7 +240,7 @@ export const useAchievementsStore = create<AchievementsStore>()((set, get) => ({
 
   syncWithServer: async (walletAddress: string) => {
     try {
-      const response = await fetch(`/api/achievements/${walletAddress}`);
+      const response = await fetch(`/api/achievements/${walletAddress}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
 
@@ -281,6 +281,7 @@ export const useAchievementsStore = create<AchievementsStore>()((set, get) => ({
       const response = await fetch(`/api/achievements/${walletAddress}/${achievementId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ progress })
       });
       if (response.ok) {

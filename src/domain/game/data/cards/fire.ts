@@ -32,7 +32,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Witch Trainee.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Witch Trainee.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-001'
   },
@@ -58,7 +58,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman B.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-002'
   },
@@ -83,7 +83,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Repo Girl.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Repo Girl.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-003'
   },
@@ -108,7 +108,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Thug A.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Thug A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-004'
   },
@@ -133,7 +133,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman A.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Shaman A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-005'
   },
@@ -158,7 +158,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Goldie.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Goldie.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-006'
   },
@@ -192,7 +192,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee A.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-007'
   },
@@ -217,7 +217,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee B.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-008'
   },
@@ -251,7 +251,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee C.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Kobar Trainee C.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-009'
   },
@@ -276,7 +276,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee A.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-010'
   },
@@ -302,7 +302,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee B.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-011'
   },
@@ -327,7 +327,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee C.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Borah Trainee C.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-012'
   },
@@ -369,7 +369,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Radja.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Radja.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-013'
   },
@@ -411,7 +411,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Radja, Rare.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Radja, Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-014'
   },
@@ -454,7 +454,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Mera.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Mera.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-015'
   },
@@ -496,7 +496,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Crimson.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Crimson.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-016'
   },
@@ -538,7 +538,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Dara.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Dara.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-017'
   },
@@ -572,7 +572,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-018'
   },
@@ -606,7 +606,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy, Super Rare.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Daisy, Super Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-019'
   },
@@ -648,7 +648,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Scarlet.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Scarlet.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-020'
   },
@@ -691,7 +691,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Eater.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Eater.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-021'
   },
@@ -734,7 +734,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Eater, Rare.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Eater, Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-022'
   },
@@ -777,7 +777,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Demon.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Demon.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-023'
   },
@@ -820,7 +820,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Demon, Rare.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Blood Demon, Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-024'
   },
@@ -871,7 +871,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Berserker.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Berserker.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-025'
   },
@@ -905,7 +905,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditions: []
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-026'
   },
@@ -945,7 +945,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditionValue: 1
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-027'
   },
@@ -985,7 +985,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         conditionValue: 1
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch, Super Rare.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Boar Witch, Super Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-028'
   },
@@ -1027,7 +1027,7 @@ export const newFireAvatarCards: AvatarCard[] = [
         ]
       },
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati Female.webp',
+    imagePath: '/cards/GENESIS/fire/avatars/Red Elemental Avatar for Apps_Ava - Banaspati Female.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-029'
   },
@@ -1043,7 +1043,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire'],
     description: 'Deal 2 damage to one enemy Avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Flame Flicker.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Flame Flicker.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1059,7 +1059,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'neutral'],
     description: 'Deal 1 damage to opponent active avatar and 1 damage to each opponent reserve avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Heat Resonance.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Heat Resonance.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1076,7 +1076,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire'],
     description: 'Heal 2 HP from your active avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Inferno Fuel.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Inferno Fuel.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     subType: 'healing',
@@ -1092,7 +1092,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'neutral'],
     description: 'Deal 2 damage to all opponent active and reserve avatars.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Searing Flame.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Searing Flame.webp',
     rarity: 'Uncommon',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1108,7 +1108,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'neutral', 'neutral'],
     description: 'Draw 2 card from your deck.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Burning Sight.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Burning Sight.webp',
     rarity: 'Uncommon',
     expansion: 'Fire and Water',
     subType: 'draw',
@@ -1124,7 +1124,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'fire', 'neutral'],
     description: 'Deal 5 damage to enemy Active Avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Wild Combustion.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Wild Combustion.webp',
     rarity: 'Super Rare',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1140,7 +1140,7 @@ export const newFireSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'fire', 'fire', 'neutral'],
     description: 'Deal 5 damage into 1 of your opponent avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Flame of Devastation.webp',
+    art: '/cards/GENESIS/fire/spells/Red Elemental Spell for Apps_Spell - Flame of Devastation.webp',
     rarity: 'Super Rare',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1160,7 +1160,7 @@ export const newFireQuickSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire'],
     description: 'Deal 1 damage to one enemy Avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Ember Spark.webp',
+    art: '/cards/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Ember Spark.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1176,7 +1176,7 @@ export const newFireQuickSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'neutral'],
     description: 'Deal 1 damage to opponent active avatar and 1 damage to one selected active or reserve avatar.',
-    art: '/attached_assets/card_images/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Volcanic Boost.webp',
+    art: '/cards/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Volcanic Boost.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     subType: 'damage',
@@ -1193,7 +1193,7 @@ export const newFireQuickSpellCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'neutral', 'neutral'],
     description: 'Target avatar get 1 shield counter.',
-    art: '/attached_assets/card_images/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Spark Shield.webp',
+    art: '/cards/GENESIS/fire/quickspells/Red Elemental Spell for Apps_Quick Spell - Spark Shield.webp',
     rarity: 'Uncommon',
     expansion: 'Fire and Water',
     subType: 'equipment',
@@ -1213,7 +1213,7 @@ export const newFireRitualArmorCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'fire', 'fire'],
     description: 'Equipped avatar gain +2 damage in their skills',
-    art: '/attached_assets/card_images/GENESIS/fire/ritualarmor/Red Elemental Spell for Apps_Ritual Armor - Burning Armor.webp',
+    art: '/cards/GENESIS/fire/ritualarmor/Red Elemental Spell for Apps_Ritual Armor - Burning Armor.webp',
     rarity: 'Super Rare',
     expansion: 'Fire and Water',
     subType: 'equipment',
@@ -1236,7 +1236,7 @@ export const newFireRitualArmorCards: ActionCard[] = [
     element: 'fire',
     spektraCost: ['fire', 'fire', 'fire', 'fire', 'neutral'],
     description: 'Everytime equipped avatar get damage from opponent Avatar, this card deal 2 damage to that card.',
-    art: '/attached_assets/card_images/GENESIS/fire/ritualarmor/Red Elemental Spell for Apps_Ritual Armor - Boiled Armor.webp',
+    art: '/cards/GENESIS/fire/ritualarmor/Red Elemental Spell for Apps_Ritual Armor - Boiled Armor.webp',
     rarity: 'Super Rare',
     expansion: 'Fire and Water',
     subType: 'equipment',
@@ -1265,7 +1265,7 @@ export const newFireFieldCards: FieldCard[] = [
     description: 'Fire element avatars on both sides gain +1 damage in their skills',
     passiveEffect: 'All Fire element avatars on field gain +1 damage to all their skills',
     affect1: 'Fire Avatar Damage +1',
-    art: '/attached_assets/card_images/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Spell - Burning Stage.webp',
+    art: '/cards/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Spell - Burning Stage.webp',
     rarity: 'Uncommon',
     expansion: 'Fire and Water',
     modifierType: 'skill_damage_boost',
@@ -1282,7 +1282,7 @@ export const newFireFieldCards: FieldCard[] = [
     description: 'Non Fire element avatar, get 1 damage everytime its user draw a card.',
     passiveEffect: 'Non-Fire element avatars take 1 damage whenever their controller draws a card',
     affect1: 'Draw Damage to Non-Fire',
-    art: '/attached_assets/card_images/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Spell - Hell Stage.webp',
+    art: '/cards/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Spell - Hell Stage.webp',
     rarity: 'Super Rare',
     expansion: 'Fire and Water',
     trigger: {
@@ -1302,7 +1302,7 @@ export const newFireFieldCards: FieldCard[] = [
     description: 'All Fire element avatar, heal 1 damage everytime its user draw a card.',
     passiveEffect: 'All Fire element avatars heal 1 damage whenever their controller draws a card',
     affect1: 'Draw Healing for Fire',
-    art: '/attached_assets/card_images/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Stage - Ashen Battlefield.webp',
+    art: '/cards/GENESIS/fire/fieldspells/Red Elemental Spell for Apps_Field Stage - Ashen Battlefield.webp',
     rarity: 'Common',
     expansion: 'Fire and Water',
     trigger: {

@@ -43,7 +43,7 @@ class AnteMatchmakingService {
   connect() {
     if (this.socket?.connected) return;
 
-    const socketUrl = window.location.origin;
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000';
     this.socket = io(socketUrl, {
       path: '/ante-socket',
       transports: ['websocket', 'polling']

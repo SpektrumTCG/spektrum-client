@@ -154,15 +154,15 @@ export const useBoosterVariantStore = create<BoosterVariantStore>()(
 
       generatePackVariants: (pack) => {
         const artUrlMap: Record<string, string> = {
-          'Beginner': '/attached_assets/Stocks-01Beginner-Pack_1761682038195.png',
-          'Advanced': '/attached_assets/Stocks-01Advanced-Pack_1761682038195.png',
-          'Expert': '/attached_assets/Stocks-01Expert-Pack_1761682038194.png'
+          'Beginner': '/boosters/beginner.png',
+          'Advanced': '/boosters/advanced.png',
+          'Expert': '/boosters/expert.png'
         };
 
         return variantTemplates.map((template, index) => ({
           id: `${pack.id}-variant-${index + 1}`,
           name: `${template.rarity} ${pack.name}`,
-          artUrl: artUrlMap[template.rarity] || `/assets/shared/boosters/${template.rarity.toLowerCase()}-pack.svg`,
+          artUrl: artUrlMap[template.rarity] || `/boosters/${template.rarity.toLowerCase()}-pack.svg`,
           ...template
         }));
       },

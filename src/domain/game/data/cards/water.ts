@@ -31,7 +31,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Fishmonger.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Fishmonger.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-045'
   },
@@ -57,7 +57,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Shaman B.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Shaman B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-046'
   },
@@ -82,7 +82,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Gal.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Gal.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-047'
   },
@@ -107,7 +107,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Fisherman.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Fisherman.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-048'
   },
@@ -132,7 +132,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Rich Tug.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Rich Tug.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-049'
   },
@@ -166,7 +166,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Shaman A.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Shaman A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-050'
   },
@@ -191,7 +191,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee A.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-051'
   },
@@ -216,7 +216,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee B.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-052'
   },
@@ -250,7 +250,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee C.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Kobar Trainee C.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-053'
   },
@@ -275,7 +275,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee A.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee A.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-054'
   },
@@ -301,7 +301,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee B.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee B.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-055'
   },
@@ -326,7 +326,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee C.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Borah Trainee C.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-056'
   },
@@ -359,7 +359,7 @@ export const blueElementalCards: AvatarCard[] = [
       effect: 'Enemy Fire Element Avatars get -2 attack damage in their skills.',
       scope: 'active_or_reserve'
     },
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Alice.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Alice.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-057'
   },
@@ -392,7 +392,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Clear.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Clear.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-058'
   },
@@ -426,7 +426,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Maya.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Maya.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-059'
   },
@@ -460,7 +460,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Maya, Rare.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Maya, Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-060'
   },
@@ -502,7 +502,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Arctic.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Arctic.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-061'
   },
@@ -544,7 +544,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Langit.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Langit.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-062'
   },
@@ -586,7 +586,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Sapphire.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Sapphire.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-063'
   },
@@ -628,7 +628,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Sapphire, Super Rare.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Sapphire, Super Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-064'
   },
@@ -679,7 +679,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Banyu Ghost.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Banyu Ghost.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-065'
   },
@@ -712,7 +712,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Lake Guardian.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Lake Guardian.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-066'
   },
@@ -754,7 +754,7 @@ export const blueElementalCards: AvatarCard[] = [
       effect: 'Enemy non Kuhaka-Kujana type avatars have -1 attack damage in their skills',
       scope: 'active'
     },
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_The Count.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_The Count.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-067'
   },
@@ -796,7 +796,7 @@ export const blueElementalCards: AvatarCard[] = [
       effect: 'Enemy non Kuhaka-Kujana type avatars have -1 attack damage in their skills',
       scope: 'active'
     },
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_The Count, Super Rare.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_The Count, Super Rare.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-068'
   },
@@ -839,7 +839,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Banyu Ghost Fem.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Banyu Ghost Fem.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-069'
   },
@@ -881,7 +881,7 @@ export const blueElementalCards: AvatarCard[] = [
         ]
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Pontia.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Pontia.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-070'
   },
@@ -914,7 +914,7 @@ export const blueElementalCards: AvatarCard[] = [
         conditions: []
       }
     ],
-    imagePath: '/attached_assets/card_images/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Whirlpool Demon.webp',
+    imagePath: '/cards/GENESIS/water/avatars/Blue Elemental Avatar for Apps_Whirlpool Demon.webp',
     expansion: 'Fire and Water',
     cardNumber: 'GEN-071'
   }
@@ -927,7 +927,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Telang Tea.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Telang Tea.webp',
     spektraCost: ['water', 'water'],
     expansion: 'Fire and Water',
     effectType: 'heal',
@@ -941,7 +941,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Ocean Memory.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Ocean Memory.webp',
     spektraCost: ['water'],
     expansion: 'Fire and Water',
     effectType: 'draw_discard',
@@ -956,7 +956,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Liquid Book.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Liquid Book.webp',
     spektraCost: ['water', 'neutral'],
     expansion: 'Fire and Water',
     effectType: 'reveal_choose',
@@ -970,7 +970,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Dew Drop.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Dew Drop.webp',
     spektraCost: ['water', 'water'],
     expansion: 'Fire and Water',
     effectType: 'peek_place_draw',
@@ -985,7 +985,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Healing Current.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Healing Current.webp',
     spektraCost: ['water', 'water', 'neutral'],
     expansion: 'Fire and Water',
     effectType: 'heal',
@@ -999,7 +999,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Deepsea Insight.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Deepsea Insight.webp',
     spektraCost: ['water'],
     expansion: 'Fire and Water',
     effectType: 'reveal_choose',
@@ -1013,7 +1013,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Water Current.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Water Current.webp',
     spektraCost: ['water', 'water', 'water', 'neutral'],
     expansion: 'Fire and Water',
     effectType: 'discard_draw',
@@ -1027,7 +1027,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'ritualArmor',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/ritualarmor/Blue Elemental Spell for Apps_Ritual Armor - Glacier Armor.webp',
+    imagePath: '/cards/GENESIS/water/ritualarmor/Blue Elemental Spell for Apps_Ritual Armor - Glacier Armor.webp',
     spektraCost: ['water', 'water', 'water', 'water'],
     expansion: 'Fire and Water',
     cardNumber: 'GEN-079',
@@ -1047,7 +1047,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'ritualArmor',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/ritualarmor/Blue Elemental Spell for Apps_Ritual Armor - Frozen Body.webp',
+    imagePath: '/cards/GENESIS/water/ritualarmor/Blue Elemental Spell for Apps_Ritual Armor - Frozen Body.webp',
     spektraCost: ['water', 'water', 'water', 'neutral', 'neutral'],
     expansion: 'Fire and Water',
     cardNumber: 'GEN-080',
@@ -1066,7 +1066,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'quickSpell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Relearn.webp',
+    imagePath: '/cards/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Relearn.webp',
     spektraCost: ['water', 'neutral', 'neutral'],
     expansion: 'Fire and Water',
     effectType: 'draw',
@@ -1080,7 +1080,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'spell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Check.webp',
+    imagePath: '/cards/GENESIS/water/spells/Blue Elemental Spell for Apps_Spell - Check.webp',
     spektraCost: ['water'],
     expansion: 'Fire and Water',
     effectType: 'peek_place',
@@ -1094,7 +1094,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'quickSpell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Water Shield.webp',
+    imagePath: '/cards/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Water Shield.webp',
     spektraCost: ['water', 'water'],
     effect: 'Reduce next 2 damage from incoming damage to target Avatar this turn.',
     expansion: 'Fire and Water',
@@ -1106,7 +1106,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'quickSpell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Energize.webp',
+    imagePath: '/cards/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Energize.webp',
     spektraCost: ['water', 'water', 'neutral', 'neutral'],
     effect: 'Heal 3 HP to all of your Avatar in field.',
     expansion: 'Fire and Water',
@@ -1118,7 +1118,7 @@ export const blueElementalSpells: ActionCard[] = [
     type: 'quickSpell',
     element: 'water',
     rarity: 'Common',
-    imagePath: '/attached_assets/card_images/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Blink.webp',
+    imagePath: '/cards/GENESIS/water/quickspells/Blue Elemental Spell for Apps_Quick Spell - Blink.webp',
     spektraCost: ['water', 'water', 'neutral'],
     effect: 'Prevents next 1 red colored quick spell.',
     expansion: 'Fire and Water',
@@ -1133,7 +1133,7 @@ export const blueElementalFieldCards: FieldCard[] = [
     type: 'field',
     element: 'water',
     rarity: 'Common',
-    art: '/attached_assets/card_images/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - Lake Stage.webp',
+    art: '/cards/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - Lake Stage.webp',
     spektraCost: ['water', 'water', 'water'],
     description: 'Water element Avatar gain +1 damage in their skills',
     passiveEffect: 'All Water element avatars gain +1 damage to all their skills',
@@ -1149,7 +1149,7 @@ export const blueElementalFieldCards: FieldCard[] = [
     type: 'field',
     element: 'water',
     rarity: 'Common',
-    art: '/attached_assets/card_images/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - Glacier Stage.webp',
+    art: '/cards/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - Glacier Stage.webp',
     spektraCost: ['water', 'water', 'water', 'neutral', 'neutral'],
     description: 'Fire element Avatar skill get -2 damage in their skills',
     passiveEffect: 'All Fire element avatars get -2 damage to all their skills',
@@ -1165,7 +1165,7 @@ export const blueElementalFieldCards: FieldCard[] = [
     type: 'field',
     element: 'water',
     rarity: 'Common',
-    art: '/attached_assets/card_images/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - City River.webp',
+    art: '/cards/GENESIS/water/fieldspells/Blue Elemental Spell for Apps_Field Spell - City River.webp',
     spektraCost: ['water', 'water', 'neutral', 'neutral'],
     description: 'Everytime Water element Avatar using skill, its user draw 1 card from deck',
     passiveEffect: 'When a Water element avatar uses a skill, draw 1 card',

@@ -9,7 +9,7 @@ interface SafeCardImageProps {
 }
 
 export function SafeCardImage({ src, alt, className, style, onError }: SafeCardImageProps) {
-  const fallbackSrc = "/attached_assets/card-placeholder.png"
+  const fallbackSrc = "/cards/placeholder.png"
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget

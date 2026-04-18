@@ -5,27 +5,24 @@ type CardLike = { art?: string; imagePath?: string; type?: string } | AvatarCard
 // Map of broken image paths to corrected ones
 const IMAGE_CORRECTIONS: Record<string, string> = {
   // Default fallback images by card type
-  DEFAULT_AVATAR: '/textures/cards/default_avatar.svg',
-  DEFAULT_SPELL: '/textures/cards/default_avatar.svg',
-  DEFAULT_QUICK_SPELL: '/textures/cards/default_avatar.svg',
+  DEFAULT_AVATAR: '/cards/default_avatar.svg',
+  DEFAULT_SPELL: '/cards/default_avatar.svg',
+  DEFAULT_QUICK_SPELL: '/cards/default_avatar.svg',
 }
 
-// Migrate old image paths to new GENESIS folder structure
+// Migrate old image paths to new structure
 function migrateToGenesisPath(path: string): string {
   if (!path) return path
 
-  const oldPathPatterns = [
-    '/attached_assets/card_images/fire/',
-    '/attached_assets/card_images/water/',
-    '/attached_assets/card_images/neutral/',
+  const migrations: [string, string][] = [
+    ['/attached_assets/card_images/GENESIS/', '/cards/GENESIS/'],
+    ['/attached_assets/card_images/fire/', '/cards/GENESIS/fire/'],
+    ['/attached_assets/card_images/water/', '/cards/GENESIS/water/'],
+    ['/attached_assets/card_images/neutral/', '/cards/GENESIS/neutral/'],
   ]
 
-  for (const oldPattern of oldPathPatterns) {
+  for (const [oldPattern, newPattern] of migrations) {
     if (path.includes(oldPattern)) {
-      const newPattern = oldPattern.replace(
-        '/attached_assets/card_images/',
-        '/attached_assets/card_images/GENESIS/'
-      )
       return path.replace(oldPattern, newPattern)
     }
   }
@@ -58,17 +55,13 @@ export function getFixedCardImagePath(card: CardLike): string {
   let imagePath = card.art || card.imagePath
 
   if (!imagePath) {
-    return '/textures/cards/default_avatar.svg'
+    return '/cards/default_avatar.svg'
   }
 
   imagePath = migrateToGenesisPath(imagePath)
 
   if (IMAGE_CORRECTIONS[imagePath]) {
     return encodeImagePath(IMAGE_CORRECTIONS[imagePath])
-  }
-
-  if (imagePath.startsWith('/textures/cards/')) {
-    return imagePath
   }
 
   return encodeImagePath(imagePath)
@@ -85,11 +78,11 @@ export function handleCardImageError(
   if (imagePath && IMAGE_CORRECTIONS[imagePath]) {
     target.src = IMAGE_CORRECTIONS[imagePath]
   } else if (card.type === 'avatar') {
-    target.src = IMAGE_CORRECTIONS['DEFAULT_AVATAR'] || '/textures/cards/card_back.png'
+    target.src = IMAGE_CORRECTIONS['DEFAULT_AVATAR'] || '/cards/card_back.png'
   } else if (card.type === 'quickSpell') {
-    target.src = IMAGE_CORRECTIONS['DEFAULT_QUICK_SPELL'] || '/textures/cards/card_back.png'
+    target.src = IMAGE_CORRECTIONS['DEFAULT_QUICK_SPELL'] || '/cards/card_back.png'
   } else {
-    target.src = IMAGE_CORRECTIONS['DEFAULT_SPELL'] || '/textures/cards/card_back.png'
+    target.src = IMAGE_CORRECTIONS['DEFAULT_SPELL'] || '/cards/card_back.png'
   }
 
   target.onerror = null
