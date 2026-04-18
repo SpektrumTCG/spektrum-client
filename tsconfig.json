@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "old-app", "src/features/blockchain"]
+  "exclude": ["node_modules", "old-app", "src/features/blockchain", "scripts", "spektrum-v1"]
 }
