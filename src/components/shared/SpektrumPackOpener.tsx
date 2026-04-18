@@ -135,7 +135,7 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
               <div className="flex justify-center gap-1">
                 {cards.map((_, i) => (
                   <div key={i} className="w-10 h-14 rounded shadow-lg overflow-hidden">
-                    <img src="/card_back.png" alt="Card" className="w-full h-full object-cover" />
+                    <img src="/cards/card_back.png" alt="Card" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -227,7 +227,7 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
                         className="absolute inset-0 rounded-lg overflow-hidden shadow-xl"
                         style={{ backfaceVisibility: 'hidden' }}
                       >
-                        <img src="/card_back.png" alt="Card Back" className="w-full h-full object-cover" />
+                        <img src="/cards/card_back.png" alt="Card Back" className="w-full h-full object-cover" />
                       </div>
 
                       <div
