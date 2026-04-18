@@ -149,7 +149,7 @@
   }
 
   body {
-    background-color: var(--spektrum-bg);
+    background-color: #ffffff;
     color: var(--spektrum-text);
     font-family: Inter, sans-serif;
     margin: 0;
