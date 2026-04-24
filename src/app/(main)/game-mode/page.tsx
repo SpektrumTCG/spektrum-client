@@ -8,7 +8,6 @@ import { useGameMode } from '@/features/game/stores/useGameMode'
 import { useGameStore } from '@/features/game/stores/useGameStore'
 import { useDeckStore } from '@/stores/useDeckStore'
 import { useWalletStore } from '@/stores/useWalletStore'
-import { BackButton } from '@/components/shared/BackButton'
 import type { AIDifficulty } from '@/features/game/stores/useGameMode'
 
 export default function GameModePage() {
@@ -101,8 +100,7 @@ export default function GameModePage() {
   }
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto">
-      <BackButton />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="w-full max-w-md mx-auto p-4">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-gray-600">Game Mode</h1>

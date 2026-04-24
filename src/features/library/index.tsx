@@ -130,7 +130,7 @@ export function LibraryFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto">
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-gray-600">Card Library</h1>

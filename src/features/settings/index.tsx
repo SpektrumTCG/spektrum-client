@@ -7,7 +7,6 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useAudio } from '@/stores/useAudioStore';
 import { useUIScale } from '@/stores/useUIStore';
 import { useWalletStore } from '@/stores/useWalletStore';
-import { BackButton } from '@/components/shared/BackButton';
 
 export function SettingsFeature() {
   const router = useRouter();
@@ -99,8 +98,7 @@ export function SettingsFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
-      <BackButton />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-3 sm:p-4 w-full">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2 text-gray-600">Settings</h1>

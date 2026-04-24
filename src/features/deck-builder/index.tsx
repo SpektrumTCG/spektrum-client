@@ -8,7 +8,6 @@ import type { Card, ElementType, AvatarCard, RarityType } from '@/domain/game/ty
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, Eye } from 'lucide-react';
-import { BackButton } from '@/components/shared/BackButton';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { getRarityColor, getRarityTextColor, getOriginalCardId, countOwnedCopies } from '@/lib/rarityUtils';
 import { useWalletStore } from '@/stores/useWalletStore';
@@ -253,8 +252,7 @@ export function DeckBuilderFeature() {
   }
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
-      <BackButton />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-6xl mx-auto p-4">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-gray-600">Deck Builder</h1>

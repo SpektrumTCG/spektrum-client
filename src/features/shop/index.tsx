@@ -1,14 +1,12 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { BackButton } from "@/components/shared/BackButton"
 
 export function ShopFeature() {
   const router = useRouter()
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto">
-      <BackButton />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="max-w-md mx-auto p-4 w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-gray-600">Shop</h1>

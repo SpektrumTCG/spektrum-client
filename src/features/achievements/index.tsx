@@ -211,7 +211,7 @@ export function AchievementsFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-orange-400 mb-2">
