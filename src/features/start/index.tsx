@@ -16,14 +16,15 @@ export function StartFeature() {
 
   const handlePlayGame = () => {
     setIsLoading(true)
-    // TODO: re-enable navigation after loading screen is finalized
-    // setTimeout(() => {
-    //   router.push("/home")
-    // }, 2000)
   }
 
   if (isLoading) {
-    return <LoadingScreen message="Entering the world of Spektrum..." />
+    return (
+      <LoadingScreen
+        message="Entering the world of Spektrum..."
+        onComplete={() => router.push("/home")}
+      />
+    )
   }
 
   return (
