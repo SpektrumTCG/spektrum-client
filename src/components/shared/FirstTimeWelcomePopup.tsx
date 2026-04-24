@@ -27,7 +27,7 @@ export function FirstTimeWelcomePopup({ isOpen, onClose, onDismiss }: FirstTimeW
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
-      <div className="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border-2 border-orange-500/60 rounded-xl shadow-2xl max-w-md w-full p-6 relative overflow-hidden">
+      <div className="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border-2 border-orange-500/60 rounded-xl shadow-2xl max-w-sm w-full p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500" />
         <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent pointer-events-none" />
 
