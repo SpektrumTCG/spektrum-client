@@ -1,51 +1,71 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useState } from "react"
 
 interface LoadingScreenProps {
   message?: string
-  backgroundImage?: string
+  playerName?: string
 }
 
-const CHARACTER_IMAGES = [
-  "/ui/loading/crimson.png",
-  "/ui/loading/maya.png",
-  "/ui/loading/mustard.png",
-  "/ui/loading/pine.png",
-  "/ui/loading/radja.png",
-]
+export function LoadingScreen({ message = "Loading...", playerName = "Player Name" }: LoadingScreenProps) {
+  const [progress, setProgress] = useState(0)
 
-export function LoadingScreen({ message = "Loading...", backgroundImage }: LoadingScreenProps) {
-  const randomCharacter = useMemo(
-    () => CHARACTER_IMAGES[Math.floor(Math.random() * CHARACTER_IMAGES.length)],
-    []
-  )
-  const finalBg = backgroundImage || randomCharacter
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + Math.random() * 15 + 5
+      })
+    }, 300)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900"
-      style={{ backgroundImage: `url(${finalBg})`, backgroundSize: "cover", backgroundPosition: "center" }}
-    >
-      <div className="absolute inset-0 bg-black/60" />
-      <div className="relative z-10 text-center px-4">
-        <div className="mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+      {/* Mobile container */}
+      <div className="relative w-full max-w-[480px] h-full flex flex-col overflow-hidden">
+        {/* Header bar */}
+        <div className="w-full shrink-0">
+          <img
+            src="/ui/v2-ui/bg-header.png"
+            alt=""
+            className="w-full h-auto block"
+          />
+        </div>
+
+        {/* Logo */}
+        <div className="shrink-0 px-8 mt-3">
           <img
             src="/ui/logo.png"
-            alt="Spektrum"
-            className="w-48 h-auto mx-auto opacity-95"
-            onError={e => { e.currentTarget.style.display = "none" }}
+            alt="Spektrum Trading Card Game"
+            className="w-48 h-auto mx-auto"
           />
         </div>
-        <div className="mb-6 flex justify-center">
-          <div
-            className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-orange-500 border-r-orange-500"
-            style={{ boxShadow: "0 0 20px rgba(249, 115, 22, 0.6)" }}
+
+        {/* Character section - fills remaining space */}
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
+          <img
+            src="/ui/v2-ui/bg-character.png"
+            alt="Character"
+            className="w-full h-full object-cover object-top"
           />
         </div>
-        <p className="text-white text-lg font-bold tracking-wide">{message}</p>
-        <div className="mt-3 text-orange-400 text-sm font-medium" style={{ textShadow: "0 0 10px rgba(249, 115, 22, 0.5)" }}>
-          Preparing your adventure...
+
+        {/* Progress bar */}
+        <div className="shrink-0 px-6 pb-8 pt-4">
+          <div className="w-full h-3 rounded-full bg-gray-200 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-300 ease-out"
+              style={{
+                width: `${Math.min(progress, 100)}%`,
+                background: "linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #6366f1)",
+              }}
+            />
+          </div>
+          <p className="text-[#1a2a3a]/40 text-xs mt-2 text-center">{message}</p>
         </div>
       </div>
     </div>

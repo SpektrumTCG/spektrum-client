@@ -16,9 +16,10 @@ export function StartFeature() {
 
   const handlePlayGame = () => {
     setIsLoading(true)
-    setTimeout(() => {
-      router.push("/home")
-    }, 2000)
+    // TODO: re-enable navigation after loading screen is finalized
+    // setTimeout(() => {
+    //   router.push("/home")
+    // }, 2000)
   }
 
   if (isLoading) {
