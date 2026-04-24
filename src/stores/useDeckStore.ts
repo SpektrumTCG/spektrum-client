@@ -137,7 +137,8 @@ export const useDeckStore = create<DeckStore>()(
               return;
             }
 
-            const cardIds = cards.map(c => (c as any).cardId || c.id);
+            const ownedCards = cards.filter(c => !((c as any).cardId || c.id).includes('-demo-'));
+            const cardIds = ownedCards.map(c => (c as any).cardId || c.id);
             await fetch('/api/decks/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -186,7 +187,9 @@ export const useDeckStore = create<DeckStore>()(
 
             const updatedDeck = get().decks.find(d => d.id === id);
             if (updatedDeck) {
-              const cardIds = updatedDeck.cards.map(c => (c as any).cardId || c.id);
+              const cardIds = updatedDeck.cards
+                .filter(c => !((c as any).cardId || c.id).includes('-demo-'))
+                .map(c => (c as any).cardId || c.id);
               const coverCardId = updatedDeck.coverCardId || null;
               await fetch('/api/decks/save', {
                 method: 'POST',

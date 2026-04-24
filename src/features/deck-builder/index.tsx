@@ -230,6 +230,17 @@ export function DeckBuilderFeature() {
     setSelectedCards(newSelectedCards);
   };
 
+  const handleAddAllCards = () => {
+    const uniqueCards = getUniqueCards(allCards);
+    const timestamp = Date.now();
+    const cardsToAdd = uniqueCards.map((card, i) => ({
+      ...card,
+      id: `${card.id}-demo-${timestamp}-${i}`,
+    }));
+    setSelectedCards([...selectedCards, ...cardsToAdd]);
+    toast.success(`Added ${cardsToAdd.length} cards to deck (demo)`);
+  };
+
   if (isLoadingCards) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
@@ -374,6 +385,12 @@ export function DeckBuilderFeature() {
                         {selectedCards.length < 40 ? `Need ${40 - selectedCards.length} more` : 'Minimum reached'}
                       </span>
                     </div>
+                    <button
+                      onClick={handleAddAllCards}
+                      className="w-full mb-2 px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-medium border border-purple-500 transition-colors"
+                    >
+                      + Add All Cards (Demo)
+                    </button>
 
                     <div className="max-h-[50vh] overflow-y-auto bg-gray-700 rounded-md p-2">
                       {selectedCards.length === 0 ? (
