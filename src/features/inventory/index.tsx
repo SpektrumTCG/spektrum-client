@@ -6,7 +6,6 @@ import { useInventoryStore } from '@/stores/useInventoryStore';
 import type { InventoryBoosterPack } from '@/stores/useInventoryStore';
 import type { Card } from '@/domain/game/types';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/shared/BackButton';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { CardRewardPopup } from '@/components/shared/CardRewardPopup';
 import { AnimatedCardReveal } from '@/components/shared/AnimatedCardReveal';
@@ -140,8 +139,7 @@ export function InventoryFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-950" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
-      <BackButton to="/shop" />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <motion.div
         className="max-w-md mx-auto p-4 w-full"
         initial={{ opacity: 1, y: 0 }}
@@ -154,11 +152,11 @@ export function InventoryFeature() {
           exit={{ opacity: 0, y: -40 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
             <Package className="text-spektrum-orange" size={28} />
             Inventory
           </h1>
-          <p className="text-gray-400 text-sm">Manage your collection and booster packs</p>
+          <p className="text-gray-500 text-sm">Manage your collection and booster packs</p>
         </motion.div>
 
         {/* Collection Badges */}
@@ -168,7 +166,7 @@ export function InventoryFeature() {
         <div className="mb-6">
           <div className="bg-gray-900 border-2 border-orange-500 p-4 rounded-xl text-center" style={{ boxShadow: '0 0 25px rgba(249, 115, 22, 0.15)' }}>
             <div className="text-lg font-bold text-orange-400">{unopenedPacks.length}</div>
-            <div className="text-sm text-gray-300">Unopened Packs</div>
+            <div className="text-sm text-gray-500">Unopened Packs</div>
           </div>
         </div>
 
@@ -195,7 +193,7 @@ export function InventoryFeature() {
         {/* Content */}
         <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-orange-600 scrollbar-track-gray-800">
           {unopenedPacks.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-500">
               <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p className="mb-2">No booster packs in inventory</p>
               <p className="text-sm">Purchase packs from the shop to get started!</p>
@@ -215,7 +213,7 @@ export function InventoryFeature() {
                     <div className="flex justify-between items-start gap-2 mb-1">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-orange-400 text-xs">{pack.name}</h3>
-                        <p className="text-xs text-gray-400 line-clamp-1">
+                        <p className="text-xs text-gray-500 line-clamp-1">
                           {formatDate(pack.purchaseDate)} &bull; Fire and Water
                         </p>
                       </div>

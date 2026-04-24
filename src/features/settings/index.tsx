@@ -98,11 +98,11 @@ export function SettingsFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-3 sm:p-4 w-full">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2 text-gray-600">Settings</h1>
-          <p className="text-spektrum-gray text-xs sm:text-sm mb-4">Customize your gaming experience</p>
+          <p className="text-gray-500 text-xs sm:text-sm mb-4">Customize your gaming experience</p>
         </div>
 
         <div className="space-y-3">

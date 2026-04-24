@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import { BackButton } from "@/components/shared/BackButton"
 import { useBoosterVariantStore, variantTemplates } from "@/stores/useBoosterVariantStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
 import type { BoosterVariant, BoosterPack } from "@/stores/useBoosterVariantStore"
@@ -110,8 +109,7 @@ export function BoosterFeature() {
   }
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-screen bg-gradient-to-b from-gray-900 to-gray-950">
-      <BackButton onClick={handleBack} />
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="max-w-md mx-auto p-4 w-full pt-6">
 
         {step === "tier-selection" && (

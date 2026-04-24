@@ -13,25 +13,10 @@ const HomeIcon = () => (
   </svg>
 )
 
-const GameIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="2" y="3" width="20" height="14" rx="2"/>
-    <path d="M8 21h8"/><path d="M12 17v4"/>
-  </svg>
-)
-
 const ShopIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
     <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 002 1.58h9.78a2 2 0 001.95-1.57l1.65-7.43H5.12"/>
-  </svg>
-)
-
-const DeckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-    <path d="M8 7h8"/><path d="M8 11h6"/>
   </svg>
 )
 
@@ -56,25 +41,33 @@ const SettingsIcon = () => (
   </svg>
 )
 
-const MoreGridIcon = () => (
+const BattleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="19" cy="5" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="19" cy="19" r="1.5" fill="currentColor" stroke="none"/>
+    <path d="M14.5 2l-5 5 7 7-5 5"/>
+    <path d="M9.5 22l5-5-7-7 5-5"/>
+  </svg>
+)
+
+const CardsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="2" y="4" width="13" height="16" rx="2"/>
+    <path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3"/>
+    <path d="M6 9h5"/><path d="M6 13h3"/>
+  </svg>
+)
+
+const HamburgerIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M4 6h16M4 12h16M4 18h16"/>
   </svg>
 )
 
 const PRIMARY_NAV = [
   { path: "/home", label: "Home", icon: <HomeIcon /> },
-  { path: "/game-mode", label: "Play", icon: <GameIcon /> },
+  { path: "/game-mode", label: "Battle", icon: <BattleIcon /> },
+  { path: "/deck-builder", label: "Cards", icon: <CardsIcon /> },
   { path: "/shop", label: "Shop", icon: <ShopIcon /> },
-  { path: "/deck-builder", label: "Deck", icon: <DeckIcon /> },
+  { path: "/settings", label: "Settings", icon: <SettingsIcon /> },
 ]
 
 const isDev = process.env.NODE_ENV === "development"
@@ -82,11 +75,10 @@ const isDev = process.env.NODE_ENV === "development"
 const MORE_NAV = [
   { path: "/library", label: "Library", icon: <LibraryIcon /> },
   { path: "/achievements", label: "Achievements", icon: <AchievementsIcon /> },
-  { path: "/settings", label: "Settings", icon: <SettingsIcon /> },
   ...(isDev ? [{ path: "/dev-tools", label: "Dev Tools", icon: <SettingsIcon /> }] : []),
 ]
 
-export function NavigationBar() {
+export function HamburgerMenu() {
   const router = useRouter()
   const pathname = usePathname()
   const [showMore, setShowMore] = useState(false)
@@ -97,16 +89,20 @@ export function NavigationBar() {
   }
 
   const isActive = (path: string) => pathname === path
-  const isMoreActive = MORE_NAV.some(item => pathname === item.path)
-
-  const navBtnClass = (active: boolean) =>
-    cn(
-      "flex flex-col items-center justify-center flex-1 gap-1 min-h-[44px] min-w-[44px] transition-colors rounded-lg",
-      active ? "text-orange-400" : "text-gray-400 hover:text-orange-400"
-    )
 
   return (
     <>
+      {/* Hamburger button — top right */}
+      <motion.button
+        onClick={() => setShowMore(v => !v)}
+        className="fixed top-10 right-3 z-50 w-12 h-12 flex items-center justify-center rounded-lg text-black hover:text-orange-500 transition-colors"
+        whileTap={{ scale: 0.9 }}
+        aria-label="Menu"
+      >
+        <HamburgerIcon />
+      </motion.button>
+
+      {/* Overlay */}
       <AnimatePresence>
         {showMore && (
           <motion.div
@@ -119,102 +115,99 @@ export function NavigationBar() {
         )}
       </AnimatePresence>
 
+      {/* Dropdown menu from top right */}
       <AnimatePresence>
         {showMore && (
           <motion.div
-            className="fixed left-1/2 -translate-x-1/2 w-full z-50"
-            style={{ bottom: NAV_HEIGHT, maxWidth: 480 }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="fixed top-[88px] right-3 z-50 w-48"
+            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
             <div
-              className="w-full bg-gray-900 border-t-2 border-orange-500 px-6 pt-4 pb-4"
-              style={{ boxShadow: "0 -4px 24px rgba(249, 115, 22, 0.25)" }}
+              className="bg-gray-900 border border-orange-500/30 rounded-xl px-2 py-2 flex flex-col gap-1"
+              style={{ boxShadow: "0 4px 24px rgba(249, 115, 22, 0.2)" }}
             >
-              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3 px-1">More</p>
-              <div className="grid grid-cols-4 gap-2">
-                {MORE_NAV.map(item => (
-                  <motion.button
-                    key={item.path}
-                    onClick={() => navigate(item.path)}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 py-3 rounded-xl transition-colors",
-                      isActive(item.path)
-                        ? "text-orange-400 bg-orange-500/20"
-                        : "text-gray-400 hover:text-orange-400 hover:bg-orange-500/10"
-                    )}
-                    whileTap={{ scale: 0.93 }}
-                  >
-                    <div className="w-5 h-5">{item.icon}</div>
-                    <span className="text-[10px] font-medium leading-none">{item.label}</span>
-                  </motion.button>
-                ))}
-              </div>
+              {MORE_NAV.map(item => (
+                <motion.button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left",
+                    isActive(item.path)
+                      ? "text-orange-400 bg-orange-500/20"
+                      : "text-gray-400 hover:text-orange-400 hover:bg-orange-500/10"
+                  )}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="w-5 h-5">{item.icon}</div>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </motion.button>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+  )
+}
 
+export function NavigationBar() {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const navigate = (path: string) => {
+    router.push(path)
+  }
+
+  const isActive = (path: string) => pathname === path
+
+  const navBtnClass = (active: boolean) =>
+    cn(
+      "flex flex-col items-center justify-center flex-1 gap-1 min-h-[44px] min-w-[44px] transition-colors rounded-lg",
+      active ? "text-orange-400" : "text-gray-400 hover:text-orange-400"
+    )
+
+  return (
+    <div
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
+      style={{ maxWidth: 480, height: NAV_HEIGHT }}
+    >
       <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
-        style={{ maxWidth: 480, height: NAV_HEIGHT }}
+        className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
       >
-        <div
-          className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
-        >
-          {/* Bottom bar background image */}
-          <img
-            src="/ui/v2-ui/bg-bottombar.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            aria-hidden="true"
-          />
-          {PRIMARY_NAV.map(item => (
-            <motion.button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={cn(navBtnClass(isActive(item.path)), "relative z-10")}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div
-                className={cn(
-                  "transition-all",
-                  isActive(item.path) ? "p-1.5 rounded-lg bg-orange-500/20" : ""
-                )}
-                animate={isActive(item.path) ? { scale: 1.15 } : { scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                {item.icon}
-              </motion.div>
-              <span className={cn("text-[9px] font-medium leading-none", isActive(item.path) && "text-orange-400 font-semibold")}>
-                {item.label}
-              </span>
-            </motion.button>
-          ))}
-
+        {/* Bottom bar background image */}
+        <img
+          src="/ui/v2-ui/bg-bottombar.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-hidden="true"
+        />
+        {PRIMARY_NAV.map(item => (
           <motion.button
-            onClick={() => setShowMore(v => !v)}
-            className={cn(navBtnClass(isMoreActive || showMore), "relative z-10")}
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className={cn(navBtnClass(isActive(item.path)), "relative z-10")}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="More navigation options"
           >
             <motion.div
-              className={cn("transition-all", (isMoreActive || showMore) ? "p-1.5 rounded-lg bg-orange-500/20" : "")}
-              animate={(isMoreActive || showMore) ? { scale: 1.15 } : { scale: 1 }}
+              className={cn(
+                "transition-all",
+                isActive(item.path) ? "p-1.5 rounded-lg bg-orange-500/20" : ""
+              )}
+              animate={isActive(item.path) ? { scale: 1.15 } : { scale: 1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <MoreGridIcon />
+              {item.icon}
             </motion.div>
-            <span className={cn("text-[9px] font-medium leading-none", (isMoreActive || showMore) && "text-orange-400 font-semibold")}>
-              More
+            <span className={cn("text-[9px] font-medium leading-none", isActive(item.path) && "text-orange-400 font-semibold")}>
+              {item.label}
             </span>
           </motion.button>
-        </div>
+        ))}
       </div>
-    </>
+    </div>
   )
 }

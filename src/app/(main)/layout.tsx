@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { NavigationBar } from "@/components/layout/NavigationBar"
+import { NavigationBar, HamburgerMenu } from "@/components/layout/NavigationBar"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,6 +43,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div className="relative w-full z-10">
         <main>{children}</main>
       </div>
+      <HamburgerMenu />
       <NavigationBar />
     </div>
   )
