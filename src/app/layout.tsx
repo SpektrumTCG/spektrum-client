@@ -14,7 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }} className="relative">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   )

@@ -122,15 +122,15 @@ export function NavigationBar() {
       <AnimatePresence>
         {showMore && (
           <motion.div
-            className="fixed left-0 right-0 z-50 flex justify-center"
-            style={{ bottom: NAV_HEIGHT }}
+            className="fixed left-1/2 -translate-x-1/2 w-full z-50"
+            style={{ bottom: NAV_HEIGHT, maxWidth: 480 }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
           >
             <div
-              className="w-full max-w-sm bg-gray-900 border-t-2 border-orange-500 px-6 pt-4 pb-4"
+              className="w-full bg-gray-900 border-t-2 border-orange-500 px-6 pt-4 pb-4"
               style={{ boxShadow: "0 -4px 24px rgba(249, 115, 22, 0.25)" }}
             >
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3 px-1">More</p>
@@ -158,18 +158,24 @@ export function NavigationBar() {
       </AnimatePresence>
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center"
-        style={{ height: NAV_HEIGHT }}
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
+        style={{ maxWidth: 480, height: NAV_HEIGHT }}
       >
         <div
-          className="w-full max-w-sm h-full border-t-2 border-orange-500 bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-around px-2"
-          style={{ boxShadow: "0 0 25px rgba(249, 115, 22, 0.4), inset 0 0 15px rgba(249, 115, 22, 0.1)" }}
+          className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
         >
+          {/* Bottom bar background image */}
+          <img
+            src="/ui/v2-ui/bg-bottombar.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
+          />
           {PRIMARY_NAV.map(item => (
             <motion.button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={navBtnClass(isActive(item.path))}
+              className={cn(navBtnClass(isActive(item.path)), "relative z-10")}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -191,7 +197,7 @@ export function NavigationBar() {
 
           <motion.button
             onClick={() => setShowMore(v => !v)}
-            className={navBtnClass(isMoreActive || showMore)}
+            className={cn(navBtnClass(isMoreActive || showMore), "relative z-10")}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.95 }}
             aria-label="More navigation options"
