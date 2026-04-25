@@ -1,52 +1,59 @@
 "use client"
 
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 export function ShopFeature() {
   const router = useRouter()
 
+  const items = [
+    { label: "Booster Packs", sub: "Randomized Card Packs", path: "/shop/booster" },
+    { label: "Premade Decks", sub: "Ready-to-play Strategies", path: "/shop/premade" },
+    { label: "Battle Sets", sub: "Ready-to-play Strategies", path: "/shop/battle-sets" },
+    { label: "Booster Packs Inventory", sub: "Open Your Booster Packs", path: "/inventory" },
+  ]
+
   return (
     <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="max-w-md mx-auto p-4 w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-600">Shop</h1>
-          <p className="text-gray-400 text-sm mb-4">Expand your collection and power up your gameplay</p>
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image src="/ui/logo.png" alt="Spektrum Trading Card Game" width={220} height={80} priority />
         </div>
 
         <div
-          className="bg-gray-900 rounded-xl p-6 border-2 border-orange-500 shadow-lg mb-6 flex flex-col space-y-3"
-          style={{ boxShadow: "0 0 30px rgba(249, 115, 22, 0.2)" }}
+          className="bg-gray-900 rounded-2xl p-6 border-2 border-orange-500 shadow-lg mb-6 flex flex-col space-y-4"
+          style={{ boxShadow: "0 0 25px rgba(249, 115, 22, 0.2)" }}
         >
-          {[
-            { label: "Booster Packs", sub: "Randomized card packs", path: "/shop/booster", comingSoon: false },
-            { label: "Premade Decks", sub: "Ready-to-play strategies", path: "/shop/premade", comingSoon: false },
-            { label: "Battle Sets", sub: "Card backs & themes", path: "/shop/battle-sets", comingSoon: true },
-            { label: "My Inventory", sub: "Open your packs", path: "/inventory", comingSoon: false },
-          ].map(item => (
+          <h2 className="text-2xl font-bold text-white text-center tracking-wider mb-2">SHOP</h2>
+
+          {items.map(item => (
             <button
               key={item.path}
               onClick={() => router.push(item.path)}
-              className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white py-4 px-4 rounded-lg shadow-lg transition-all flex items-center justify-between border border-orange-400"
-              style={{ boxShadow: "0 0 15px rgba(249, 115, 22, 0.4)" }}
+              className="relative w-full h-[72px] flex flex-col items-center justify-center text-white hover:brightness-110 transition-all"
             >
-              <div className="flex flex-col items-start">
-                <div className="text-lg font-bold">{item.label}</div>
-                <div className="text-xs opacity-90">{item.sub}</div>
-              </div>
-              {item.comingSoon && (
-                <span className="text-[10px] font-bold bg-black/30 border border-white/20 px-2 py-1 rounded-full whitespace-nowrap">
-                  Coming Soon
-                </span>
-              )}
+              <img
+                src="/ui/v2-ui/Button.png"
+                alt=""
+                className="absolute inset-0 w-full h-full object-fill"
+              />
+              <span className="relative z-10 text-lg font-bold tracking-wide">{item.label}</span>
+              <span className="relative z-10 text-[11px] text-gray-300">{item.sub}</span>
             </button>
           ))}
 
           <button
             onClick={() => window.open("https://www.tensor.trade/", "_blank")}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-orange-400 py-4 px-4 rounded-lg shadow-lg transition-all flex flex-col items-center border border-orange-500/50"
+            className="relative w-full h-[72px] flex flex-col items-center justify-center text-white hover:brightness-110 transition-all"
           >
-            <div className="text-lg font-bold mb-0.5">NFT Marketplace</div>
-            <div className="text-xs opacity-90 text-gray-400">Trade cards on Tensor</div>
+            <img
+              src="/ui/v2-ui/Button.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-fill"
+            />
+            <span className="relative z-10 text-lg font-bold tracking-wide">Marketplace</span>
+            <span className="relative z-10 text-[11px] text-gray-300">Trade on Tensor</span>
           </button>
         </div>
       </div>
