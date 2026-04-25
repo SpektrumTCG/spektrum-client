@@ -65,7 +65,7 @@ const HamburgerIcon = () => (
 const PRIMARY_NAV = [
   { path: "/home", label: "Home", icon: <HomeIcon /> },
   { path: "/game-mode", label: "Battle", icon: <BattleIcon /> },
-  { path: "/deck-builder", label: "Cards", icon: <CardsIcon /> },
+  { path: "/cards", label: "Cards", icon: <CardsIcon /> },
   { path: "/shop", label: "Shop", icon: <ShopIcon /> },
   { path: "/settings", label: "Settings", icon: <SettingsIcon /> },
 ]
@@ -166,6 +166,7 @@ export function NavigationBar() {
   }
 
   const isActive = (path: string) => pathname === path
+  const isHidden = pathname === "/cards"
 
   const navBtnClass = (active: boolean) =>
     cn(
@@ -174,44 +175,52 @@ export function NavigationBar() {
     )
 
   return (
-    <div
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
-      style={{ maxWidth: 480, height: NAV_HEIGHT, viewTransitionName: "site-nav" }}
-    >
-      <div
-        className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
-      >
-        {/* Bottom bar background image */}
-        <img
-          src="/ui/v2-ui/bg-bottombar.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        />
-        {PRIMARY_NAV.map(item => (
-          <motion.button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className={cn(navBtnClass(isActive(item.path)), "relative z-10")}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
+    <AnimatePresence>
+      {!isHidden && (
+        <motion.div
+          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
+          style={{ maxWidth: 480, height: NAV_HEIGHT, viewTransitionName: "site-nav" }}
+          initial={{ y: NAV_HEIGHT }}
+          animate={{ y: 0 }}
+          exit={{ y: NAV_HEIGHT }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <div
+            className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
           >
-            <motion.div
-              className={cn(
-                "transition-all",
-                isActive(item.path) ? "p-1.5 rounded-lg bg-orange-500/20" : ""
-              )}
-              animate={isActive(item.path) ? { scale: 1.15 } : { scale: 1 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {item.icon}
-            </motion.div>
-            <span className={cn("text-[9px] font-medium leading-none", isActive(item.path) && "text-orange-400 font-semibold")}>
-              {item.label}
-            </span>
-          </motion.button>
-        ))}
-      </div>
-    </div>
+            {/* Bottom bar background image */}
+            <img
+              src="/ui/v2-ui/bg-bottombar.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              aria-hidden="true"
+            />
+            {PRIMARY_NAV.map(item => (
+              <motion.button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={cn(navBtnClass(isActive(item.path)), "relative z-10")}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  className={cn(
+                    "transition-all",
+                    isActive(item.path) ? "p-1.5 rounded-lg bg-orange-500/20" : ""
+                  )}
+                  animate={isActive(item.path) ? { scale: 1.15 } : { scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {item.icon}
+                </motion.div>
+                <span className={cn("text-[9px] font-medium leading-none", isActive(item.path) && "text-orange-400 font-semibold")}>
+                  {item.label}
+                </span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
