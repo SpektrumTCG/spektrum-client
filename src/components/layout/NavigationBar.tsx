@@ -92,15 +92,17 @@ export function HamburgerMenu() {
 
   return (
     <>
-      {/* Hamburger button — top right */}
-      <motion.button
-        onClick={() => setShowMore(v => !v)}
-        className="fixed top-10 right-3 z-50 w-12 h-12 flex items-center justify-center rounded-lg text-black hover:text-orange-500 transition-colors"
-        whileTap={{ scale: 0.9 }}
-        aria-label="Menu"
-      >
-        <HamburgerIcon />
-      </motion.button>
+      {/* Hamburger button — top right, constrained to 480px frame */}
+      <div className="fixed top-10 left-1/2 -translate-x-1/2 z-50 w-full pointer-events-none" style={{ maxWidth: 480 }}>
+        <motion.button
+          onClick={() => setShowMore(v => !v)}
+          className="absolute top-0 right-3 w-12 h-12 flex items-center justify-center rounded-lg text-black hover:text-orange-500 transition-colors pointer-events-auto"
+          whileTap={{ scale: 0.9 }}
+          aria-label="Menu"
+        >
+          <HamburgerIcon />
+        </motion.button>
+      </div>
 
       {/* Overlay */}
       <AnimatePresence>
@@ -115,11 +117,12 @@ export function HamburgerMenu() {
         )}
       </AnimatePresence>
 
-      {/* Dropdown menu from top right */}
+      {/* Dropdown menu from top right, constrained to 480px frame */}
       <AnimatePresence>
         {showMore && (
+          <div className="fixed top-[88px] left-1/2 -translate-x-1/2 z-50 w-full pointer-events-none" style={{ maxWidth: 480 }}>
           <motion.div
-            className="fixed top-[88px] right-3 z-50 w-48"
+            className="absolute top-0 right-3 w-48 pointer-events-auto"
             initial={{ opacity: 0, y: -8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -147,6 +150,7 @@ export function HamburgerMenu() {
               ))}
             </div>
           </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>
