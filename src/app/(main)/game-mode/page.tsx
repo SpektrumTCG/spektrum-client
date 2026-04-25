@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useGameMode } from '@/features/game/stores/useGameMode'
@@ -102,63 +103,50 @@ export default function GameModePage() {
   return (
     <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
       <div className="w-full max-w-md mx-auto p-4">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-600">Game Mode</h1>
-          <p className="text-gray-400 text-sm">Select your opponent and begin the battle</p>
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image src="/ui/logo.png" alt="Spektrum Trading Card Game" width={220} height={80} priority />
         </div>
 
+        {/* Player Setup Card */}
         <div
           className="bg-gray-900 border-2 border-orange-500 rounded-2xl p-6 shadow-lg mb-6"
           style={{ boxShadow: '0 0 25px rgba(249, 115, 22, 0.2)' }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 2 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-            </svg>
-            <h2 className="text-xl font-bold text-white">Player Setup</h2>
-          </div>
+          <h2 className="text-xl font-bold text-white text-center tracking-wider mb-5">PLAYER SETUP</h2>
 
           {/* Player Name */}
-          <div className="mb-4">
-            <label htmlFor="playerName" className="block text-sm font-medium mb-1 text-gray-200">
+          <div className="mb-5">
+            <label htmlFor="playerName" className="block text-xs font-bold mb-1.5 text-gray-300 tracking-wider uppercase">
               Your Name
             </label>
-            <div className="flex gap-2 min-w-0">
+            <div className="relative">
               <input
                 id="playerName"
                 type="text"
                 value={playerName}
                 onChange={e => setPlayerName(e.target.value)}
-                className="min-w-0 flex-1 px-3 py-2 bg-gray-800 border border-orange-500/40 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
-                placeholder="Enter your name"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors pr-24"
+                placeholder="Player Name"
               />
               <button
                 onClick={handleSavePlayerName}
                 disabled={isSavingName || !playerName.trim()}
-                className="shrink-0 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors border border-orange-400"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-orange-500 hover:text-orange-400 disabled:text-gray-600 font-bold text-sm tracking-wider transition-colors"
               >
-                {isSavingName ? 'Saving…' : 'Save'}
+                {isSavingName ? 'SAVING…' : 'CONFIRM'}
               </button>
             </div>
           </div>
 
           {/* Deck Selection */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-200">Select Deck</label>
-              <div className="flex space-x-2">
-                <Link href="/deck-builder" className="text-orange-400 hover:text-orange-300 text-xs">
-                  Manage Decks
-                </Link>
-                <Link href="/library" className="text-orange-400 hover:text-orange-300 text-xs">
-                  Card Library
-                </Link>
-              </div>
-            </div>
+          <div>
+            <label className="block text-xs font-bold mb-1.5 text-gray-300 tracking-wider uppercase">
+              Select Deck
+            </label>
 
             {decks.length === 0 ? (
-              <div className="bg-gray-800 p-4 rounded-xl text-center border border-orange-500/30">
+              <div className="bg-gray-800 p-4 rounded-lg text-center border border-gray-600">
                 <p className="text-gray-400 mb-2">No decks available</p>
                 <Link href="/deck-builder" className="text-orange-400 hover:text-orange-300 underline">
                   Create a Deck
@@ -168,9 +156,10 @@ export default function GameModePage() {
               <select
                 value={selectedDeckId || ''}
                 onChange={e => setSelectedDeckId(e.target.value || null)}
-                className="w-full px-3 py-2 bg-gray-800 border border-orange-500/40 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors appearance-none"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
               >
-                <option value="" disabled>Choose a deck...</option>
+                <option value="" disabled>DECK NAME</option>
                 {decks.map(deck => {
                   const tribeLabel =
                     deck.tribe === 'kobar-borah' ? ' · Kobar-Borah' :
@@ -183,37 +172,45 @@ export default function GameModePage() {
                 })}
               </select>
             )}
-          </div>
 
-          {/* Game Modes */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
-                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                <path d="M8 21h8"/><path d="M12 17v4"/>
-              </svg>
-              <h3 className="text-lg font-semibold text-white">Game Modes</h3>
+            <div className="flex justify-end mt-1.5">
+              <Link href="/deck-builder" className="text-orange-400 hover:text-orange-300 text-xs font-medium">
+                Manage Decks
+              </Link>
             </div>
-
-            <button
-              onClick={() => handleStartAIGame()}
-              disabled={decks.length === 0 || !selectedDeckId}
-              className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white py-3 px-4 rounded-lg transition-colors font-medium border border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Vs AI
-            </button>
-
-            <button
-              onClick={() => {
-                if (!updateActiveDeck()) return
-                router.push('/multiplayer')
-              }}
-              disabled={decks.length === 0 || !selectedDeckId}
-              className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white py-3 px-4 rounded-lg transition-colors font-medium border border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Multiplayer Mode
-            </button>
           </div>
+        </div>
+
+        {/* Game Mode Buttons */}
+        <div className="space-y-3">
+          <button
+            onClick={() => handleStartAIGame()}
+            disabled={decks.length === 0 || !selectedDeckId}
+            className="relative w-full h-[52px] flex items-center justify-center text-white font-bold text-lg tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+          >
+            <img
+              src="/ui/v2-ui/Button.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-fill"
+            />
+            <span className="relative z-10">VS AI</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!updateActiveDeck()) return
+              router.push('/multiplayer')
+            }}
+            disabled={decks.length === 0 || !selectedDeckId}
+            className="relative w-full h-[52px] flex items-center justify-center text-white font-bold text-lg tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+          >
+            <img
+              src="/ui/v2-ui/Button.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-fill"
+            />
+            <span className="relative z-10">MULTIPLAYER MODE</span>
+          </button>
         </div>
       </div>
 

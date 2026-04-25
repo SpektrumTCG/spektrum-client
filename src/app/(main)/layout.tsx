@@ -1,13 +1,14 @@
+import { ViewTransition } from "react"
 import Image from "next/image"
 import { NavigationBar, HamburgerMenu } from "@/components/layout/NavigationBar"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh w-full relative bg-white overflow-hidden">
-      {/* Header bar */}
+      {/* Header bar — anchored during transitions */}
       <div
         className="fixed top-0 left-1/2 -translate-x-1/2 w-full z-20 pointer-events-none"
-        style={{ maxWidth: 480 }}
+        style={{ maxWidth: 480, viewTransitionName: "site-header" }}
       >
         <Image
           src="/ui/v2-ui/bg-header.png"
@@ -41,7 +42,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       <div className="relative w-full z-10">
-        <main>{children}</main>
+        <main>
+          <ViewTransition name="page-content" enter="page-enter" exit="page-exit" default="page-crossfade">
+            {children}
+          </ViewTransition>
+        </main>
       </div>
       <HamburgerMenu />
       <NavigationBar />

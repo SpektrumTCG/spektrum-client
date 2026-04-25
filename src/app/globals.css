@@ -134,6 +134,64 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ── View Transition: page crossfade ── */
+::view-transition-old(.page-crossfade),
+::view-transition-old(.page-exit) {
+  animation: 150ms ease-in both vt-fade-out;
+}
+::view-transition-new(.page-crossfade),
+::view-transition-new(.page-enter) {
+  animation: 200ms ease-out 100ms both vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+/* Anchor header & nav — no animation during transitions */
+::view-transition-group(site-header),
+::view-transition-group(site-nav) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header),
+::view-transition-old(site-nav) {
+  display: none;
+}
+::view-transition-new(site-header),
+::view-transition-new(site-nav) {
+  animation: none;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

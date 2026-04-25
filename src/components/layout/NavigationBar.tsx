@@ -176,7 +176,7 @@ export function NavigationBar() {
   return (
     <div
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
-      style={{ maxWidth: 480, height: NAV_HEIGHT }}
+      style={{ maxWidth: 480, height: NAV_HEIGHT, viewTransitionName: "site-nav" }}
     >
       <div
         className="w-full h-full flex items-center justify-around px-2 relative overflow-hidden"
