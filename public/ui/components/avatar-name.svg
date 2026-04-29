@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1162.12 1459.64">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #00aeef;
+      }
+
+      .cls-2 {
+        font-family: NotoSans-Bold, 'Noto Sans';
+        font-size: 144.35px;
+        font-variation-settings: 'wght' 700, 'wdth' 100;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g>
+    <polygon class="cls-1" points="1162.12 1459.64 63 1459.64 63 524.88 1162.12 986.46 1162.12 1459.64"/>
+    <polygon class="cls-1" points="891.28 758.01 0 391.94 0 0 891.28 374.29 891.28 758.01"/>
+  </g>
+  <text class="cls-2" transform="translate(1093.91 875.29) rotate(-90)"><tspan x="0" y="0">SAPPHIRE</tspan></text>
+</svg>

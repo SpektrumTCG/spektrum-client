@@ -18,6 +18,21 @@ export function LoadingScreen({
   onComplete,
 }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0)
+  const [animStep, setAnimStep] = useState(0)
+
+  const [animKey, setAnimKey] = useState(0)
+
+  // Staggered animation steps: 0=hidden, 1=Vector, 2=Vector1, 3=SAPPHIRE, 4=avatar
+  useEffect(() => {
+    setAnimStep(0)
+    const timers = [
+      setTimeout(() => setAnimStep(1), 100),   // Vector slides in
+      setTimeout(() => setAnimStep(2), 300),   // Vector1 slides in
+      setTimeout(() => setAnimStep(3), 500),   // SAPPHIRE slides in
+      setTimeout(() => setAnimStep(4), 900),   // Avatar slides in after base layers settle
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [animKey])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -26,18 +41,20 @@ export function LoadingScreen({
           clearInterval(interval)
           return 100
         }
-        return prev + Math.random() * 15 + 5
+        return prev + Math.random() * 20 + 10
       })
-    }, 300)
+    }, 150)
     return () => clearInterval(interval)
   }, [])
 
+  // Trigger onComplete when progress reaches 100
   useEffect(() => {
     if (progress >= 100 && onComplete) {
-      const timeout = setTimeout(onComplete, 500)
-      return () => clearTimeout(timeout)
+      const timer = setTimeout(onComplete, 400)
+      return () => clearTimeout(timer)
     }
   }, [progress, onComplete])
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f1a28]">
@@ -61,12 +78,44 @@ export function LoadingScreen({
           />
         </div>
 
-        {/* Character - large, fills most of the screen */}
-        <div className="absolute inset-0 top-[15%] flex items-start justify-center overflow-hidden pointer-events-none">
+        {/* Character area - animated layers, anchored to bottom panel */}
+        <div className="absolute inset-x-0 top-[15%] bottom-[5%] overflow-hidden pointer-events-none">
+          {/* Base layer 1: Vector.png - top diagonal stripe, slides from left */}
           <img
-            src="/ui/v2-ui/bg-character.png"
+            src="/ui/components/avatar-name/Vector.png"
+            alt=""
+            className="absolute top-[2%] left-0 w-[80%] h-[40%] object-fill transition-transform duration-700 ease-out"
+            style={{
+              transform: animStep >= 1 ? "translateX(0)" : "translateX(-110%)",
+            }}
+          />
+          {/* Base layer 2: Vector1.png - bottom trapezoid, anchored to bottom, slides from left */}
+          <img
+            src="/ui/components/avatar-name/Vector1.png"
+            alt=""
+            className="absolute bottom-0 left-0 w-[85%] h-[65%] object-fill transition-transform duration-700 ease-out"
+            style={{
+              transform: animStep >= 2 ? "translateX(0)" : "translateX(-110%)",
+            }}
+          />
+          {/* Base layer 3: SAPPHIRE text, slides from right */}
+          <img
+            src="/ui/components/avatar-name/SAPPHIRE.png"
+            alt="SAPPHIRE"
+            className="absolute right-1 bottom-[5%] h-[55%] w-auto object-contain transition-transform duration-700 ease-out"
+            style={{
+              transform: animStep >= 3 ? "translateX(0)" : "translateX(200%)",
+            }}
+          />
+          {/* Layer 4: Avatar character, slides up from bottom AFTER base layers */}
+          <img
+            src="/ui/components/avatar-name/avatar.png"
             alt="Character"
-            className="w-[110%] max-w-none h-auto object-contain"
+            className="absolute bottom-0 left-1/2 h-[90%] w-auto object-contain transition-all duration-800 ease-out"
+            style={{
+              transform: animStep >= 4 ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(100%)",
+              opacity: animStep >= 4 ? 1 : 0,
+            }}
           />
         </div>
 
@@ -118,6 +167,14 @@ export function LoadingScreen({
 
             {/* Loading message */}
             <p className="text-white/30 text-xs mt-1.5 text-center ml-3">{message}</p>
+
+            {/* DEBUG: Replay animation button - remove after done */}
+            <button
+              onClick={() => setAnimKey(k => k + 1)}
+              className="absolute top-2 right-2 text-[10px] text-white/40 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors"
+            >
+              ↻ Replay
+            </button>
           </div>
         </div>
       </div>
