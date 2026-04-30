@@ -35,12 +35,14 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   isAIThinking: false,
 
   startGame: (playerDeck, difficulty = get().aiDifficulty) => {
-    const opponentDeck = cardRegistry.shuffleDeck(
-      cardRegistry
-        .getAllCards()
-        .filter(c => c.type === 'avatar' || c.type === 'spell')
-        .slice(0, 20)
-    )
+    const allCards = cardRegistry.getAllCards()
+    // Ensure opponent deck has enough avatars for setup
+    const avatars = allCards.filter(c => c.type === 'avatar')
+    const spells = allCards.filter(c => c.type === 'spell' || c.type === 'quickSpell')
+    const opponentDeck = cardRegistry.shuffleDeck([
+      ...avatars.slice(0, 12),
+      ...spells.slice(0, 8),
+    ])
     const game = startGame(playerDeck, opponentDeck)
     set({ game, aiDifficulty: difficulty })
   },
@@ -109,7 +111,6 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   _maybeRunAI: (game) => {
     // AI is player index 1; only act on opponent's turn
     if (game.currentPlayerIndex !== 1) return
-    const { aiDifficulty } = get()
     set({ isAIThinking: true })
 
     // Small delay for human-feeling response
@@ -119,6 +120,22 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         set({ isAIThinking: false })
         return
       }
+
+      // Handle setup phase: AI places first avatar automatically
+      if (current.phase === 'setup') {
+        const aiPlayer = current.players[1]
+        const avatar = aiPlayer.hand.find(c => c.type === 'avatar')
+        if (avatar) {
+          get().playCard(avatar.id, 'active')
+        }
+        // End setup to hand back to player or start game
+        const afterPlay = get().game
+        if (afterPlay) get().endPhase()
+        set({ isAIThinking: false })
+        return
+      }
+
+      const { aiDifficulty } = get()
       const ai = AIFactory.create(aiDifficulty)
       const decision = ai.decide(current, 1)
       get()._applyAIDecision(decision)

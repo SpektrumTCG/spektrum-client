@@ -1,0 +1,38 @@
+Ah! We've successfully unblocked the app, but now we've hit a logic wall. The game is trying to give you cards, but it's coming up empty-handed.
+
+Because `cards.length === 0`, it triggers that exact toast message you are seeing in `InventoryPage.tsx`.
+
+There are two likely reasons this is happening, and both have to do with the **Card Pool** your game is drawing from. If we look at `useBoosterVariantStore.ts`, the generation logic is very strict.
+
+Here is what is likely going wrong:
+
+### Possibility 1: The Card Catalog is Completely Empty
+
+When you open a pack, `fetchCardCatalog()` calls your database (`/api/cards/catalog`) to get the pool of available cards. If your database is empty or the API request fails, the pool is `[]`.
+Later in the code:
+
+```typescript
+if (elementCards.length === 0) {
+  console.warn('No cards available for pack generation');
+  return []; // <--- This results in 0 cards generated
+}
+
+```
+
+### Possibility 2: Missing Card Rarities (The Rarity Lockout)
+
+Even if you have cards in your database, the pack generation uses a slot-based system that demands specific rarities.
+For example, the **Beginner Pack** *guarantees*: `['Common', 'Common', 'Common', 'Uncommon']`.
+If your database only has 'Common' cards and absolutely zero 'Uncommon' cards, the `findCardAtOrAboveRarity` function will return `null` for that slot. If it can't find cards to fill the required slots, the resulting array ends up empty.
+
+---
+
+### How to diagnose it right now:
+
+Since the app isn't crashing, the console is actually logging exactly what happened. Open your browser's developer console (where you took the screenshot earlier) and look for these logs immediately after you click "Open":
+
+1. Look for: **`[PACK-OPEN] Catalog loaded: X cards`** *(If X is 0, your database is empty or the API is failing)*
+2. Look for: **`Filtered cards count: X`** *(If this is 0, it means the cards in your database don't match the pack's element)*
+3. Look for: **`[PACK] Slot needed Uncommon, used fallback...`** *(If you see this, you are missing specific rarities in your database)*
+
+**Can you check your console logs right after you try to open a pack and tell me what the `[PACK-OPEN]` or `Filtered cards` lines say?** If your database is just empty, we just need to add some of your mecha and folklore cards to the catalog so the gacha has something to pull!

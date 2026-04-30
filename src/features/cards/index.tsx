@@ -3,13 +3,13 @@
 import React, { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDeckStore } from "@/stores/useDeckStore"
-import type { Deck } from "@/stores/useDeckStore"
 import type { Card, ElementType, AvatarCard } from "@/domain/game/types"
 import { SafeCardImage } from "@/components/shared/SafeCardImage"
 import { countOwnedCopies } from "@/lib/rarityUtils"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
+import { DeckBuilderFeature } from "@/features/deck-builder"
 
 type Tab = "deck" | "library"
 
@@ -41,7 +41,7 @@ export function CardsFeature() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <DecksTab />
+              <DeckBuilderFeature embedded />
             </motion.div>
           ) : (
             <motion.div
@@ -99,75 +99,6 @@ export function CardsFeature() {
           </div>
         </motion.div>
       </div>
-    </div>
-  )
-}
-
-/* ─── Decks Tab ─── */
-function DecksTab() {
-  const { decks, activeDeckId, setActiveDeck } = useDeckStore()
-
-  const handleSetActive = (deck: Deck) => {
-    setActiveDeck(deck.id)
-    toast.success(`Deck "${deck.name}" set as active`)
-  }
-
-  return (
-    <div className="bg-gray-900 border-2 border-orange-500 rounded-2xl p-4" style={{ boxShadow: "0 0 25px rgba(249, 115, 22, 0.15)" }}>
-      <h2 className="text-lg font-bold text-white text-center mb-4">Your Decks</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {decks.map((deck) => (
-          <DeckCard
-            key={deck.id}
-            deck={deck}
-            isActive={deck.id === activeDeckId}
-            onSetActive={() => handleSetActive(deck)}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function DeckCard({ deck, isActive, onSetActive }: { deck: Deck; isActive: boolean; onSetActive: () => void }) {
-  const { getAvailableCards } = useDeckStore()
-  const allCards = getAvailableCards()
-
-  const coverImage = useMemo(() => {
-    if (!deck.coverCardId) return null
-    let coverCard = allCards.find((c) => c.id === deck.coverCardId)
-    if (!coverCard) {
-      const searchPattern = deck.coverCardId.replace(/-copy-\d+$/, "")
-      coverCard = allCards.find(
-        (c) => c.id.includes(searchPattern) || c.id.includes(`owned-${searchPattern}`) || c.id.startsWith(`owned-${deck.coverCardId}`)
-      )
-    }
-    return coverCard ? (coverCard as AvatarCard).imagePath || coverCard.art : null
-  }, [deck.coverCardId, allCards])
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="w-full aspect-[3/4] bg-gray-800 rounded-lg mb-1.5 overflow-hidden border border-gray-700">
-        {coverImage ? (
-          <SafeCardImage src={coverImage} alt={deck.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">No Cover</div>
-        )}
-      </div>
-      <span className="text-white text-xs font-semibold text-center line-clamp-1 w-full">{deck.name}</span>
-      <span className="text-gray-400 text-[10px]">{String(deck.cards.length).padStart(2, "0")} Cards</span>
-      {isActive ? (
-        <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-semibold px-3 py-0.5 rounded-full mt-1">
-          Active
-        </span>
-      ) : (
-        <button
-          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white text-[10px] font-semibold px-3 py-0.5 rounded-full mt-1 border border-orange-400 transition-colors"
-          onClick={onSetActive}
-        >
-          Set Active
-        </button>
-      )}
     </div>
   )
 }

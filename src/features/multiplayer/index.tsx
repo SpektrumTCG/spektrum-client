@@ -83,7 +83,7 @@ export function MultiplayerFeature() {
 
       if (!deckIdToUse) {
         toast.error('Error: Please create a deck before playing');
-        router.push('/deck-builder');
+        router.push('/cards');
         return;
       }
 
@@ -179,7 +179,7 @@ export function MultiplayerFeature() {
     }
     if (!activeDeckId) {
       toast.error('Please select a deck before starting Ante Mode');
-      router.push('/deck-builder');
+      router.push('/cards');
       return;
     }
     setShowAnteMode(true);
@@ -268,7 +268,7 @@ export function MultiplayerFeature() {
               {decks.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-gray-400 mb-3">You don't have any decks yet!</p>
-                  <AnimatedButton onClick={() => router.push('/deck-builder')} variant="primary" size="sm">
+                  <AnimatedButton onClick={() => router.push('/cards')} variant="primary" size="sm">
                     Create a Deck
                   </AnimatedButton>
                 </div>

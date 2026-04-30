@@ -1,0 +1,93 @@
+1. Fatigue Damage (Deck Out)
+Litepaper says: Avatar takes escalating damage when drawing from empty deck
+Code does: Moves a life card to the deck, or player loses if no life cards remain
+Status: ❌ Not implemented
+2. Equipment Capacity (2 max)
+Litepaper says: Avatar can hold max 2 Equipment Cards
+Code does: Uses attachedEquipment array with no limit check
+Status: ❌ Not implemented
+3. Equipment Overwriting
+Litepaper says: Can destroy existing equipment to make room for new one
+Code does: No overwrite logic found
+Status: ❌ Not implemented
+4. Field Card Global Unique Rule
+Litepaper says: Only one Field Card active; new one destroys existing
+Code does: Field cards work but no "destroy existing" logic found
+Status: ❌ Not implemented
+5. Field Card +1 Cost Override
+Litepaper says: Playing a Field Card when one exists costs +1 Spektra
+Code does: No extra cost logic
+Status: ❌ Not implemented
+6. "The Ritual" Onboarding (Faction + Element Choice)
+Litepaper says: New players choose faction and get starter deck
+Code does: No faction choice system exists
+Status: ❌ Not implemented
+7. New Slot System Booster Packs
+Litepaper says: Beginner $1, Advanced $5, Expert $10 with guaranteed slots
+Code has: Different pack system (older prices/weights)
+Status: ⚠️ Needs verification/update
+8. Freeze Prevents Evolution
+Litepaper says: Frozen avatar cannot evolve
+Code does: No freeze check in evolution logic
+Status: ❌ Not implemented
+9. Negative Stat Floor (0 minimum)
+Litepaper says: Attack/Health cannot drop below 0
+Code does: Only checks <= 0 for death, no floor enforcement
+Status: ⚠️ Partially implemented
+10. DoT Triggers in End Phase
+Litepaper says: Burn/Bleed trigger during End Phase
+Code does: Need to verify exact timing
+Status: ⚠️ Needs verification
+
+
+Solving
+1. Fatigue Damage (Deck Out)
+Litepaper says: Avatar takes escalating damage when drawing from empty deck
+The actual : If Deck Out, the player who cant draw from his/her deck, its lost
+2. Equipment Capacity (2 max)
+Litepaper says: Avatar can hold max 2 Equipment Cards
+Code does: Uses attachedEquipment array with no limit check
+Status: ❌ Not implemented
+Please Implement it
+3. Equipment Overwriting
+Litepaper says: Can destroy existing equipment to make room for new one
+Code does: No overwrite logic found
+Status: ❌ Not implemented
+Please Implement it
+4. Field Card Global Unique Rule
+Litepaper says: Only one Field Card active; new one destroys existing
+Code does: Field cards work but no "destroy existing" logic found
+Status: ❌ Not implemented
+Please Implement it
+5. Field Card +1 Cost Override
+Litepaper says: Playing a Field Card when one exists costs +1 Spektra
+Code does: No extra cost logic
+Status: ❌ Not implemented
+Please Implement it
+
+6. "The Ritual" Onboarding (Faction + Element Choice)
+Litepaper says: New players choose faction and get starter deck
+Code does: No faction choice system exists
+Status: ❌ Not implemented
+Please Implement it
+7. New Slot System Booster Packs
+Litepaper says: Beginner $1, Advanced $5, Expert $10 with guaranteed slots
+Code has: Different pack system (older prices/weights)
+Status: ⚠️ Needs verification/update
+Please Implement it
+8. Freeze Prevents Evolution
+Litepaper says: Frozen avatar cannot evolve
+Code does: No freeze check in evolution logic
+Status: ❌ Not implemented
+Remove all the Frozen Stats on code and lite paper
+9. Negative Stat Floor (0 minimum)
+Litepaper says: Attack/Health cannot drop below 0
+Code does: Only checks <= 0 for death, no floor enforcement
+Status: ⚠️ Partially implemented
+Please Implement it
+10. DoT Triggers in End Phase
+Litepaper says: Burn/Bleed trigger during End Phase
+Code does: Need to verify exact timing
+Status: ⚠️ Needs verification
+Burn trigger during preparation phase, and Bleed trigger if the Active avatar using Active Skill
+

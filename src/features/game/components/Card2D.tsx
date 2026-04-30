@@ -31,43 +31,50 @@ const CardPreview = ({
   damageCounter?: number
 }) => {
   const isAvatarCard = card.type === 'avatar'
-  const maxWidth = isAvatarCard ? 450 : 390
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="relative bg-gray-800 rounded shadow-lg max-h-[90vh] overflow-y-auto overflow-x-hidden"
-        style={{
-          width: '100%',
-          maxWidth: `${maxWidth}px`,
-          boxSizing: 'border-box',
-          minWidth: 0,
-        }}
+        className="relative bg-gray-900 rounded-lg border-2 border-orange-500 shadow-lg max-w-sm w-full max-h-[80vh] overflow-y-auto"
+        style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute top-1 right-1 text-white bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-xs z-10"
+          className="absolute top-2 right-2 text-orange-400 hover:text-orange-300 text-xl font-bold z-10"
           onClick={onClose}
         >
           X
         </button>
 
-        <div className="p-2 overflow-hidden">
-          <div className="mb-2 rounded overflow-hidden">
-            {(card.art || card.imagePath) && (
+        <div className="p-4">
+          {(card.art || card.imagePath) && (
+            <div className="mb-3 rounded overflow-hidden">
               <img
                 src={getFixedCardImagePath(card)}
                 alt={card?.name || 'Card'}
-                className="w-full max-h-[40vh] object-cover"
+                className="w-full max-h-[40vh] object-contain rounded"
                 onError={(e) => handleCardImageError(e, card)}
               />
-            )}
-          </div>
+            </div>
+          )}
 
-          <h3 className="text-sm font-bold text-white mb-1 leading-tight text-center">
-            {card?.name || 'Unknown Card'}
+          <h3 className="text-xl font-bold text-white mb-2">
+            {card?.name || card?.cardId || 'Card'}
           </h3>
-          <div className="text-xs text-gray-400 text-center">
-            {card.type.charAt(0).toUpperCase() + card.type.slice(1)}
+
+          <div className="space-y-2 text-sm text-white">
+            <p><span className="font-semibold text-gray-400">Type:</span> {card.type?.charAt(0).toUpperCase() + card.type?.slice(1)}</p>
+            <p><span className="font-semibold text-gray-400">Element:</span> {card.element}</p>
+            {isAvatarCard && (
+              <>
+                {card.health != null && <p><span className="font-semibold text-gray-400">Health:</span> <span className="text-green-400">{card.health - damageCounter}/{card.health}</span></p>}
+                {card.level != null && <p><span className="font-semibold text-gray-400">Level:</span> {card.level}</p>}
+              </>
+            )}
+            {card.description && <p><span className="font-semibold text-gray-400">Description:</span> {card.description}</p>}
           </div>
         </div>
       </div>

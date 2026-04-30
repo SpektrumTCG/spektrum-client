@@ -327,6 +327,10 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     if (card.id) {
       if (action === 'play' || action === 'active') {
         gameStore.playCard(card.id, 'active')
+        // Auto-advance setup phase after placing avatar
+        if (gamePhase === 'setup') {
+          gameStore.endPhase()
+        }
       } else if (action === 'reserve') {
         gameStore.playCard(card.id, 1)
       } else if (action === 'toSpektra') {
@@ -452,7 +456,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
   }
 
   return (
-    <div className="w-full h-full bg-gray-900 text-white p-2 md:p-4 pb-28 relative overflow-x-hidden">
+    <div className="w-full min-h-screen bg-gray-900 text-white p-2 pb-20 relative overflow-x-hidden mx-auto" style={{ paddingTop: 56, maxWidth: 480 }}>
       {/* Ante (Wager): Waiting overlay */}
       {isAnteGame && waitingForAnteStart && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[100]">
@@ -511,63 +515,43 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
       {/* Game header */}
       <div
-        className="mb-2 md:mb-4 flex flex-wrap gap-2 justify-between items-center bg-gray-800 p-2 rounded-lg border-2 border-orange-500"
-        style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.2)' }}
+        className="relative z-40 mb-2 p-2 flex flex-wrap gap-2 justify-between items-center bg-gray-800 rounded-none md:rounded-lg border-b-2 md:border-2 border-orange-500"
+        style={{ boxShadow: '0 0 20px rgba(249,115,22,0.2)' }}
       >
-        <div className="flex flex-wrap gap-1 md:gap-2 items-center">
-          <span className="font-bold text-sm md:text-base">Turn {turn}</span>
-          <span className="bg-orange-600 px-1 md:px-2 py-0.5 rounded text-xs">{gamePhase}</span>
-
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="font-bold text-sm">Turn {turn}</span>
+          <span className="bg-orange-600 px-2 py-0.5 rounded text-xs">{gamePhase}</span>
           {currentPlayer === 'opponent' && playerState?.hand.some((card) => card.type === 'quickSpell') && (
-            <span className="bg-purple-700 px-1 md:px-2 py-0.5 rounded text-xs animate-pulse">
-              Quick Spells Available
-            </span>
+            <span className="bg-purple-700 px-2 py-0.5 rounded text-xs animate-pulse">Quick Spells</span>
           )}
-
           <span
-            className="px-1 md:px-2 py-0.5 rounded text-xs"
+            className="px-2 py-0.5 rounded text-xs"
             style={{
-              backgroundColor:
-                isMultiplayer
-                  ? '#FF6B35'
-                  : gameMode.mode === 'playerVsAI'
-                  ? '#8B0000'
-                  : gameMode.mode === 'singlePlayer'
-                  ? '#006400'
-                  : '#555',
+              backgroundColor: isMultiplayer ? '#FF6B35' : gameMode.mode === 'playerVsAI' ? '#8B0000' : gameMode.mode === 'singlePlayer' ? '#006400' : '#555',
             }}
           >
-            {isMultiplayer
-              ? `VS ${opponentName}`
-              : gameMode.mode === 'playerVsAI'
-              ? `VS AI - ${gameMode.aiDifficulty.charAt(0).toUpperCase() + gameMode.aiDifficulty.slice(1)}`
-              : gameMode.mode === 'singlePlayer'
-              ? 'Practice'
-              : 'Unknown Mode'}
+            {isMultiplayer ? `VS ${opponentName}` : gameMode.mode === 'playerVsAI' ? `VS AI - ${gameMode.aiDifficulty.charAt(0).toUpperCase() + gameMode.aiDifficulty.slice(1)}` : gameMode.mode === 'singlePlayer' ? 'Practice' : ''}
           </span>
         </div>
+        <button onClick={() => setShowForfeitDialog(true)} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">✕ Exit</button>
       </div>
 
-      {/* Opponent's board */}
-      <div className="mb-4">
-        <h3 className="text-sm font-bold mb-1 text-orange-400">Opponent</h3>
+      <div className="px-2 space-y-2">
 
-        <div className="flex flex-col">
-          {/* Opponent Hand Display */}
-          <div className="bg-gray-800 bg-opacity-30 p-2 rounded mb-2 flex justify-center">
+        {/* ── OPPONENT ── */}
+        <div>
+          <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">Opponent</h3>
+
+          {/* Opponent hand */}
+          <div className="bg-gray-800 bg-opacity-30 p-2 rounded-lg mb-2 flex justify-center">
             <div className="flex relative">
               {opponentState?.hand.map((_, index) => (
                 <img
                   key={`opponent-hand-${index}`}
-                  src="/card_back.png"
+                  src="/cards/card_back.png"
                   alt="Card Back"
                   className="rounded-md shadow-md object-cover"
-                  style={{
-                    width: `${cardWidth * 2.5}px`,
-                    height: `${cardWidth * 3.5}px`,
-                    marginLeft: index > 0 ? `${-cardWidth / 2}px` : '0',
-                    transform: 'rotate(180deg)',
-                  }}
+                  style={{ width: '38px', height: '53px', marginLeft: index > 0 ? '-14px' : '0', transform: 'rotate(180deg)', zIndex: index, position: 'relative' }}
                 />
               ))}
               {(!opponentState?.hand || opponentState.hand.length === 0) && (
@@ -576,382 +560,260 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
             </div>
           </div>
 
+          {/* Opponent board */}
           <div
             className="flex justify-between bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30"
-            style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.1)' }}
+            style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
           >
-            {/* Opponent Stats */}
-            <div className="flex flex-col">
-              <div className="flex flex-col items-center gap-1 mb-2">
-                <div className="relative" style={{ width: '50px', height: '65px' }}>
-                  <img
-                    src="/card_back.png"
-                    alt="Opponent Deck"
-                    className="w-full h-full object-cover rounded border-2 border-red-600 rotate-180"
-                  />
-                  <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {opponentState?.deck?.length || 0}
+            {/* Deck + life */}
+            <div className="flex flex-col gap-1.5">
+              <div className="relative" style={{ width: '50px', height: '65px' }}>
+                <img src="/cards/card_back.png" alt="Opponent Deck" className="w-full h-full object-cover rounded border-2 border-red-600 rotate-180" />
+                <div className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{opponentState?.deck?.length || 0}</div>
+              </div>
+              <div className="text-[10px] text-red-400 font-semibold">Life ({opponentState?.lifeCards?.length || 0}):</div>
+              <div className="flex gap-0.5 mb-1">
+                {Array.from({ length: opponentState?.lifeCards?.length || 0 }).map((_, i) => (
+                  <img key={i} src="/cards/card_back.png" alt="Life Card" className="object-cover rounded border border-red-600/70" style={{ width: '14px', height: '19px', transform: 'rotate(180deg)' }} />
+                ))}
+              </div>
+              <div className="text-[10px] font-semibold text-red-400">Spektra: {opponentState?.spektraPile?.length || 0}</div>
+            </div>
+
+            {/* Opponent spektra pile */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="bg-gray-700 bg-opacity-50 rounded p-2 text-center min-w-[80px]">
+                <div className="text-[10px] font-bold text-gray-300">Spektra Pile:</div>
+                {(opponentState?.spektraPile?.length || 0) > 0 ? (
+                  <div className="flex items-center justify-center gap-0.5 mt-0.5 flex-wrap">
+                    {opponentState?.spektraPile?.map((card, i) => (
+                      <div key={i} className={`w-3 h-3 rounded-full ${card.element === 'fire' ? 'bg-red-500' : card.element === 'water' ? 'bg-blue-500' : card.element === 'ground' ? 'bg-amber-800' : card.element === 'air' ? 'bg-cyan-300' : 'bg-gray-400'}`} />
+                    ))}
                   </div>
-                </div>
-              </div>
-              <div className="text-xs font-semibold text-red-400">
-                Life: {opponentState?.lifeCards?.length || 0}
-              </div>
-              <div className="text-xs font-semibold text-red-400">
-                Spektra: {opponentState?.spektraPile?.length || 0}
+                ) : (
+                  <div className="text-[10px] text-gray-400">Empty</div>
+                )}
               </div>
             </div>
 
-            {/* Opponent Avatar */}
-            <div className="w-1/4">
+            {/* Opponent active avatar */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Active Avatar</span>
               {opponentState?.activeAvatar ? (
-                <div
-                  className="transform rotate-180 relative cursor-pointer"
-                  onClick={(e) => handleAvatarClick(opponentState.activeAvatar!, e)}
-                >
-                  <Card2D
-                    card={opponentState.activeAvatar}
-                    isPlayable={false}
-                    isTapped={opponentState.activeAvatar.isTapped}
-                    onClick={() => {}}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 px-0.5 py-0.5 text-center transform rotate-180">
-                    <div className="text-[9px] text-yellow-300">
-                      HP:{' '}
-                      {opponentState.activeAvatar.health -
-                        (opponentState.activeAvatar.counters?.damage || 0)}
-                    </div>
+                <div className="cursor-pointer" onClick={(e) => handleAvatarClick(opponentState.activeAvatar!, e)}>
+                  <Card2D card={opponentState.activeAvatar} isPlayable={false} isInHand={false} isTapped={opponentState.activeAvatar.isTapped} counters={opponentState.activeAvatar.counters} scale={0.85} />
+                  <div className="text-center text-[9px] text-yellow-300 font-bold mt-0.5">
+                    HP {opponentState.activeAvatar.health - (opponentState.activeAvatar.counters?.damage || 0)}/{opponentState.activeAvatar.health}
                   </div>
                 </div>
               ) : (
-                <div className="h-32 border-2 border-dashed border-red-800 rounded flex items-center justify-center">
-                  <span className="text-xs text-red-400">No Avatar</span>
+                <div className="border-2 border-dashed border-red-800 rounded-lg flex items-center justify-center" style={{ height: '90px', width: '65px' }}>
+                  <span className="text-[10px] text-red-400 text-center">No Avatar</span>
                 </div>
               )}
             </div>
 
-            {/* Opponent Reserves */}
-            <div className="flex flex-col">
-              <div className="text-xs mb-1">
-                Reserves: {opponentState?.reserveAvatars?.length || 0}/2
-              </div>
-              {opponentState?.reserveAvatars && opponentState.reserveAvatars.length > 0 && (
-                <div className="flex gap-1">
-                  {opponentState.reserveAvatars.map((avatar, index) => (
-                    <div
-                      key={index}
-                      className="relative rounded cursor-pointer overflow-hidden ring-1 ring-red-700"
-                      style={{ width: '60px', height: '80px' }}
-                      onClick={(e) => handleAvatarClick(avatar, e)}
-                    >
-                      {(avatar.imagePath || avatar.art) && (
-                        <SafeCardImage
-                          src={getFixedCardImagePath(avatar)}
-                          alt={avatar.name}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 px-0.5 py-0.5">
-                        <div className="text-[9px] text-yellow-300 text-center">
-                          HP: {avatar.health - (avatar.counters?.damage || 0)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+            {/* Opponent reserves */}
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-gray-500">Reserves {opponentState?.reserveAvatars?.length || 0}/2</div>
+              {opponentState?.reserveAvatars?.map((avatar, index) => (
+                <div key={index} className="relative rounded cursor-pointer overflow-hidden ring-1 ring-red-700" style={{ width: '48px', height: '64px' }} onClick={(e) => handleAvatarClick(avatar, e)}>
+                  {(avatar.imagePath || avatar.art) && <SafeCardImage src={getFixedCardImagePath(avatar)} alt={avatar.name} className="w-full h-full object-cover" />}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 px-0.5 py-0.5">
+                    <div className="text-[9px] text-yellow-300 text-center">HP: {avatar.health - (avatar.counters?.damage || 0)}</div>
+                  </div>
+                </div>
+              ))}
+              {(!opponentState?.reserveAvatars || opponentState.reserveAvatars.length === 0) && (
+                <div className="border border-dashed border-gray-700 rounded w-12 h-16 flex items-center justify-center opacity-30">
+                  <span className="text-[9px] text-gray-500">Rsv</span>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Field */}
-      <div className="mb-4">
-        <h3 className="text-sm font-bold text-orange-400">Field</h3>
+        {/* ── FIELD ── */}
         <div
-          className="flex justify-center bg-gray-800 bg-opacity-30 p-2 rounded-lg border border-orange-500 border-opacity-30"
-          style={{ minHeight: `${cardWidth * 0.75}px` }}
+          className="flex items-center justify-center bg-gray-800 bg-opacity-30 p-2 rounded-lg border border-orange-500 border-opacity-30"
+          style={{ minHeight: '56px', boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
         >
-          <div
-            className="flex items-center justify-center"
-            style={{ width: `${cardWidth}px`, height: `${cardWidth * 0.6}px` }}
-          >
+          <div className="flex gap-3 items-center">
+            <h3 className="text-xs font-bold text-orange-400 tracking-widest uppercase">Field</h3>
             {playerState?.field && playerState.field.length > 0 ? (
-              <div className="text-xs text-center bg-purple-900 bg-opacity-70 p-1 rounded border border-purple-500">
+              <div className="text-xs text-center bg-purple-900 bg-opacity-70 p-2 rounded border border-purple-500 min-w-[80px]">
                 <div className="font-bold truncate">{playerState.field[0].name}</div>
                 <div className="text-[10px] text-gray-300">{playerState.field[0].type}</div>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-600 rounded p-1 w-full h-full flex items-center justify-center">
-                <span className="text-[10px] text-gray-400">Field</span>
+              <div className="border-2 border-dashed border-gray-600 rounded p-2 text-center min-w-[60px]">
+                <span className="text-[10px] text-gray-400">Empty</span>
               </div>
             )}
+            <button
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all duration-200 border-2 ${
+                isPlayerTurn
+                  ? 'bg-orange-600 border-orange-400 text-white hover:bg-orange-500'
+                  : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
+              onClick={handleNextPhase}
+              disabled={!isPlayerTurn}
+            >
+              Next Phase →
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all duration-200 border-2 ${
+                isPlayerTurn
+                  ? 'bg-gray-700 border-gray-600 text-white hover:bg-orange-600 hover:border-orange-500'
+                  : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
+              onClick={() => {
+                if (isAnteGame) { sendAnteAction({ type: 'endTurn' }) }
+                else if (isMultiplayer) { sendActionToServer({ type: 'endTurn' }) }
+                else { gameStore.endPhase() }
+              }}
+              disabled={!isPlayerTurn}
+            >
+              End Turn
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Player's board */}
-      <div className="mb-4">
-        <h3 className="text-sm font-bold mb-1 text-orange-400">Your Board</h3>
-        <div
-          className="flex justify-between bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30"
-          style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.1)' }}
-        >
-          {/* Player Stats */}
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-semibold text-blue-400">
-              Life: {playerState?.lifeCards?.length || 0}
-            </div>
-            <div className="text-xs font-semibold text-blue-400">
-              Spektra: {playerState?.spektraPile?.length || 0}
-            </div>
-            <div className="relative mt-1" style={{ width: '50px', height: '65px' }}>
-              <img
-                src="/card_back.png"
-                alt="Deck"
-                className="w-full h-full object-cover rounded border-2 border-blue-600"
-              />
-              <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {playerState?.deck?.length || 0}
+        {/* ── BATTLE LOG ── */}
+        <div className="bg-gray-950 border border-gray-800 rounded-lg p-2">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Battle Log</div>
+          <div className="max-h-16 overflow-y-auto" ref={gameLogRef}>
+            {logs.map((log: string, index: number) => (
+              <div key={index} className={`text-[10px] leading-relaxed ${index === logs.length - 1 ? 'text-orange-300' : 'text-gray-600'}`}>
+                › {log}
               </div>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* Spektra Pile */}
-          <div className="flex flex-col mr-4 relative">
-            <span className="text-xs font-semibold mb-1">Spektra Pile:</span>
-            <div className="flex flex-wrap gap-0.5 max-w-[150px]">
-              {playerState?.spektraPile?.map((card, index) => (
-                <div
-                  key={`spektra-${card.id}-${index}`}
-                  className="w-5 h-5 rounded-full border border-amber-500 flex items-center justify-center"
-                  title={`${card.name} (${card.element})`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      card.element === 'fire'
-                        ? 'bg-red-500'
-                        : card.element === 'water'
-                        ? 'bg-blue-500'
-                        : card.element === 'ground'
-                        ? 'bg-amber-800'
-                        : card.element === 'air'
-                        ? 'bg-cyan-300'
-                        : 'bg-gray-400'
-                    }`}
-                  />
-                </div>
-              ))}
-              {(!playerState?.spektraPile || playerState.spektraPile.length === 0) && (
-                <span className="text-[10px] text-gray-400">Empty</span>
-              )}
-            </div>
-          </div>
-
-          {/* Player Avatar */}
-          <div className="w-1/4">
-            {playerState?.activeAvatar ? (
-              <div
-                className={`cursor-pointer relative ${
-                  isTargetingEvolution && validEvolutionTargets.includes('active')
-                    ? 'ring-4 ring-orange-400 rounded hover:ring-orange-300 animate-pulse'
-                    : ''
-                }`}
-                onClick={(e) => {
-                  if (isTargetingEvolution && validEvolutionTargets.includes('active')) {
-                    handleEvolutionSelection('active')
-                    return
-                  }
-                  handleAvatarClick(playerState.activeAvatar!, e)
-                }}
-              >
-                <Card2D
-                  card={playerState.activeAvatar}
-                  isPlayable={true}
-                  isTapped={playerState.activeAvatar.isTapped}
-                  onClick={() => {}}
-                />
-
-                {isPlayerTurn && gamePhase === 'battle' && !playerState.activeAvatar.isTapped && (
-                  <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-1">
-                    {(() => {
-                      const skill1 =
-                        playerState.activeAvatar.skills?.[0] || playerState.activeAvatar.skill1
-                      const skill2 =
-                        playerState.activeAvatar.skills?.[1] || playerState.activeAvatar.skill2
-
-                      return (
-                        <>
-                          {skill1 && (
-                            <button
-                              className="text-[8px] px-1 py-0.5 rounded-sm bg-red-600 hover:bg-red-500 text-white"
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation()
-                                handleSkillUse(1)
-                              }}
-                            >
-                              {skill1.name}
-                            </button>
-                          )}
-                          {skill2 && (
-                            <button
-                              className="text-[8px] px-1 py-0.5 rounded-sm bg-purple-600 hover:bg-purple-500 text-white"
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation()
-                                handleSkillUse(2)
-                              }}
-                            >
-                              {skill2.name}
-                            </button>
-                          )}
-                        </>
-                      )
-                    })()}
+        {/* ── PLAYER BOARD ── */}
+        <div>
+          <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">Your Board</h3>
+          <div
+            className="flex justify-between bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30"
+            style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
+          >
+            {/* Player stats + deck */}
+            <div className="flex flex-col gap-1.5">
+              <div className="relative" style={{ width: '50px', height: '65px' }}>
+                <img src="/cards/card_back.png" alt="Player Deck" className="w-full h-full object-cover rounded border-2 border-blue-600" />
+                <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{playerState?.deck?.length || 0}</div>
+              </div>
+              <div className="text-[10px] text-blue-400 font-semibold">Life ({playerState?.lifeCards?.length || 0}):</div>
+              <div className="flex gap-0.5 mb-1">
+                {Array.from({ length: playerState?.lifeCards?.length || 0 }).map((_, i) => (
+                  <img key={i} src="/cards/card_back.png" alt="Life Card" className="object-cover rounded border border-blue-600/70" style={{ width: '14px', height: '19px' }} />
+                ))}
+              </div>
+              <div>
+                <div className="text-[10px] text-gray-400 mb-1">Spektra Pile:</div>
+                {(playerState?.spektraPile?.length || 0) > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {playerState?.spektraPile?.map((card, i) => (
+                      <div key={`spektra-${card.id}-${i}`} className="w-5 h-5 rounded-full border border-amber-500 flex items-center justify-center" title={`${card.name} (${card.element})`}>
+                        <div className={`w-3 h-3 rounded-full ${card.element === 'fire' ? 'bg-red-500' : card.element === 'water' ? 'bg-blue-500' : card.element === 'ground' ? 'bg-amber-800' : card.element === 'air' ? 'bg-cyan-300' : 'bg-gray-400'}`} />
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <span className="text-[10px] text-gray-500">Empty</span>
                 )}
               </div>
-            ) : (
-              <div className="h-32 border-2 border-dashed border-blue-800 rounded flex items-center justify-center">
-                <span className="text-xs text-blue-400">No Avatar</span>
-              </div>
-            )}
-          </div>
-
-          {/* Reserve Avatars */}
-          <div className="flex flex-col">
-            <div className="text-xs mb-1">
-              Reserves: {playerState?.reserveAvatars?.length || 0}/2
             </div>
-            <div className="flex gap-1">
+
+            {/* Player active avatar */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Active Avatar</span>
+              {playerState?.activeAvatar ? (
+                <div
+                  className={`cursor-pointer transition-all duration-200 ${isTargetingEvolution && validEvolutionTargets.includes('active') ? 'ring-4 ring-orange-400 rounded-lg animate-pulse' : ''}`}
+                  onClick={(e) => {
+                    if (isTargetingEvolution && validEvolutionTargets.includes('active')) { handleEvolutionSelection('active'); return }
+                    handleAvatarClick(playerState.activeAvatar!, e)
+                  }}
+                >
+                  <Card2D card={playerState.activeAvatar} isPlayable={true} isInHand={false} isTapped={playerState.activeAvatar.isTapped} counters={playerState.activeAvatar.counters} scale={0.85} />
+                  <div className="text-center text-[9px] text-yellow-300 font-bold mt-0.5">
+                    HP {playerState.activeAvatar.health - (playerState.activeAvatar.counters?.damage || 0)}/{playerState.activeAvatar.health}
+                  </div>
+                  {isPlayerTurn && gamePhase === 'battle' && !playerState.activeAvatar.isTapped && (() => {
+                    const skill1 = playerState.activeAvatar!.skills?.[0] || (playerState.activeAvatar as any).skill1
+                    const skill2 = playerState.activeAvatar!.skills?.[1] || (playerState.activeAvatar as any).skill2
+                    return (skill1 || skill2) ? (
+                      <div className="flex justify-center gap-1 mt-1">
+                        {skill1 && <button className="text-[9px] px-2 py-0.5 rounded font-bold bg-red-600 hover:bg-red-500 text-white" onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleSkillUse(1) }}>{skill1.name}</button>}
+                        {skill2 && <button className="text-[9px] px-2 py-0.5 rounded font-bold bg-purple-600 hover:bg-purple-500 text-white" onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleSkillUse(2) }}>{skill2.name}</button>}
+                      </div>
+                    ) : null
+                  })()}
+                </div>
+              ) : (
+                <div className="w-16 border-2 border-dashed border-blue-800 rounded-lg flex flex-col items-center justify-center cursor-pointer" style={{ height: '91px' }}>
+                  <span className="text-[9px] text-blue-400 text-center px-1 leading-tight">Deploy Avatar here</span>
+                </div>
+              )}
+            </div>
+
+            {/* Player reserves */}
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-gray-500">Reserves {playerState?.reserveAvatars?.length || 0}/2</div>
               {playerState?.reserveAvatars?.map((avatar, index) => (
                 <div
                   key={index}
-                  className={`relative rounded cursor-pointer overflow-hidden transition-all hover:shadow-lg ${
-                    isTargetingEvolution && validEvolutionTargets.includes(index)
-                      ? 'ring-2 ring-orange-400 hover:ring-orange-300 animate-pulse'
-                      : 'ring-1 ring-blue-700'
-                  }`}
-                  style={{ width: '60px', height: '80px' }}
-                  onClick={(e) => {
-                    if (isTargetingEvolution && validEvolutionTargets.includes(index)) {
-                      handleEvolutionSelection(index)
-                      return
-                    }
-                    handleAvatarClick(avatar, e)
-                  }}
+                  className={`relative rounded cursor-pointer overflow-hidden transition-all ${isTargetingEvolution && validEvolutionTargets.includes(index) ? 'ring-2 ring-orange-400 animate-pulse' : 'ring-1 ring-blue-700'}`}
+                  style={{ width: '48px', height: '64px' }}
+                  onClick={(e) => { if (isTargetingEvolution && validEvolutionTargets.includes(index)) { handleEvolutionSelection(index); return } handleAvatarClick(avatar, e) }}
                 >
-                  {(avatar.imagePath || avatar.art) && (
-                    <SafeCardImage
-                      src={getFixedCardImagePath(avatar)}
-                      alt={avatar.name}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  {(avatar.imagePath || avatar.art) && <SafeCardImage src={getFixedCardImagePath(avatar)} alt={avatar.name} className="w-full h-full object-cover" />}
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 px-0.5 py-0.5">
-                    <div className="text-[9px] text-yellow-300 text-center">
-                      HP: {avatar.health - (avatar.counters?.damage || 0)}
-                    </div>
+                    <div className="text-[9px] text-yellow-300 text-center">HP: {avatar.health - (avatar.counters?.damage || 0)}</div>
                   </div>
                 </div>
               ))}
+              {(!playerState?.reserveAvatars || playerState.reserveAvatars.length === 0) && (
+                <>
+                  <div className="border border-dashed border-gray-700 rounded w-12 h-16 flex items-center justify-center opacity-30"><span className="text-[9px] text-gray-500">Rsv</span></div>
+                  <div className="border border-dashed border-gray-700 rounded w-12 h-16 flex items-center justify-center opacity-30"><span className="text-[9px] text-gray-500">Rsv</span></div>
+                </>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Player's hand */}
-      <h3 className="text-sm font-bold mb-1 text-center text-orange-400">
-        Your Hand ({playerState?.hand?.length || 0})
-      </h3>
-      <div
-        className="bg-gray-800 bg-opacity-50 p-2 rounded mb-2 flex justify-center"
-        style={{ position: 'relative', overflow: 'visible' }}
-      >
-        <div className="flex gap-8" style={{ position: 'relative' }}>
-          {(playerState?.hand as Card[] | undefined)?.map((card, index) => (
-            <div
-              key={card.id}
-              style={{
-                width: `${cardWidth * 0.6}px`,
-                transition: 'all 0.2s ease-out',
-                cursor: 'pointer',
-                position: 'relative',
-                zIndex: 10,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.10) translateY(-25px)'
-                e.currentTarget.style.zIndex = '50'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1) translateY(0)'
-                e.currentTarget.style.zIndex = '10'
-              }}
-            >
-              <Card2D
-                card={card}
-                isPlayable={isCardPlayable(card)}
-                isInHand={true}
-                scale={0.6}
-                onClick={() => setSelectedCard(card)}
-                onAction={(action) => handleCardAction(card, action)}
-              />
-            </div>
-          ))}
-          {(!playerState?.hand || playerState.hand.length === 0) && (
-            <div className="text-gray-400 text-xs">Your hand is empty</div>
-          )}
-        </div>
-      </div>
-
-      {/* Game logs */}
-      <div ref={gameLogRef} className="mt-4 bg-black bg-opacity-50 p-2 rounded h-32 overflow-y-auto">
-        <h3 className="text-xs font-bold mb-1">Game Log</h3>
-        {logs.map((log: string, index: number) => (
-          <div key={index} className="text-xs text-gray-300 mb-0.5">
-            {log}
+        {/* ── PLAYER HAND ── */}
+        <div>
+          <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">
+            Your Hand ({playerState?.hand?.length || 0} cards)
+          </h3>
+          <div
+            className="bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30 flex gap-2 flex-wrap"
+            style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)', minHeight: '110px' }}
+          >
+            {(playerState?.hand as Card[] | undefined)?.map((card) => (
+              <div key={card.id} className="transition-all duration-200 rounded-lg">
+                <Card2D
+                  card={card}
+                  isPlayable={isCardPlayable(card)}
+                  isInHand={true}
+                  scale={0.85}
+                  onClick={() => setSelectedCard(card)}
+                  onAction={(action) => handleCardAction(card, action)}
+                />
+              </div>
+            ))}
+            {(!playerState?.hand || playerState.hand.length === 0) && (
+              <span className="text-xs text-gray-500 italic self-center">Hand is empty</span>
+            )}
           </div>
-        ))}
+        </div>
+
       </div>
 
-      {/* Fixed Bottom Navigation Bar */}
-      {pathname?.startsWith('/game') && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t-2 border-orange-500 p-4 flex justify-center gap-3 z-50 shadow-lg"
-          style={{ boxShadow: '0 -0 20px rgba(249, 115, 22, 0.15)' }}
-        >
-          <button
-            className="bg-gradient-to-r from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 px-4 py-3 rounded-lg text-sm font-bold border border-red-500"
-            onClick={() => setShowForfeitDialog(true)}
-            style={{ boxShadow: '0 0 15px rgba(220, 38, 38, 0.3)' }}
-          >
-            Exit
-          </button>
-          <button
-            className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed border border-orange-400"
-            onClick={handleNextPhase}
-            disabled={!isPlayerTurn}
-            style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.3)' }}
-          >
-            Next Phase
-          </button>
-          <button
-            className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed border border-orange-400"
-            onClick={() => {
-              if (isAnteGame) {
-                sendAnteAction({ type: 'endTurn' })
-              } else if (isMultiplayer) {
-                sendActionToServer({ type: 'endTurn' })
-              } else {
-                gameStore.endPhase()
-              }
-            }}
-            disabled={!isPlayerTurn}
-            style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.3)' }}
-          >
-            End Turn
-          </button>
-        </div>
-      )}
 
       {/* Discard Card Modal */}
       {showDiscardModal && discardCard && (

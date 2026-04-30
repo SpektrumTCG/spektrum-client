@@ -1,0 +1,18 @@
+Additions for T001: Rust & CPI Context
+System Program Requirement: To execute system_program::transfer inside your handler, you must build a CpiContext. This requires the system_program. Since InitializePack creates a PDA, you likely already have system_program: Program<'info, System> in your accounts struct, but you must ensure it is explicitly passed into the transfer context alongside the owner (from) and treasury (to) accounts.
+
+Insufficient Funds Error Handling: While the Solana runtime will automatically fail the transaction if the user lacks the funds for the transfer and rent, adding a custom Anchor error for insufficient funds before the CPI call can provide cleaner error logs for debugging.
+
+Additions for T003: IDL Synchronization
+The "Double Build" Step: Your plan correctly notes that you need to update declare_id!() in lib.rs after the initial deploy. However, after updating declare_id!(), you must recompile the program (cargo build-sbf or anchor build).
+
+IDL Export: Updating the program ID changes the generated IDL (target/idl/spektrum_gacha.json). You must copy this newly generated IDL over to your frontend (client/src/...) so that the @coral-xyz/anchor client knows the correct address to route instructions to. Without this, your frontend will still try to communicate with the old or default localnet address.
+
+Additions for T004: Frontend Transaction Lifecycle
+Strict Transaction Confirmation: In your details, you mention submitting with connection.sendRawTransaction(signed.serialize()) and then storing the packNonce. sendRawTransaction only broadcasts the transaction; it does not mean it succeeded on-chain.
+
+Action: You must capture the returned transaction signature and await connection.confirmTransaction({ signature, ... }, 'confirmed'). Only after the promise resolves successfully should you store the packNonce and show the success UI. Failing to wait for confirmation can lead to phantom data in your database if the network drops the transaction.
+
+Deterministic PDA Derivation: Ensure your frontend derives the boosterPack PDA using PublicKey.findProgramAddressSync. The seeds you pass here (e.g., the user's pubkey, the packNonce byte array) must perfectly match the #[account(seeds = [...])] macro in your Rust program. If the buffer encoding differs even slightly, the Anchor instruction will fail with a constraint error.
+
+Pre-flight Balance Check: Before prompting the wallet to sign the transaction, check if wallet.balance >= priceLamports. If not, instantly surface an "Insufficient SOL" error in the UI. This prevents unnecessary RPC calls and user frustration from failed signature requests.

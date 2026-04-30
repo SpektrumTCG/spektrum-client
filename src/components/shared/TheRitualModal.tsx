@@ -177,7 +177,14 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
       }
 
       const result = await response.json();
+      // Wait briefly for DB commit, then sync decks with retry
+      await new Promise(r => setTimeout(r, 500));
       await useDeckStore.getState().syncDecksFromDatabase();
+      // Retry if the deck didn't appear (DB replication delay)
+      if (useDeckStore.getState().decks.length === 0) {
+        await new Promise(r => setTimeout(r, 1500));
+        await useDeckStore.getState().syncDecksFromDatabase();
+      }
       toast.success(`You received: ${result.deckName} (${result.totalCards} cards)!`, { duration: 5000 });
       onComplete(selectedFaction, assignedElement, deckId);
       setStep(3);
@@ -189,7 +196,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
 
   const handleFinish = useCallback(() => {
     onClose();
-    router.push('/deck-builder');
+    router.push('/cards');
   }, [router, onClose]);
 
   if (!isOpen) return null;

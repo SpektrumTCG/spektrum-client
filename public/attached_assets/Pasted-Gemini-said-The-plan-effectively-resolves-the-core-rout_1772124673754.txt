@@ -1,0 +1,27 @@
+Gemini said
+The plan effectively resolves the core routing issue by dynamically mapping the transaction request to the correct provider namespace.
+
+However, to ensure this integration meets the institutional-grade reliability expected for a platform created by Ondo, there are a few architectural blind spots in the broader wallet lifecycle that you should address alongside this fix.
+
+Here are the critical additions to consider:
+
+1. Dynamic Event Listener Management
+When you hardcode Phantom, you typically attach event listeners (like accountChanged or disconnect) directly to the Phantom object on mount. Now that the active wallet is dynamic, your event listener logic must also become dynamic.
+
+The Risk: If a user connects with Solflare, but your app is still listening to window.phantom.on('accountChanged', ...) from a previous session, changing accounts inside the Solflare extension will not update your application's UI. This can lead to a user accidentally signing a transaction with the wrong address.
+
+The Fix: Whenever walletType changes in your Zustand store, you must actively unbind the event listeners from the previous provider and bind them to the new getWalletProvider(walletType) object.
+
+2. Mobile Deep Link Parity
+Your previous tasks (specifically T002) addressed mobile connection stability by heavily modifying phantomDeeplink.ts.
+
+The Risk: If a user selects Solflare or Backpack on a mobile browser, attempting to use the Phantom deep link logic will fail. Solflare and Backpack do not use the phantom_session token system; they have their own Universal Link schemas and payload encryption methods.
+
+The Fix: If you intend to support Solflare and Backpack on mobile, you will need to create dedicated solflareDeeplink.ts and backpackDeeplink.ts handlers. If you only support Phantom on mobile for now, you must explicitly disable the Solflare and Backpack UI buttons for mobile users to prevent dead-ends.
+
+3. Provider State Cleansing on Switch
+When a user disconnects one wallet and connects another, residual state can cause conflicts.
+
+The Risk: If a user drops a Phantom session to switch to Solflare, lingering Phantom encryption keys in localStorage might interfere with your auto-reconnect logic on the next page load.
+
+The Fix: Ensure your disconnectWallet() function in the Zustand store forcefully purges all provider-specific tokens (e.g., Phantom's public keys, Solflare's internal session states) before setting the new walletType.

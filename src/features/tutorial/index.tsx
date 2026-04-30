@@ -121,7 +121,7 @@ export function TutorialFeature() {
   const handleSkip = () => {
     markTutorialCompleted();
     if (!ritualCompleted) { setShowRitualModal(true); return; }
-    router.push('/deck-builder');
+    router.push('/cards');
   };
 
   const handleComplete = () => {
@@ -146,7 +146,7 @@ export function TutorialFeature() {
     setRitualCompleted(true);
     setShowRitualModal(false);
     toast.success('Welcome to Spektrum! Your starter deck is ready.');
-    router.push('/deck-builder');
+    router.push('/cards');
   };
 
   const tutorialSteps = [
@@ -474,7 +474,7 @@ export function TutorialFeature() {
   const currentContent = tutorialSteps[currentStep - 1];
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pb-24 pt-14 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg p-4 mb-4 border-2 border-yellow-400" style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}>
           <div className="flex justify-between items-center mb-3">
@@ -580,7 +580,7 @@ export function TutorialFeature() {
 
       <TheRitualModal
         isOpen={showRitualModal}
-        onClose={() => { setShowRitualModal(false); router.push('/deck-builder'); }}
+        onClose={() => { setShowRitualModal(false); router.push('/cards'); }}
         onComplete={handleRitualComplete}
       />
     </div>

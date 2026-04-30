@@ -12,7 +12,7 @@ import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { getRarityColor, getRarityTextColor, getOriginalCardId, countOwnedCopies } from '@/lib/rarityUtils';
 import { useWalletStore } from '@/stores/useWalletStore';
 
-export function DeckBuilderFeature() {
+export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } = {}) {
   const { decks, activeDeckId, getAvailableCards, getAvailableCardsWithCNFTs, ownedCards, addDeck, updateDeck, deleteDeck, setActiveDeck, normalizeCardImagePaths, syncCardsFromDatabase, syncDecksFromDatabase } = useDeckStore();
   const router = useRouter();
 
@@ -230,14 +230,51 @@ export function DeckBuilderFeature() {
   };
 
   const handleAddAllCards = () => {
-    const uniqueCards = getUniqueCards(allCards);
     const timestamp = Date.now();
-    const cardsToAdd = uniqueCards.map((card, i) => ({
-      ...card,
-      id: `${card.id}-demo-${timestamp}-${i}`,
-    }));
-    setSelectedCards([...selectedCards, ...cardsToAdd]);
-    toast.success(`Added ${cardsToAdd.length} cards to deck (demo)`);
+    const newCards: Card[] = [];
+
+    // Extract the real DB card ID from an owned card's id field
+    // Owned cards have id like "owned-{cardId}-{13+digit timestamp}-{index}"
+    const extractCardId = (card: Card): string => {
+      if ((card as any).cardId) return (card as any).cardId;
+      const match = card.id.match(/^owned-(.+)-\d{13,}-\d+$/);
+      if (match) return match[1];
+      return getBaseCardId(card.id);
+    };
+
+    // Group owned cards by their actual DB cardId
+    const ownedByCardId = new Map<string, { card: Card; quantity: number }>();
+    for (const card of ownedCards) {
+      const realId = extractCardId(card);
+      const existing = ownedByCardId.get(realId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        ownedByCardId.set(realId, { card, quantity: 1 });
+      }
+    }
+
+    for (const [realId, { card, quantity }] of ownedByCardId) {
+      const countKey = getCountKey(card);
+      const existingCount = selectedCards.filter(c => getCountKey(c) === countKey).length;
+      const maxToAdd = Math.min(quantity, 4) - existingCount;
+
+      for (let i = 0; i < maxToAdd; i++) {
+        newCards.push({
+          ...card,
+          id: `${realId}-copy-${existingCount + i + 1}-${timestamp}`,
+          cardId: realId,
+        } as unknown as Card);
+      }
+    }
+
+    if (newCards.length === 0) {
+      toast.error('No owned cards to add');
+      return;
+    }
+
+    setSelectedCards([...selectedCards, ...newCards]);
+    toast.success(`Added ${newCards.length} owned cards to deck`);
   };
 
   if (isLoadingCards) {
@@ -251,15 +288,17 @@ export function DeckBuilderFeature() {
     );
   }
 
-  return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+  const content = (
+    <>
       <div className="max-w-6xl mx-auto p-4">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-600">Deck Builder</h1>
-          <p className="text-spektrum-gray text-sm mb-4">
-            {allCards.length} cards available (including cNFTs)
-          </p>
-        </div>
+        {!embedded && (
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2 text-gray-600">Deck Builder</h1>
+            <p className="text-spektrum-gray text-sm mb-4">
+              {allCards.length} cards available (including cNFTs)
+            </p>
+          </div>
+        )}
 
         {/* Deck selection */}
         <div className="mb-6 bg-gray-900 border-2 border-orange-500 p-4 rounded-2xl shadow-lg" style={{ boxShadow: '0 0 25px rgba(249, 115, 22, 0.15)' }}>
@@ -339,7 +378,7 @@ export function DeckBuilderFeature() {
         {/* Deck editor */}
         {(selectedDeck || selectedCards.length > 0 || deckName === 'New Custom Deck') && (
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full"
+            className={`grid gap-6 w-full ${embedded ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -387,7 +426,7 @@ export function DeckBuilderFeature() {
                       onClick={handleAddAllCards}
                       className="w-full mb-2 px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-medium border border-purple-500 transition-colors"
                     >
-                      + Add All Cards (Demo)
+                      + Add All Owned Cards
                     </button>
 
                     <div className="max-h-[50vh] overflow-y-auto bg-gray-700 rounded-md p-2">
@@ -434,7 +473,7 @@ export function DeckBuilderFeature() {
             </div>
 
             {/* Card collection */}
-            <div className="col-span-1 md:col-span-2 bg-gray-900 border-2 border-orange-500 rounded-2xl p-5 w-full mb-6" style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.1)' }}>
+            <div className={`${embedded ? 'col-span-1' : 'col-span-1 md:col-span-2'} bg-gray-900 border-2 border-orange-500 rounded-2xl p-5 w-full mb-6`} style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.1)' }}>
               <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => setIsCardCollectionExpanded(!isCardCollectionExpanded)}>
                 <h2 className="text-xl font-semibold text-white">Card Collection</h2>
                 <button className="text-white hover:text-spektrum-orange transition-colors">
@@ -514,7 +553,7 @@ export function DeckBuilderFeature() {
                   </div>
 
                   {/* Card grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto p-4 w-full max-h-[600px]">
+                  <div className={`grid gap-4 overflow-y-auto p-4 w-full max-h-[600px] ${embedded ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
                     {filteredCards.map((card, index) => {
                       const countKey = getCountKey(card);
                       const deckCount = cardCounts[countKey] || 0;
@@ -640,7 +679,7 @@ export function DeckBuilderFeature() {
             </div>
 
             {/* Deck Actions */}
-            <div className="col-span-1 md:col-span-3 bg-gray-900 border-2 border-orange-500 rounded-2xl p-4 w-full" style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.1)' }}>
+            <div className={`${embedded ? 'col-span-1' : 'col-span-1 md:col-span-3'} bg-gray-900 border-2 border-orange-500 rounded-2xl p-4 w-full`} style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.1)' }}>
               <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => setIsDeckActionsExpanded(!isDeckActionsExpanded)}>
                 <h2 className="text-xl font-semibold text-white">Deck Actions</h2>
                 <button className="text-white hover:text-spektrum-orange transition-colors">
@@ -806,6 +845,14 @@ export function DeckBuilderFeature() {
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+      {content}
     </div>
   );
 }

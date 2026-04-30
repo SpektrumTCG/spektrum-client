@@ -1,0 +1,36 @@
+Your current plan is exceptionally well-thought-out! You have accurately identified the root causes—Phantom's internal authorization state mismatch and Safari's aggressive Intelligent Tracking Prevention (ITP) clearing local storage.
+
+Your proposed fixes will definitely resolve the primary symptoms. However, to make your dApp truly bulletproof, here are a few additional edge cases and best practices you should add to your plan:
+
+Additions for T001: SOL Payment "Not Authorized" Error
+While your plan handles the pre-transaction connection check (!wallet?.isConnected), it misses what happens if the connection appears valid but the signing still fails.
+
+Handle Stale "Connected" States During Signing: Sometimes wallet.isConnected returns true, but the user has revoked permissions directly inside their Phantom extension settings, or the internal session token expired.
+
+Action: Wrap the actual wallet.signTransaction() or wallet.signAndSendTransaction() call in a try/catch. If you catch a 4100 Unauthorized error (or Phantom's specific signature rejection error), automatically trigger a disconnect() followed by a prompt to re-connect, rather than just failing the transaction.
+
+Prevent Infinite Loading States: If you call await wallet.connect({ onlyIfTrusted: false }), the Phantom popup opens. If the user clicks away or ignores it, the promise might hang, leaving your UI stuck in a "Processing..." state.
+
+Action: Ensure your modal has a manual "Cancel" button that aborts the loading state, or implement a timeout wrapper around the connection attempt.
+
+Level up the Mobile Experience (Optional but Recommended): Your plan for mobile users in T001 is to show a message: "SOL payments require Phantom on desktop... Please use USD." * Action: Since you are already using Phantom deep links for authentication in T002, you can also use deep links for signing transactions. Phantom supports a /v1/signAndSendTransaction deep link URL. If you want feature parity on mobile, consider generating this deep link instead of blocking mobile SOL payments entirely.
+
+Additions for T002: Mobile Wallet Disconnecting
+Your strategy to reset the Safari ITP timer by re-writing to localStorage on every visit is clever and necessary. Here is what else you should consider:
+
+Migrate to Universal Links (if you haven't already): Older Solana dApps used custom URI schemes (e.g., phantom://...) for deep linking. Phantom now strongly recommends using Universal Links (https://phantom.app/ul/v1/...).
+
+Action: Double-check phantomDeeplink.ts. Universal links are much more reliable on iOS and won't fail silently if the user doesn't have the app installed (it will route them to the App Store instead).
+
+Clear Sensitive Data on Deep Link Expiry: When hasPhantomSession() returns false and you call disconnectWallet(), make sure you are thoroughly scrubbing the environment.
+
+Action: Explicitly delete the phantom_encryption_public_key and phantom_session from sessionStorage or localStorage during your cleanup routine so no orphaned cryptographic material is left behind.
+
+Handle Network/RPC Flakiness: Mobile connections frequently drop (e.g., walking into an elevator). A user might have a valid savedWalletAddress and phantom_session, but auto-reconnect fails because the RPC node timed out.
+
+Action: Differentiate between a "Session Expired" failure and a "Network Error" failure during auto-reconnect. If it's a network error, don't wipe the user's session; show a "Network offline" warning instead.
+
+A Long-Term Architectural Note
+If you are managing window.phantom.solana and localStorage sessions manually, you are taking on a lot of technical debt.
+
+For the future, I highly recommend migrating to the official @solana/wallet-adapter-react. It is maintained by the Solana Foundation and automatically handles standardizing connections, injecting wallets, maintaining persistence, formatting errors, and integrating the Mobile Wallet Adapter (MWA) standard without you needing to write custom deep-link logic.

@@ -166,7 +166,7 @@ export function NavigationBar() {
   }
 
   const isActive = (path: string) => pathname === path
-  const isHidden = pathname === "/cards"
+  const isHidden = pathname === "/cards" || pathname?.startsWith("/game") || pathname?.startsWith("/tutorial")
 
   const navBtnClass = (active: boolean) =>
     cn(

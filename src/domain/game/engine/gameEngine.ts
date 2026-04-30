@@ -32,19 +32,18 @@ function createPlayer(id: string, name: string, deck: Card[], isActive: boolean)
 }
 
 export function startGame(playerDeck: Card[], opponentDeck: Card[]): GameState {
-  const firstPlayer = Math.random() < 0.5 ? 0 : 1
   return {
     currentTurn: 1,
-    phase: 'draw',
+    phase: 'setup',
     players: [
-      createPlayer('player', 'Player', playerDeck, firstPlayer === 0),
-      createPlayer('opponent', 'Opponent', opponentDeck, firstPlayer === 1),
+      createPlayer('player', 'Player', playerDeck, true),
+      createPlayer('opponent', 'Opponent', opponentDeck, false),
     ],
-    currentPlayerIndex: firstPlayer as 0 | 1,
+    currentPlayerIndex: 0 as 0 | 1,
     winner: null,
     turnTimer: 120,
-    lastAction: 'Game started',
-    battleLog: ['Game started'],
+    lastAction: 'Game started — deploy your Active Avatar!',
+    battleLog: ['Game started', 'Setup Phase: Deploy your Active Avatar from your hand.'],
     effectStack: [],
   }
 }
@@ -104,15 +103,40 @@ export function playAvatar(
 
 export function endPhase(state: GameState): GameState {
   if (state.phase === 'end') return nextTurn(state)
+
+  // Setup phase: both players must have an active avatar before moving on
+  if (state.phase === 'setup') {
+    const player = state.players[state.currentPlayerIndex]
+    if (!player.activeAvatar) return state // can't leave setup without deploying
+
+    // If opponent also needs setup, switch to them
+    const oppIndex: 0 | 1 = state.currentPlayerIndex === 0 ? 1 : 0
+    const opponent = state.players[oppIndex]
+    if (!opponent.activeAvatar) {
+      return { ...state, currentPlayerIndex: oppIndex }
+    }
+
+    // Both have avatars — move to draw phase for player 0 (first turn)
+    let next: GameState = {
+      ...state,
+      phase: 'draw',
+      currentPlayerIndex: 0,
+      currentTurn: 1,
+    }
+    // Auto-draw a card for the active player
+    next = drawCard(next, 0)
+    return next
+  }
+
   const order: Array<GameState['phase']> = ['draw', 'main', 'battle', 'end']
   const idx = order.indexOf(state.phase)
-  if (idx === -1) return state  // phase not in turn sequence, no-op
+  if (idx === -1) return state
   return { ...state, phase: order[idx + 1] ?? 'end' }
 }
 
 function nextTurn(state: GameState): GameState {
   const next: 0 | 1 = state.currentPlayerIndex === 0 ? 1 : 0
-  return {
+  let newState: GameState = {
     ...state,
     currentTurn: state.currentTurn + 1,
     phase: 'draw',
@@ -122,6 +146,9 @@ function nextTurn(state: GameState): GameState {
       { ...state.players[1], isActivePlayer: next === 1, discardedThisTurn: [] },
     ],
   }
+  // Auto-draw a card for the new active player
+  newState = drawCard(newState, next)
+  return newState
 }
 
 export function checkWinner(state: GameState): string | null {

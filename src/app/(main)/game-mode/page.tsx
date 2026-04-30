@@ -148,7 +148,7 @@ export default function GameModePage() {
             {decks.length === 0 ? (
               <div className="bg-gray-800 p-4 rounded-lg text-center border border-gray-600">
                 <p className="text-gray-400 mb-2">No decks available</p>
-                <Link href="/deck-builder" className="text-orange-400 hover:text-orange-300 underline">
+                <Link href="/cards" className="text-orange-400 hover:text-orange-300 underline">
                   Create a Deck
                 </Link>
               </div>
@@ -174,7 +174,7 @@ export default function GameModePage() {
             )}
 
             <div className="flex justify-end mt-1.5">
-              <Link href="/deck-builder" className="text-orange-400 hover:text-orange-300 text-xs font-medium">
+              <Link href="/cards" className="text-orange-400 hover:text-orange-300 text-xs font-medium">
                 Manage Decks
               </Link>
             </div>

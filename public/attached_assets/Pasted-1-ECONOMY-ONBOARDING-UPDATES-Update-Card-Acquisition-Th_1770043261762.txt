@@ -1,0 +1,95 @@
+1. ECONOMY & ONBOARDING UPDATES
+Update: Card Acquisition (The Starter Deck)
+Replace the note about "free packs" with this detailed onboarding flow:
+New Player Onboarding: "The Ritual"
+Upon completing the Tutorial, players undergo "The Ritual" to receive their first Starter Deck (40 cards). This ensures every new player can jump immediately into gameplay without needing to build a deck from scratch.
+Choose Your Path: The player selects their preferred Faction:
+The Guardians (Kobar & Borah): Focuses on high defense, healing, and physical prowess.
+The Corrupted (Kuhaka & Kujana): Focuses on dark magic, debuffs, and aggressive combos.
+Elemental Affinity: The game randomly assigns an Elemental Affinity (Fire or Water) to the chosen faction.
+Result: The player receives a complete, battle-ready deck matching that specific Faction/Element combination.
+Update: Rarity-Tier Packs (The Slot System)
+Replace the "Rarity-Tier Packs" table with this definitive Slot System table:
+Booster Pack Slot Breakdown
+Instead of random percentages, every pack guarantees specific slot allocations to ensure value at every price point.
+
+
+Pack Name
+Price (USDC)
+Slot Breakdown (5 Cards)
+Wild/Jackpot Slot Odds
+Beginner Pack
+$1.00
+• 3x Common
+• 1x Uncommon
+• 1x Wild Slot
+Wild Slot Rates:
+• 90% Common
+• 9.9% Rare
+• 0.1% Super Rare
+Advanced Pack
+$5.00
+• 2x Common
+• 2x Uncommon
+• 1x Rare Slot
+Rare Slot Rates:
+• 90% Rare (Guaranteed)
+• 9.9% Super Rare
+• 0.1% Mythic
+Expert Pack
+$10.00
+• 3x Uncommon
+• 1x Rare
+• 1x Super Rare Slot
+Super Rare Slot Rates:
+• 90% Super Rare (Guaranteed)
+• 10% Mythic
+(Contains NO Common Cards)
+
+
+
+2. CORE MECHANICS (The Missing Rules)
+Add these definitions to the "Core Mechanics" section or create an "Appendix: Game Rules" section.
+Hand & Resource Limits
+Maximum Hand Size: The maximum hand size is 10 cards. If a player holds more than 10 cards at the end of their turn, they must discard down to 10.
+Maximum Spektra: The Spektra Pile is capped at 10 cards. Players cannot add more Avatars to the pile once this limit is reached.
+Deck Out (Fatigue): If a player attempts to draw a card from an empty deck, they take Fatigue Damage.
+Effect: The player's Active Avatar takes 1 damage (increasing by +1 for each subsequent draw attempt).
+Deck Building Restrictions
+Mythic Limit: While standard cards allow up to 4 copies, Mythic Rarity cards are limited to 1 copy per deck to preserve game balance.
+Life Card Origin
+Setup: At the start of the match, after decks are shuffled, players draw the top 4 cards of their deck and place them face-down as Life Cards. These are removed from the drawable deck count.
+Equipment & Item Logic
+Item Usage: There is no limit to the number of Item cards played per turn, provided the player has the Spektra to pay for them. (Remove the "Limit 1" rule at ).
+Equipment Capacity: An Avatar can hold a maximum of 2 Equipment Cards at any time.
+Overwriting: If an Avatar is at full capacity, the player may choose to destroy an existing attached Equipment card to make room for a new one.
+3. GAMEPLAY LOGIC (Developer Specifications)
+These rules clarify the "gray areas" in the Combat and Turn Structure sections.
+Combat State & Switching
+Switching Exhaustion: When an Avatar is moved from Reserve to the Active slot (via the "Switching" action ), it enters the field Exhausted.
+Rule: It cannot attack this turn unless it possesses a specific skill (e.g., "Ambush" or "Haste").
+Exception: This does not apply to Avatars promoted automatically after a death; only manual switching triggers Exhaustion.
+Turn Phasing & Death
+Main Phase 2 Resources: Spektra does not refresh at the start of Main Phase 2. Players must save unspent Spektra from Main Phase 1 if they wish to use cards after the Battle Phase.
+Immediate Promotion: If an Active Avatar is defeated during the Damage Phase, the "Recheck" happens instantaneously. The player must promote a Reserve Avatar immediately before play proceeds to Main Phase 2. There is never an "Empty Board" state during a Main Phase.
+Card Zones & Interactions
+The Spektra Pile: Cards placed in the Spektra Pile are considered "Exiled Energy."
+They lose their Avatar stats/types.
+They cannot be targeted, destroyed, or returned to the hand/deck by any card effect.
+Reserve Overflow: If a player's Reserve slots are full (Max 2), any effect that attempts to summon or spawn a unit into the Reserve fails (the spell fizzles or the card returns to hand).
+Graveyard Logic: When an Avatar is defeated or an Equipment card is destroyed, it moves to the Graveyard.
+Status & Stats
+Negative Stat Floor: An Avatar's Attack or Health cannot drop below 0. If a debuff would reduce stats below 0, they remain at 0. (Attacks with 0 Attack deal 0 damage).
+Status Timing: Damage-over-time effects (Burn, Bleed) trigger during the End Phase.
+Freeze Definition: A "Frozen" Avatar cannot Attack, use Active Skills, or Evolve. It can still be swapped to the Reserve manually.
+Evolution Math: When an Avatar evolves, existing damage counters persist.
+Calculation: New Current HP = Old Current HP + (New Max HP - Old Max HP).
+Special Card Types
+Field Cards: Field Cards are Global Unique. Only one Field Card can be active at a time. If a player plays a new Field Card, the existing Field Card (regardless of owner) is destroyed. But the cost of the Field Card will +1 from its card cost
+
+4. BUSINESS & MONETIZATION
+Add this line to the "Trading & Marketplace" section.
+Marketplace Fees
+Ecosystem Royalties: A standard 5% royalty fee applies to all player-to-player marketplace transactions. These funds are reinvested into the ecosystem to support tournament prize pools, development, and server costs.
+
+

@@ -110,6 +110,7 @@ export function InteractiveTutorialFeature() {
   const [showVictory, setShowVictory]           = useState(false)
   const [oppPhase, setOppPhase]                 = useState<OppPhase>('idle')
   const animTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const battleLogRef = useRef<HTMLDivElement>(null)
 
   const [playerHand, setPlayerHand]         = useState<(AvatarCard | ActionCard)[]>([
     KOBAR_TRAINEE, BORAH_TRAINEE, BORAH_TRAINEE_B, FLAME_FLICKER,
@@ -341,6 +342,10 @@ export function InteractiveTutorialFeature() {
   useEffect(() => () => animTimers.current.forEach(clearTimeout), [])
 
   useEffect(() => {
+    battleLogRef.current?.scrollTo({ top: battleLogRef.current.scrollHeight, behavior: 'smooth' })
+  }, [battleLog])
+
+  useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setSelectedId(null); setAttackingField(false) }
     }
@@ -383,7 +388,7 @@ export function InteractiveTutorialFeature() {
         </div>
       )}
 
-      <div className="w-full min-h-screen bg-gray-900 text-white relative overflow-x-hidden pb-6">
+      <div className="w-full min-h-screen bg-gray-900 text-white relative overflow-x-hidden pb-20 z-[25]" style={{ paddingTop: 56 }}>
 
         {/* Opponent-turn overlay */}
         {oppPhase !== 'idle' && (
@@ -603,6 +608,21 @@ export function InteractiveTutorialFeature() {
             </div>
           </div>
 
+          {/* ── BATTLE LOG ── */}
+          <div className="bg-gray-950 border border-gray-800 rounded-lg p-2">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Battle Log</div>
+            <div className="max-h-16 overflow-y-auto" ref={battleLogRef}>
+              {battleLog.map((entry, i) => (
+                <div
+                  key={i}
+                  className={`text-[10px] leading-relaxed ${i === battleLog.length - 1 ? 'text-orange-300' : 'text-gray-600'}`}
+                >
+                  › {entry}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ── PLAYER BOARD ── */}
           <div>
             <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">Your Board</h3>
@@ -800,19 +820,6 @@ export function InteractiveTutorialFeature() {
                 <span className="text-xs text-gray-500 italic self-center">Hand is empty</span>
               )}
             </div>
-          </div>
-
-          {/* ── BATTLE LOG ── */}
-          <div className="bg-gray-950 border border-gray-800 rounded-lg p-2">
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Battle Log</div>
-            {battleLog.map((entry, i) => (
-              <div
-                key={i}
-                className={`text-[10px] leading-relaxed ${i === battleLog.length - 1 ? 'text-orange-300' : 'text-gray-600'}`}
-              >
-                › {entry}
-              </div>
-            ))}
           </div>
 
         </div>
