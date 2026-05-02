@@ -61,9 +61,11 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       const baseId = (card as any).cardId || card.id.replace(/^(owned-|deck-[^-]+-)/,'').replace(/-\d+(-\d+)?$/, '')
       const registryCard = registryMap.get(card.id) || registryMap.get(baseId)
       if (registryCard) {
+        // Strip undefined values from deck card so they don't overwrite registry data
+        const defined = Object.fromEntries(Object.entries(card).filter(([, v]) => v !== undefined))
         return {
           ...registryCard,
-          ...card,
+          ...defined,
           imagePath: card.imagePath || registryCard.imagePath || (registryCard as any).art,
           art: card.art || (registryCard as any).art || registryCard.imagePath,
           skills: (card as any).skills?.length ? (card as any).skills : (registryCard as any).skills,

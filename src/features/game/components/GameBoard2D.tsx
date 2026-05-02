@@ -620,7 +620,6 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
               {isMultiplayer ? `VS ${opponentName}` : gameMode.mode === 'playerVsAI' ? `VS AI - ${gameMode.aiDifficulty.charAt(0).toUpperCase() + gameMode.aiDifficulty.slice(1)}` : gameMode.mode === 'singlePlayer' ? 'Practice' : ''}
             </span>
           </div>
-          <button onClick={() => setShowForfeitDialog(true)} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">&#x2715; Exit</button>
         </div>
 
         {/* Selected card / skill hint banner */}
@@ -760,19 +759,6 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                   <span className="text-[10px] text-gray-400">Empty</span>
                 </div>
               )}
-              <button
-                onClick={handleNextAction}
-                disabled={!isPlayerTurn || gamePhase === 'setup'}
-                className={`
-                  px-3 py-1.5 rounded-lg font-bold text-xs transition-all duration-200 border-2
-                  ${isPlayerTurn && gamePhase !== 'setup'
-                    ? 'bg-orange-600 border-orange-400 text-white hover:bg-orange-500'
-                    : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'}
-                  ${shakingId === 'btn-next-turn' ? 'animate-shake' : ''}
-                `}
-              >
-                {nextActionLabel}
-              </button>
             </div>
           </div>
 
@@ -1089,6 +1075,37 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
           />
         )}
 
+        {/* ── Bottom Action Bar ── */}
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t-2 border-orange-500 px-4 py-3 flex items-center justify-between"
+          style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}
+        >
+          <button
+            onClick={() => setShowForfeitDialog(true)}
+            className="px-4 py-2 rounded-lg font-bold text-sm bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white transition-all"
+          >
+            Exit
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 hidden sm:inline">
+              Turn {turn} &bull; {gamePhase}
+            </span>
+            <button
+              onClick={handleNextAction}
+              disabled={!isPlayerTurn || gamePhase === 'setup'}
+              className={`
+                px-6 py-2 rounded-lg font-bold text-sm transition-all duration-200 border-2
+                ${isPlayerTurn && gamePhase !== 'setup'
+                  ? 'bg-orange-600 border-orange-400 text-white hover:bg-orange-500 active:scale-95'
+                  : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'}
+              `}
+            >
+              {nextActionLabel}
+            </button>
+          </div>
+        </div>
+
         {/* Forfeit confirmation dialog */}
         {showForfeitDialog && (
           <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
@@ -1111,7 +1128,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                   Stay in Game
                 </button>
                 <button
-                  onClick={() => { setShowForfeitDialog(false); onForfeit?.() }}
+                  onClick={() => { setShowForfeitDialog(false); if (onForfeit) { onForfeit() } else { gameStore.resetGame(); router.push('/home') } }}
                   className="px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm"
                 >
                   {anteBattle.isAnteMode ? 'Forfeit & Lose Card' : 'Leave & Forfeit'}
