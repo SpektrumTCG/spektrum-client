@@ -1,4 +1,6 @@
 import type { Card, ElementType, CardCategory } from '../types/card'
+import { allCsvCards } from './cards/generated'
+// Legacy imports kept for reference / fallback
 import { allNewFireCards } from './cards/fire'
 import { blueElementalCards, blueElementalSpells, blueElementalFieldCards } from './cards/water'
 import { redElementalCards } from './cards/red'
@@ -13,7 +15,12 @@ function flatArray(val: unknown): Card[] {
   return [val as Card]
 }
 
-const ALL_CARDS: Card[] = [
+// Primary source: CSV-generated cards (source of truth)
+// Falls back to legacy hand-written cards for any IDs not in CSV
+const CSV_CARDS: Card[] = flatArray(allCsvCards)
+const csvIds = new Set(CSV_CARDS.map(c => c.id))
+
+const LEGACY_CARDS: Card[] = [
   ...flatArray(allNewFireCards),
   ...flatArray(blueElementalCards),
   ...flatArray(blueElementalSpells),
@@ -23,7 +30,9 @@ const ALL_CARDS: Card[] = [
   ...flatArray(allNonElementalCards),
   ...flatArray(advancedSpellCards),
   ...flatArray(conditionalDamageCards),
-]
+].filter(c => !csvIds.has(c.id))
+
+const ALL_CARDS: Card[] = [...CSV_CARDS, ...LEGACY_CARDS]
 
 // Deduplicate by id
 const uniqueCards: Card[] = Array.from(

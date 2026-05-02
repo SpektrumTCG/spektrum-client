@@ -1,6 +1,6 @@
 import { startGame, drawCard, addToSpektra, playAvatar, endPhase, checkWinner } from '../../engine/gameEngine'
 import { cardRegistry } from '../../data/cardRegistry'
-import type { AvatarCard } from '../../types'
+import { AvatarCard } from '../../types'
 
 function buildTestDeck() {
   const avatars = cardRegistry.getCardsByType('avatar').slice(0, 5) as AvatarCard[]
@@ -20,14 +20,14 @@ describe('startGame', () => {
     expect(state.players[1].hand).toHaveLength(5)
   })
 
-  it('starts in draw phase', () => {
+  it('starts in setup phase', () => {
     const state = startGame(buildTestDeck(), buildTestDeck())
-    expect(state.phase).toBe('draw')
+    expect(state.phase).toBe('setup')
   })
 
-  it('sets currentPlayerIndex to 0 or 1', () => {
+  it('sets currentPlayerIndex to 0', () => {
     const state = startGame(buildTestDeck(), buildTestDeck())
-    expect([0, 1]).toContain(state.currentPlayerIndex)
+    expect(state.currentPlayerIndex).toBe(0)
   })
 
   it('winner is null at start', () => {
@@ -80,7 +80,7 @@ describe('addToSpektra', () => {
 describe('playAvatar', () => {
   it('places avatar into active slot and removes from hand', () => {
     const initial = startGame(buildTestDeck(), buildTestDeck())
-    const avatar = initial.players[0].hand.find(c => c.type === 'avatar')
+    const avatar = initial.players[0].hand.find(c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1)
     if (!avatar) return
     const next = playAvatar(initial, 0, avatar.id, 'active')
     expect(next.players[0].activeAvatar?.id).toBe(avatar.id)
@@ -89,25 +89,28 @@ describe('playAvatar', () => {
 })
 
 describe('endPhase', () => {
-  it('draw → main', () => {
+  it('main1 → battle', () => {
     const initial = startGame(buildTestDeck(), buildTestDeck())
-    expect(endPhase({ ...initial, phase: 'draw' }).phase).toBe('main')
+    expect(endPhase({ ...initial, phase: 'main1' }).phase).toBe('battle')
   })
 
-  it('main → battle', () => {
+  it('battle → main2', () => {
     const initial = startGame(buildTestDeck(), buildTestDeck())
-    expect(endPhase({ ...initial, phase: 'main' }).phase).toBe('battle')
+    expect(endPhase({ ...initial, phase: 'battle' }).phase).toBe('main2')
   })
 
-  it('battle → end', () => {
+  it('main2 → end (via recheck)', () => {
     const initial = startGame(buildTestDeck(), buildTestDeck())
-    expect(endPhase({ ...initial, phase: 'battle' }).phase).toBe('end')
+    const next = endPhase({ ...initial, phase: 'main2' })
+    // recheck auto-advances to end
+    expect(next.phase).toBe('end')
   })
 
-  it('end → draw (next turn)', () => {
+  it('end → main1 (next turn via refresh→draw)', () => {
     const initial = startGame(buildTestDeck(), buildTestDeck())
     const next = endPhase({ ...initial, phase: 'end' })
-    expect(next.phase).toBe('draw')
+    // end triggers nextTurn which auto-processes refresh→draw→main1
+    expect(next.phase).toBe('main1')
     expect(next.currentTurn).toBe(initial.currentTurn + 1)
   })
 
@@ -124,13 +127,13 @@ describe('checkWinner', () => {
     expect(checkWinner(state)).toBeNull()
   })
 
-  it('returns winner id when opponent has no deck, life cards, or hand', () => {
+  it('returns winner id when opponent has no avatars, life cards, or playable hand', () => {
     const state = startGame(buildTestDeck(), buildTestDeck())
     const terminal: typeof state = {
       ...state,
       players: [
         state.players[0],
-        { ...state.players[1], deck: [], lifeCards: [], hand: [] },
+        { ...state.players[1], deck: [], lifeCards: [], hand: [], activeAvatar: null, reserveAvatars: [] },
       ],
     }
     expect(checkWinner(terminal)).toBe(state.players[0].id)

@@ -7,7 +7,7 @@ export class RegularAI extends BaseAI {
   decide(state: GameState, playerIndex: 0 | 1 = 1): AIDecision {
     const player = state.players[playerIndex]
 
-    if (state.phase !== 'main' && state.phase !== 'battle') {
+    if (state.phase !== 'main1' && state.phase !== 'main2' && state.phase !== 'battle') {
       return this.endPhase(`auto end ${state.phase}`)
     }
 

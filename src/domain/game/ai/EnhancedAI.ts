@@ -8,7 +8,7 @@ export class EnhancedAI extends BaseAI {
     const player = state.players[playerIndex]
     const opponent = state.players[playerIndex === 0 ? 1 : 0]
 
-    if (state.phase !== 'main' && state.phase !== 'battle') {
+    if (state.phase !== 'main1' && state.phase !== 'main2' && state.phase !== 'battle') {
       return this.endPhase(`auto end ${state.phase}`)
     }
 

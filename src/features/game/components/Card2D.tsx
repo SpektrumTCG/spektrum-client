@@ -98,7 +98,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
   const playHitSound = useAudio((state) => state.playHit)
   const playCard = useAudio((state) => state.playCard)
   const cardRef = useRef<HTMLDivElement>(null)
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
 
   const [isMobileView, setIsMobileView] = useState(false)
 
@@ -227,16 +226,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
   }
 
   const borderColor = isPlayable ? '#f5d76a' : '#666666'
-
-  useEffect(() => {
-    if (showActions && cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect()
-      setMenuPosition({
-        top: rect.top + window.scrollY,
-        left: rect.right + 10 + window.scrollX,
-      })
-    }
-  }, [showActions])
 
   const [visualRefreshCounter, setVisualRefreshCounter] = useState(0)
 
@@ -435,17 +424,13 @@ const Card2DInner: React.FC<Card2DProps> = ({
 
       {showActions && isPlayable && isInHand && document.body &&
         createPortal(
-          <>
+          <div
+            className="fixed inset-0 z-[9999998] flex items-center justify-center bg-black bg-opacity-60"
+            onClick={() => setShowActions(false)}
+          >
             <div
-              className="fixed inset-0 z-[9999998]"
-              onClick={() => setShowActions(false)}
-            />
-            <div
-              className="fixed bg-gray-800 rounded-lg p-3 border-2 border-orange-500 shadow-xl"
+              className="bg-gray-800 rounded-lg p-4 border-2 border-orange-500 shadow-xl w-[220px]"
               style={{
-                top: `${menuPosition.top}px`,
-                left: `${menuPosition.left + 10}px`,
-                width: `${width + 40}px`,
                 zIndex: 9999999,
                 boxShadow: '0 0 25px rgba(249, 115, 22, 0.4)',
               }}
@@ -453,27 +438,27 @@ const Card2DInner: React.FC<Card2DProps> = ({
             >
               <div className="relative">
                 <button
-                  className="absolute -right-2 -top-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border border-orange-400"
+                  className="absolute -right-2 -top-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border border-orange-400"
                   onClick={() => setShowActions(false)}
                 >
                   X
                 </button>
 
-                <div className="text-orange-400 text-xs font-bold mb-2 text-center border-b border-orange-500 pb-1">
-                  {card.name}
+                <div className="text-orange-400 text-sm font-bold mb-3 text-center border-b border-orange-500 pb-2">
+                  {card.name || (card as any).cardId || 'Card'}
                 </div>
 
                 <div className="flex flex-col gap-2">
                   {card.type === 'avatar' && (
                     <>
                       <button
-                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded p-1 text-xs font-bold border border-red-400"
+                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-lg p-2 text-sm font-bold border border-red-400"
                         onClick={() => handleAction('active')}
                       >
                         Place as Active Avatar
                       </button>
                       <button
-                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white rounded p-1 text-xs font-bold border border-orange-400"
+                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg p-2 text-sm font-bold border border-orange-400"
                         onClick={() => handleAction('reserve')}
                       >
                         Place as Reserve Avatar
@@ -483,25 +468,23 @@ const Card2DInner: React.FC<Card2DProps> = ({
 
                   {card.type !== 'avatar' && (
                     <button
-                      className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white rounded p-1 text-xs font-bold border border-orange-400"
+                      className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white rounded-lg p-2 text-sm font-bold border border-orange-400"
                       onClick={() => handleAction('play')}
                     >
                       Play Card
                     </button>
                   )}
 
-                  {card.type === 'avatar' && (
-                    <button
-                      className="bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white rounded p-1 text-xs font-bold border border-amber-500"
-                      onClick={() => handleAction('toSpektra')}
-                    >
-                      Use as Spektra
-                    </button>
-                  )}
+                  <button
+                    className="bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg p-2 text-sm font-bold border border-amber-500"
+                    onClick={() => handleAction('toSpektra')}
+                  >
+                    Use as Spektra
+                  </button>
                 </div>
               </div>
             </div>
-          </>,
+          </div>,
           document.body
         )}
     </>

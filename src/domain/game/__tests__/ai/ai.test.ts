@@ -13,7 +13,7 @@ describe.each(['newbie', 'regular', 'advanced'] as const)('%s AI', (difficulty) 
   it('returns a valid AIDecision for main phase', () => {
     const ai = AIFactory.create(difficulty)
     const state = startGame(buildTestDeck(), buildTestDeck())
-    const decision = ai.decide({ ...state, phase: 'main' }, 1)
+    const decision = ai.decide({ ...state, phase: 'main1' }, 1)
     expect(decision).toBeDefined()
     expect(decision.type).toBeDefined()
     expect(typeof decision.reasoning).toBe('string')
@@ -30,7 +30,7 @@ describe.each(['newbie', 'regular', 'advanced'] as const)('%s AI', (difficulty) 
         { ...state.players[1], hand: [] },
       ],
     }
-    const decision = ai.decide({ ...emptyHand, phase: 'main' }, 1)
+    const decision = ai.decide({ ...emptyHand, phase: 'main1' }, 1)
     expect(decision.type).toBe('endPhase')
   })
 

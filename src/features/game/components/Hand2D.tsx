@@ -24,7 +24,7 @@ export function Hand2D({
 
     if (
       currentPlayer !== 'player' ||
-      (gamePhase !== 'main1' && gamePhase !== 'main2')
+      (gamePhase !== 'main1' && gamePhase !== 'main2' && gamePhase !== 'setup')
     ) {
       return false
     }

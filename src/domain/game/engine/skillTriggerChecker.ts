@@ -1,5 +1,5 @@
 import type { AvatarCard } from '../types';
-import type { Player, GameState } from '../types/card';
+import type { Player, SkillCheckState } from '../types/card';
 
 // SkillEffect interface since it doesn't exist in cardTypes
 export interface SkillEffect {
@@ -10,7 +10,7 @@ export interface SkillEffect {
   conditions?: import('../types/card').StructuredCondition[];
 }
 
-export type { Player, GameState };
+export type { Player, SkillCheckState };
 
 // Interface for skill trigger check result
 export interface SkillTriggerResult {
@@ -28,7 +28,7 @@ export function checkSkillTrigger(
   skill: SkillEffect,
   avatar: AvatarCard,
   targetAvatar: AvatarCard | null | undefined,
-  gameState: GameState,
+  gameState: SkillCheckState,
   player: Player
 ): SkillTriggerResult {
   // Safety check for invalid inputs
@@ -271,7 +271,7 @@ export function applySkillTriggerEffects(
   targetAvatar: AvatarCard | null | undefined,
   player: Player,
   updateGameState: (update: any) => void,
-  gameState?: GameState
+  gameState?: SkillCheckState
 ): void {
   if (!triggerResult.shouldTrigger) {
     return;

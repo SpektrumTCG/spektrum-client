@@ -435,7 +435,7 @@ export const useDeckStore = create<DeckStore>()(
                   skills: dbCard.skills,
                   cardType: dbCard.cardType,
                   type: dbCard.type,
-                  level: dbCard.level !== undefined ? Number(dbCard.level) : undefined,
+                  level: dbCard.level !== undefined ? Number(dbCard.level) : (dbCard.type === 'avatar' ? 1 : undefined),
                   subType: dbCard.subType,
                   spektraCost: dbCard.spektraCost,
                   passiveSkills: dbCard.passiveSkills,
@@ -528,7 +528,7 @@ export const useDeckStore = create<DeckStore>()(
                 skills: card.skills,
                 cardType: card.cardType,
                 type: card.type,
-                level: card.level !== undefined ? Number(card.level) : undefined,
+                level: card.level !== undefined ? Number(card.level) : (card.type === 'avatar' ? 1 : undefined),
                 subType: card.subType,
                 effectType: card.effectType,
                 effectValue: card.effectValue,
@@ -581,16 +581,28 @@ export const useDeckStore = create<DeckStore>()(
         const freshCardMap = new Map<string, Card>();
         allFreshCards.forEach(card => freshCardMap.set(card.id, card));
 
-        const getBaseId = (id: string) => id.replace(/-copy-\d+(-\d+)?$/, '');
+        const findFreshCard = (card: Card): Card | undefined => {
+          // Try direct ID match
+          const direct = freshCardMap.get(card.id);
+          if (direct) return direct;
+          // Try cardId property (the canonical card ID)
+          const cardId = (card as any).cardId;
+          if (cardId) {
+            const byCardId = freshCardMap.get(cardId);
+            if (byCardId) return byCardId;
+          }
+          // Try stripping prefixes (owned-xxx-, deck-xxx-)
+          const stripped = card.id.replace(/^(owned-|deck-\d+-)/, '').replace(/-\d+(-\d+)?$/, '');
+          return freshCardMap.get(stripped);
+        };
 
         const normalizeCard = (card: Card): Card => {
-          const baseId = getBaseId(card.id);
-          const freshCard = freshCardMap.get(baseId) || freshCardMap.get(card.id);
-          if (freshCard && (freshCard.imagePath !== card.imagePath || freshCard.art !== card.art)) {
+          const freshCard = findFreshCard(card);
+          if (freshCard && (!card.imagePath || !card.art)) {
             return {
               ...card,
-              imagePath: freshCard.imagePath,
-              art: freshCard.art
+              imagePath: card.imagePath || freshCard.imagePath || freshCard.art,
+              art: card.art || freshCard.art || freshCard.imagePath
             };
           }
           return card;

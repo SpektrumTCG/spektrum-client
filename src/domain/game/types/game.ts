@@ -1,4 +1,4 @@
-import type { AvatarCard, BaseCard, ElementType } from './card';
+import type { AvatarCard, BaseCard, Card, ElementType } from './card';
 
 export interface Counter {
   bleed?: number;
@@ -21,23 +21,38 @@ export interface Player {
     air: number;
     neutral: number;
   };
-  spektraPile: BaseCard[];
-  usedSpektraPile: BaseCard[];
-  lifeCards: BaseCard[];
-  hand: BaseCard[];
-  deck: BaseCard[];
-  discardPile: BaseCard[];
-  field: BaseCard[];
+  spektraPile: Card[];
+  usedSpektraPile: Card[];
+  lifeCards: Card[];
+  hand: Card[];
+  deck: Card[];
+  discardPile: Card[];
+  graveyard: Card[];
+  field: Card[];
   activeAvatar: AvatarCard | null;
   reserveAvatars: AvatarCard[];
   counters: Counter;
-  discardedThisTurn: BaseCard[];
+  discardedThisTurn: Card[];
   isActivePlayer: boolean;
+  avatarToSpektraCount: number;
+  hasPlayedItemThisTurn: boolean;
+  equipmentActivations: Record<string, number>;
 }
+
+export type GamePhaseType =
+  | 'setup'
+  | 'refresh'
+  | 'draw'
+  | 'main1'
+  | 'battle'
+  | 'main2'
+  | 'recheck'
+  | 'end'
+  | 'game_over';
 
 export interface GameState {
   currentTurn: number;
-  phase: 'setup' | 'draw' | 'main' | 'battle' | 'end' | 'game_over';
+  phase: GamePhaseType;
   players: [Player, Player];
   currentPlayerIndex: 0 | 1;
   winner: string | null;

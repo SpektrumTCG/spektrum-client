@@ -30,7 +30,8 @@ export type EffectType =
   | 'peek_deck'      // Look at top card of deck
   | 'peek_place'     // Look at top cards and place one back, return rest to deck
   | 'peek_place_draw' // Look at top cards, place one on top, draw remaining
-  | 'spell_protection'; // Block next N spells matching criteria (element/type)
+  | 'spell_protection' // Block next N spells matching criteria (element/type)
+  | 'counter';         // Apply counter effect
 
 // Modifier types for continuous stat bonuses
 export type ModifierType =
@@ -285,8 +286,8 @@ export interface StructuredCondition {
   };
 }
 
-// Minimal player state for GameState (used by skillTriggerChecker and callers)
-export interface GamePlayerState {
+// Minimal player state for skill trigger checking (lightweight view)
+export interface SkillCheckPlayerState {
   hand: any[];
   spektraPile: any[];
   usedSpektraPile: any[];
@@ -296,11 +297,14 @@ export interface GamePlayerState {
   avatarToSpektraCount: number;
 }
 
-// GameState interface shared between client and server for checkSkillTrigger
-export interface GameState {
-  player: GamePlayerState;
-  opponent: GamePlayerState;
+// Lightweight game state for skillTriggerChecker (NOT the full engine GameState)
+export interface SkillCheckState {
+  player: SkillCheckPlayerState;
+  opponent: SkillCheckPlayerState;
   gamePhase: string;
   currentPlayer: Player;
   coinFlipResult?: boolean;
 }
+
+/** @deprecated Use SkillCheckPlayerState */
+export type GamePlayerState = SkillCheckPlayerState;

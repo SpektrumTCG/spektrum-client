@@ -8,9 +8,10 @@ export type {
   EffectType, ModifierType, FieldTriggerType, FieldTrigger, TriggerEffectType,
   ConditionType, HPThresholdOperator, ActivationType, EffectTargetType,
   ConditionalDamage, Skill, BaseCard, AvatarCard, FieldCard, ActionCard, Card,
-  GamePhase, SkillConditionType, StructuredCondition, GamePlayerState,
+  GamePhase, SkillConditionType, StructuredCondition,
+  SkillCheckState, SkillCheckPlayerState, GamePlayerState,
 } from './card'
 
-export type { Counter, Player, GameState, GameEffect, EffectCondition, BattleResult } from './game'
+export type { Counter, Player, GameState, GamePhaseType, GameEffect, EffectCondition, BattleResult } from './game'
 
 export * from './ai'

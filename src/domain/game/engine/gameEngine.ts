@@ -1,8 +1,12 @@
-import type { Card, AvatarCard } from '../types/card'
-import type { GameState, Player } from '../types/game'
+import type { Card, AvatarCard, ElementType, Skill } from '../types/card'
+import type { GameState, Player, GamePhaseType } from '../types/game'
+import type { SkillCheckState, SkillCheckPlayerState } from '../types/card'
+import { destroyAvatar } from './destroyAvatar'
+import { getValidEvolutionTargets } from './getValidEvolutionTargets'
 
 const INITIAL_HAND_SIZE = 5
 const INITIAL_LIFE_CARDS = 4
+const MAX_HAND_SIZE = 8
 
 function createPlayer(id: string, name: string, deck: Card[], isActive: boolean): Player {
   const shuffled = [...deck]
@@ -22,12 +26,16 @@ function createPlayer(id: string, name: string, deck: Card[], isActive: boolean)
     hand: shuffled.splice(0, INITIAL_HAND_SIZE),
     deck: shuffled,
     discardPile: [],
+    graveyard: [],
     field: [],
     activeAvatar: null,
     reserveAvatars: [],
     counters: { bleed: 0, burn: 0, poison: 0, stun: 0, shield: 0 },
     discardedThisTurn: [],
     isActivePlayer: isActive,
+    avatarToSpektraCount: 0,
+    hasPlayedItemThisTurn: false,
+    equipmentActivations: {},
   }
 }
 
@@ -48,6 +56,102 @@ export function startGame(playerDeck: Card[], opponentDeck: Card[]): GameState {
   }
 }
 
+// ─── Phase progression ───────────────────────────────────────────────────────
+
+const PHASE_ORDER: GamePhaseType[] = ['refresh', 'draw', 'main1', 'battle', 'main2', 'recheck', 'end']
+
+export function endPhase(state: GameState): GameState {
+  if (state.phase === 'game_over') return state
+  if (state.phase === 'end') return nextTurn(state)
+
+  // Setup phase: both players must have an active avatar before moving on
+  if (state.phase === 'setup') {
+    const player = state.players[state.currentPlayerIndex]
+    if (!player.activeAvatar) return state
+
+    const oppIndex: 0 | 1 = state.currentPlayerIndex === 0 ? 1 : 0
+    const opponent = state.players[oppIndex]
+    if (!opponent.activeAvatar) {
+      return { ...state, currentPlayerIndex: oppIndex }
+    }
+
+    // Both have avatars — start the game with refresh phase for player 0
+    return refreshPhase({ ...state, currentPlayerIndex: 0, currentTurn: 1 })
+  }
+
+  const idx = PHASE_ORDER.indexOf(state.phase)
+  if (idx === -1) return state
+  const nextPhaseType = PHASE_ORDER[idx + 1]
+  if (!nextPhaseType) return { ...state, phase: 'end' }
+
+  // Auto-process certain phases
+  if (nextPhaseType === 'refresh') return refreshPhase(state)
+  if (nextPhaseType === 'draw') return drawPhase(state)
+  if (nextPhaseType === 'recheck') return recheckPhase(state)
+
+  return { ...state, phase: nextPhaseType }
+}
+
+// ─── Refresh phase ───────────────────────────────────────────────────────────
+
+export function refreshPhase(state: GameState): GameState {
+  const pi = state.currentPlayerIndex
+  const player = state.players[pi]
+
+  // Move used spektra back to available
+  const refreshedPlayer: Player = {
+    ...player,
+    spektraPile: [...player.spektraPile, ...player.usedSpektraPile],
+    usedSpektraPile: [],
+    avatarToSpektraCount: 0,
+    hasPlayedItemThisTurn: false,
+    equipmentActivations: {},
+    discardedThisTurn: [],
+  }
+
+  // Untap all avatars
+  const untapped = untapAvatars(refreshedPlayer)
+
+  let next = updatePlayer(state, pi, untapped)
+  next = { ...next, phase: 'draw' }
+
+  // Auto-advance to draw
+  return drawPhase(next)
+}
+
+// ─── Draw phase ──────────────────────────────────────────────────────────────
+
+export function drawPhase(state: GameState): GameState {
+  let next = { ...state, phase: 'draw' as GamePhaseType }
+  // Draw 1 card for active player (skip on turn 1 since they already drew in setup)
+  next = drawCard(next, next.currentPlayerIndex)
+  return { ...next, phase: 'main1' }
+}
+
+// ─── Recheck phase ───────────────────────────────────────────────────────────
+
+export function recheckPhase(state: GameState): GameState {
+  const pi = state.currentPlayerIndex
+  const player = state.players[pi]
+
+  // Enforce max hand size — discard excess for AI, player handles via UI
+  if (player.hand.length > MAX_HAND_SIZE && player.id === 'opponent') {
+    const excess = player.hand.length - MAX_HAND_SIZE
+    const discarded = player.hand.slice(-excess)
+    const remaining = player.hand.slice(0, MAX_HAND_SIZE)
+    const updated: Player = {
+      ...player,
+      hand: remaining,
+      graveyard: [...player.graveyard, ...discarded],
+    }
+    return { ...updatePlayer(state, pi, updated), phase: 'end' }
+  }
+
+  return { ...state, phase: 'end' }
+}
+
+// ─── Card operations ─────────────────────────────────────────────────────────
+
 export function drawCard(state: GameState, playerIndex: 0 | 1): GameState {
   const player = state.players[playerIndex]
   if (player.deck.length === 0) return state
@@ -62,6 +166,8 @@ export function drawCard(state: GameState, playerIndex: 0 | 1): GameState {
 
 export function addToSpektra(state: GameState, playerIndex: 0 | 1, cardId: string): GameState {
   const player = state.players[playerIndex]
+  if (player.avatarToSpektraCount >= 1) return state // Limit: 1 per turn
+
   const card = player.hand.find(c => c.id === cardId)
   if (!card) return state
 
@@ -69,6 +175,7 @@ export function addToSpektra(state: GameState, playerIndex: 0 | 1, cardId: strin
     ...player,
     hand: player.hand.filter(c => c.id !== cardId),
     spektraPile: [...player.spektraPile, card],
+    avatarToSpektraCount: player.avatarToSpektraCount + 1,
   })
 }
 
@@ -82,9 +189,13 @@ export function playAvatar(
   const card = player.hand.find(c => c.id === cardId)
   if (!card || card.type !== 'avatar') return state
 
-  const placed: AvatarCard = { ...(card as AvatarCard), turnPlayed: state.currentTurn, isTapped: false }
+  const avatar = card as AvatarCard
+  if (Number(avatar.level) !== 1) return state // Only Level 1 can be placed directly
+
+  const placed: AvatarCard = { ...avatar, turnPlayed: state.currentTurn, isTapped: false }
 
   if (slot === 'active') {
+    if (player.activeAvatar) return state // Slot occupied
     return updatePlayer(state, playerIndex, {
       ...player,
       hand: player.hand.filter(c => c.id !== cardId),
@@ -92,8 +203,12 @@ export function playAvatar(
     })
   }
 
+  const reserveIdx = slot as number
+  if (reserveIdx < 0 || reserveIdx >= 2) return state
+  if (player.reserveAvatars[reserveIdx]) return state // Slot occupied
+
   const reserve = [...player.reserveAvatars]
-  reserve[slot as number] = placed
+  reserve[reserveIdx] = placed
   return updatePlayer(state, playerIndex, {
     ...player,
     hand: player.hand.filter(c => c.id !== cardId),
@@ -101,64 +216,503 @@ export function playAvatar(
   })
 }
 
-export function endPhase(state: GameState): GameState {
-  if (state.phase === 'end') return nextTurn(state)
+// ─── Spektra cost ────────────────────────────────────────────────────────────
 
-  // Setup phase: both players must have an active avatar before moving on
-  if (state.phase === 'setup') {
-    const player = state.players[state.currentPlayerIndex]
-    if (!player.activeAvatar) return state // can't leave setup without deploying
-
-    // If opponent also needs setup, switch to them
-    const oppIndex: 0 | 1 = state.currentPlayerIndex === 0 ? 1 : 0
-    const opponent = state.players[oppIndex]
-    if (!opponent.activeAvatar) {
-      return { ...state, currentPlayerIndex: oppIndex }
-    }
-
-    // Both have avatars — move to draw phase for player 0 (first turn)
-    let next: GameState = {
-      ...state,
-      phase: 'draw',
-      currentPlayerIndex: 0,
-      currentTurn: 1,
-    }
-    // Auto-draw a card for the active player
-    next = drawCard(next, 0)
-    return next
+export function hasEnoughSpektra(player: Player, cost: ElementType[]): boolean {
+  if (!cost || cost.length === 0) return true
+  // Simple check: player needs at least as many spektra cards as the cost length
+  // Element-specific matching: count available elements
+  const available: Record<string, number> = {}
+  for (const card of player.spektraPile) {
+    const el = card.element ?? 'neutral'
+    available[el] = (available[el] ?? 0) + 1
   }
 
-  const order: Array<GameState['phase']> = ['draw', 'main', 'battle', 'end']
-  const idx = order.indexOf(state.phase)
-  if (idx === -1) return state
-  return { ...state, phase: order[idx + 1] ?? 'end' }
+  const needed: Record<string, number> = {}
+  for (const el of cost) {
+    needed[el] = (needed[el] ?? 0) + 1
+  }
+
+  for (const [element, count] of Object.entries(needed)) {
+    if ((available[element] ?? 0) < count) return false
+  }
+  return true
 }
 
-function nextTurn(state: GameState): GameState {
+export function consumeSpektra(state: GameState, playerIndex: 0 | 1, cost: ElementType[]): GameState {
+  if (!cost || cost.length === 0) return state
+  const player = state.players[playerIndex]
+  const remaining = [...player.spektraPile]
+  const used = [...player.usedSpektraPile]
+
+  for (const element of cost) {
+    const idx = remaining.findIndex(c => c.element === element)
+    if (idx === -1) return state // Can't afford — shouldn't happen if hasEnoughSpektra was checked
+    used.push(remaining.splice(idx, 1)[0])
+  }
+
+  return updatePlayer(state, playerIndex, {
+    ...player,
+    spektraPile: remaining,
+    usedSpektraPile: used,
+  })
+}
+
+// ─── Skill execution ─────────────────────────────────────────────────────────
+
+export function executeSkill(
+  state: GameState,
+  playerIndex: 0 | 1,
+  skillIndex: number,
+  targetPlayerIndex?: 0 | 1,
+): GameState {
+  const player = state.players[playerIndex]
+  const avatar = player.activeAvatar
+  if (!avatar || avatar.isTapped) return state
+
+  // Get the skill
+  const skills = avatar.skills ?? [avatar.skill1, avatar.skill2].filter(Boolean)
+  const skill = skills[skillIndex] as Skill | undefined
+  if (!skill) return state
+
+  // Check spektra cost
+  const cost = skill.spektraCost ?? []
+  if (!hasEnoughSpektra(player, cost)) return state
+
+  // Consume spektra
+  let next = consumeSpektra(state, playerIndex, cost)
+
+  // Calculate damage
+  const baseDamage = skill.damage ?? 0
+  const oppIdx = targetPlayerIndex ?? (playerIndex === 0 ? 1 : 0) as 0 | 1
+  const opponent = next.players[oppIdx]
+
+  // Process bleed-on-attack: if attacker has bleed, take bleed damage before attacking
+  if (avatar.counters?.bleed && avatar.counters.bleed > 0) {
+    const bleedDmg = avatar.counters.bleed
+    const currentDmg = avatar.counters?.damage ?? 0
+    const updatedAvatar: AvatarCard = {
+      ...avatar,
+      counters: { ...avatar.counters, damage: currentDmg + bleedDmg },
+    }
+    const updatedPlayer = { ...next.players[playerIndex], activeAvatar: updatedAvatar }
+    next = updatePlayer(next, playerIndex, updatedPlayer)
+
+    // Check if avatar died from bleed
+    if ((updatedAvatar.counters?.damage ?? 0) >= updatedAvatar.health) {
+      next = {
+        ...next,
+        battleLog: [...next.battleLog, `${avatar.name} collapsed from bleed damage!`],
+      }
+      return checkDefeatedAvatars(next)
+    }
+  }
+
+  // Apply damage to opponent's active avatar
+  if (baseDamage > 0 && opponent.activeAvatar) {
+    const oppAvatar = opponent.activeAvatar
+    const currentDmg = oppAvatar.counters?.damage ?? 0
+    const updatedOppAvatar: AvatarCard = {
+      ...oppAvatar,
+      counters: { ...(oppAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: currentDmg + baseDamage },
+    }
+    const updatedOpp = { ...opponent, activeAvatar: updatedOppAvatar }
+    next = updatePlayer(next, oppIdx, updatedOpp)
+  }
+
+  // Apply additional effects based on effectType
+  if (skill.effectType && skill.effectType !== 'none') {
+    next = applySkillEffect(next, playerIndex, oppIdx, skill)
+  }
+
+  // Mark avatar as tapped
+  const tappedAvatar: AvatarCard = { ...(next.players[playerIndex].activeAvatar!), isTapped: true }
+  next = updatePlayer(next, playerIndex, { ...next.players[playerIndex], activeAvatar: tappedAvatar })
+
+  // Add battle log
+  next = {
+    ...next,
+    battleLog: [...next.battleLog, `${avatar.name} used ${skill.name}${baseDamage > 0 ? ` for ${baseDamage} damage` : ''}!`],
+    lastAction: `${avatar.name} used ${skill.name}!`,
+  }
+
+  // Check for defeated avatars
+  next = checkDefeatedAvatars(next)
+
+  return next
+}
+
+function applySkillEffect(state: GameState, playerIdx: 0 | 1, oppIdx: 0 | 1, skill: Skill): GameState {
+  const effectValue = skill.effectValue ?? 0
+  const player = state.players[playerIdx]
+  const opponent = state.players[oppIdx]
+
+  switch (skill.effectType) {
+    case 'heal': {
+      if (!player.activeAvatar) return state
+      const currentDmg = player.activeAvatar.counters?.damage ?? 0
+      const healed = Math.max(0, currentDmg - effectValue)
+      const updatedAvatar: AvatarCard = {
+        ...player.activeAvatar,
+        counters: { ...(player.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: healed },
+      }
+      return updatePlayer(state, playerIdx, { ...player, activeAvatar: updatedAvatar })
+    }
+    case 'shield': {
+      if (!player.activeAvatar) return state
+      const currentShield = player.activeAvatar.counters?.shield ?? 0
+      const updatedAvatar: AvatarCard = {
+        ...player.activeAvatar,
+        counters: { ...(player.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), shield: currentShield + effectValue },
+      }
+      return updatePlayer(state, playerIdx, { ...player, activeAvatar: updatedAvatar })
+    }
+    case 'bleed': {
+      if (!opponent.activeAvatar) return state
+      const currentBleed = opponent.activeAvatar.counters?.bleed ?? 0
+      const updatedOppAvatar: AvatarCard = {
+        ...opponent.activeAvatar,
+        counters: { ...(opponent.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), bleed: currentBleed + effectValue },
+      }
+      return updatePlayer(state, oppIdx, { ...opponent, activeAvatar: updatedOppAvatar })
+    }
+    case 'draw': {
+      let next = state
+      for (let i = 0; i < effectValue; i++) {
+        next = drawCard(next, playerIdx)
+      }
+      return next
+    }
+    default:
+      return state
+  }
+}
+
+// ─── Spell execution ─────────────────────────────────────────────────────────
+
+export function playSpell(state: GameState, playerIndex: 0 | 1, cardId: string): GameState {
+  const player = state.players[playerIndex]
+  const card = player.hand.find(c => c.id === cardId)
+  if (!card || (card.type !== 'spell' && card.type !== 'quickSpell')) return state
+
+  const spellCard = card as import('../types/card').ActionCard
+
+  // Check spektra cost
+  const cost = (spellCard.spektraCost ?? []) as ElementType[]
+  if (!hasEnoughSpektra(player, cost)) return state
+
+  // Consume spektra
+  let next = consumeSpektra(state, playerIndex, cost)
+
+  // Remove from hand, add to discard pile
+  const updatedPlayer = next.players[playerIndex]
+  next = updatePlayer(next, playerIndex, {
+    ...updatedPlayer,
+    hand: updatedPlayer.hand.filter(c => c.id !== cardId),
+    discardPile: [...updatedPlayer.discardPile, card],
+  })
+
+  // Apply spell effect
+  const oppIdx = (playerIndex === 0 ? 1 : 0) as 0 | 1
+  const effectType = spellCard.effectType ?? 'damage'
+  const effectValue = spellCard.effectValue ?? 0
+  const opponent = next.players[oppIdx]
+
+  if (effectType === 'damage' || effectType === 'none') {
+    // Direct damage to opponent's active avatar
+    if (opponent.activeAvatar && effectValue > 0) {
+      const currentDmg = opponent.activeAvatar.counters?.damage ?? 0
+      const updatedOpp: AvatarCard = {
+        ...opponent.activeAvatar,
+        counters: { ...(opponent.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: currentDmg + effectValue },
+      }
+      next = updatePlayer(next, oppIdx, { ...opponent, activeAvatar: updatedOpp })
+    }
+  } else if (effectType === 'heal') {
+    const myPlayer = next.players[playerIndex]
+    if (myPlayer.activeAvatar) {
+      const currentDmg = myPlayer.activeAvatar.counters?.damage ?? 0
+      const healed = Math.max(0, currentDmg - effectValue)
+      const updated: AvatarCard = {
+        ...myPlayer.activeAvatar,
+        counters: { ...(myPlayer.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: healed },
+      }
+      next = updatePlayer(next, playerIndex, { ...myPlayer, activeAvatar: updated })
+    }
+  } else if (effectType === 'draw') {
+    for (let i = 0; i < effectValue; i++) {
+      next = drawCard(next, playerIndex)
+    }
+  } else if (effectType === 'bleed') {
+    if (opponent.activeAvatar) {
+      const currentBleed = opponent.activeAvatar.counters?.bleed ?? 0
+      const updated: AvatarCard = {
+        ...opponent.activeAvatar,
+        counters: { ...(opponent.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), bleed: currentBleed + effectValue },
+      }
+      next = updatePlayer(next, oppIdx, { ...opponent, activeAvatar: updated })
+    }
+  } else if (effectType === 'shield') {
+    const myPlayer = next.players[playerIndex]
+    if (myPlayer.activeAvatar) {
+      const currentShield = myPlayer.activeAvatar.counters?.shield ?? 0
+      const updated: AvatarCard = {
+        ...myPlayer.activeAvatar,
+        counters: { ...(myPlayer.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), shield: currentShield + effectValue },
+      }
+      next = updatePlayer(next, playerIndex, { ...myPlayer, activeAvatar: updated })
+    }
+  }
+
+  next = {
+    ...next,
+    battleLog: [...next.battleLog, `${spellCard.name} cast!`],
+    lastAction: `${spellCard.name} cast!`,
+  }
+
+  return checkDefeatedAvatars(next)
+}
+
+// ─── Evolution ───────────────────────────────────────────────────────────────
+
+export function evolveAvatar(
+  state: GameState,
+  playerIndex: 0 | 1,
+  handCardId: string,
+  targetSlot: 'active' | number
+): GameState {
+  const player = state.players[playerIndex]
+  const card = player.hand.find(c => c.id === handCardId)
+  if (!card || card.type !== 'avatar') return state
+
+  const level2Card = card as AvatarCard
+  if (Number(level2Card.level) !== 2) return state
+
+  // Validate evolution target
+  const validSlots = getValidEvolutionTargets(level2Card, {
+    activeAvatar: player.activeAvatar,
+    reserveAvatars: player.reserveAvatars,
+  }, state.currentTurn)
+
+  if (!validSlots.includes(targetSlot)) return state
+
+  // Get the target avatar
+  let target: AvatarCard | null = null
+  if (targetSlot === 'active') {
+    target = player.activeAvatar
+  } else {
+    target = player.reserveAvatars[targetSlot as number] ?? null
+  }
+  if (!target) return state
+
+  // Evolve: preserve counters and equipment from base
+  const evolved: AvatarCard = {
+    ...level2Card,
+    turnPlayed: state.currentTurn,
+    isTapped: target.isTapped ?? false,
+    counters: target.counters ? { ...target.counters } : undefined,
+    attachedEquipment: target.attachedEquipment ? [...target.attachedEquipment] : undefined,
+    baseCard: target,
+  }
+
+  // Place evolved avatar
+  let updated: Player
+  if (targetSlot === 'active') {
+    updated = {
+      ...player,
+      hand: player.hand.filter(c => c.id !== handCardId),
+      activeAvatar: evolved,
+    }
+  } else {
+    const reserve = [...player.reserveAvatars]
+    reserve[targetSlot as number] = evolved
+    updated = {
+      ...player,
+      hand: player.hand.filter(c => c.id !== handCardId),
+      reserveAvatars: reserve,
+    }
+  }
+
+  let next = updatePlayer(state, playerIndex, updated)
+  next = {
+    ...next,
+    battleLog: [...next.battleLog, `${target.name} evolved into ${level2Card.name}!`],
+    lastAction: `${target.name} evolved into ${level2Card.name}!`,
+  }
+
+  return next
+}
+
+// ─── Damage resolution ──────────────────────────────────────────────────────
+
+export function checkDefeatedAvatars(state: GameState): GameState {
+  let next = state
+
+  for (const pi of [0, 1] as const) {
+    const player = next.players[pi]
+
+    // Check active avatar
+    if (player.activeAvatar) {
+      const dmg = player.activeAvatar.counters?.damage ?? 0
+      if (dmg >= player.activeAvatar.health) {
+        next = handleAvatarDefeat(next, pi, 'active')
+      }
+    }
+
+    // Check reserve avatars
+    const updatedPlayer = next.players[pi]
+    for (let ri = updatedPlayer.reserveAvatars.length - 1; ri >= 0; ri--) {
+      const reserve = updatedPlayer.reserveAvatars[ri]
+      if (reserve) {
+        const dmg = reserve.counters?.damage ?? 0
+        if (dmg >= reserve.health) {
+          next = handleAvatarDefeat(next, pi, ri)
+        }
+      }
+    }
+  }
+
+  return next
+}
+
+function handleAvatarDefeat(state: GameState, playerIndex: 0 | 1, slot: 'active' | number): GameState {
+  const player = state.players[playerIndex]
+  let defeatedAvatar: AvatarCard | null = null
+
+  if (slot === 'active') {
+    defeatedAvatar = player.activeAvatar
+  } else {
+    defeatedAvatar = player.reserveAvatars[slot as number] ?? null
+  }
+
+  if (!defeatedAvatar) return state
+
+  // Send to graveyard
+  const graveyardCards = destroyAvatar(defeatedAvatar)
+
+  let updated: Player = {
+    ...player,
+    graveyard: [...player.graveyard, ...graveyardCards],
+  }
+
+  if (slot === 'active') {
+    updated.activeAvatar = null
+
+    // Promote first reserve to active
+    const firstReserve = updated.reserveAvatars.find(a => a !== null && a !== undefined)
+    if (firstReserve) {
+      updated.activeAvatar = firstReserve
+      updated.reserveAvatars = updated.reserveAvatars.filter(a => a !== firstReserve)
+    }
+  } else {
+    const reserve = [...updated.reserveAvatars]
+    reserve.splice(slot as number, 1)
+    updated.reserveAvatars = reserve
+  }
+
+  let next = updatePlayer(state, playerIndex, updated)
+
+  next = {
+    ...next,
+    battleLog: [...next.battleLog, `${defeatedAvatar.name} was defeated!`],
+  }
+
+  // Check if player has no avatars left and must use a life card
+  const p = next.players[playerIndex]
+  if (!p.activeAvatar && p.reserveAvatars.length === 0) {
+    if (p.lifeCards.length > 0) {
+      // Life card goes to hand
+      const [lifeCard, ...remainingLife] = p.lifeCards
+      next = updatePlayer(next, playerIndex, {
+        ...next.players[playerIndex],
+        lifeCards: remainingLife,
+        hand: [...next.players[playerIndex].hand, lifeCard],
+      })
+      next = {
+        ...next,
+        battleLog: [...next.battleLog, `${p.name} loses a Life Card! (${remainingLife.length} remaining)`],
+      }
+    }
+
+    // Check win condition: no avatars, no life cards, no playable avatars in hand
+    const finalPlayer = next.players[playerIndex]
+    if (finalPlayer.lifeCards.length === 0 && !finalPlayer.activeAvatar && finalPlayer.reserveAvatars.length === 0) {
+      const hasPlayableAvatar = finalPlayer.hand.some(c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1)
+      if (!hasPlayableAvatar) {
+        const winnerId = next.players[playerIndex === 0 ? 1 : 0].id
+        next = { ...next, winner: winnerId, phase: 'game_over' }
+      }
+    }
+  }
+
+  return next
+}
+
+// ─── Turn management ─────────────────────────────────────────────────────────
+
+export function nextTurn(state: GameState): GameState {
   const next: 0 | 1 = state.currentPlayerIndex === 0 ? 1 : 0
-  let newState: GameState = {
+  const p0: Player = { ...state.players[0], isActivePlayer: next === 0, discardedThisTurn: [] }
+  const p1: Player = { ...state.players[1], isActivePlayer: next === 1, discardedThisTurn: [] }
+  const newState: GameState = {
     ...state,
     currentTurn: state.currentTurn + 1,
-    phase: 'draw',
+    phase: 'refresh',
     currentPlayerIndex: next,
-    players: [
-      { ...state.players[0], isActivePlayer: next === 0, discardedThisTurn: [] },
-      { ...state.players[1], isActivePlayer: next === 1, discardedThisTurn: [] },
-    ],
+    players: [p0, p1],
   }
-  // Auto-draw a card for the new active player
-  newState = drawCard(newState, next)
-  return newState
+  // Auto-process refresh → draw → main1
+  return refreshPhase(newState)
 }
 
+// ─── Win condition ───────────────────────────────────────────────────────────
+
 export function checkWinner(state: GameState): string | null {
-  for (const player of state.players) {
-    const opp = state.players.find(p => p.id !== player.id)!
-    if (opp.deck.length === 0 && opp.lifeCards.length === 0 && opp.hand.length === 0) {
-      return player.id
+  if (state.winner) return state.winner
+
+  for (const pi of [0, 1] as const) {
+    const player = state.players[pi]
+    // Player loses if they have no avatars on field, no life cards, and no Level 1 avatars in hand
+    if (!player.activeAvatar && player.reserveAvatars.length === 0 && player.lifeCards.length === 0) {
+      const hasPlayableAvatar = player.hand.some(c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1)
+      if (!hasPlayableAvatar) {
+        return state.players[pi === 0 ? 1 : 0].id
+      }
     }
   }
   return null
+}
+
+// ─── Helper to build SkillCheckState from full GameState ─────────────────────
+
+export function toSkillCheckState(state: GameState, playerIndex: 0 | 1): SkillCheckState {
+  const pi = playerIndex
+  const oi = (pi === 0 ? 1 : 0) as 0 | 1
+  const toCheckPlayer = (p: Player): SkillCheckPlayerState => ({
+    hand: p.hand,
+    spektraPile: p.spektraPile,
+    usedSpektraPile: p.usedSpektraPile,
+    activeAvatar: p.activeAvatar,
+    reserveAvatars: p.reserveAvatars,
+    graveyard: p.graveyard,
+    avatarToSpektraCount: p.avatarToSpektraCount,
+  })
+  return {
+    player: toCheckPlayer(state.players[pi]),
+    opponent: toCheckPlayer(state.players[oi]),
+    gamePhase: state.phase,
+    currentPlayer: pi === 0 ? 'player' : 'opponent',
+  }
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+
+function untapAvatars(player: Player): Player {
+  return {
+    ...player,
+    activeAvatar: player.activeAvatar ? { ...player.activeAvatar, isTapped: false } : null,
+    reserveAvatars: player.reserveAvatars.map(a => ({ ...a, isTapped: false })),
+  }
 }
 
 function updatePlayer(state: GameState, index: 0 | 1, player: Player): GameState {

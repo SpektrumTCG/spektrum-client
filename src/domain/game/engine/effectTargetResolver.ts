@@ -1,5 +1,5 @@
 import type { EffectTargetType, AvatarCard } from '../types';
-import type { Player } from '../types/card';
+import type { Player } from '../types/card'; // Player = 'player' | 'opponent' string union
 
 export interface PlayerState {
   activeAvatar: AvatarCard | null;

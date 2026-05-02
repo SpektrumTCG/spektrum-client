@@ -1,15 +1,15 @@
 import { resolveEffectTargets } from '../../engine/effectTargetResolver'
 import { checkSkillTrigger } from '../../engine/skillTriggerChecker'
 import type { AvatarCard } from '../../types'
-// Import the lightweight GameState used by skillTriggerChecker (from card.ts, not game.ts)
-import type { GameState } from '../../types/card'
+// Import the lightweight SkillCheckState used by skillTriggerChecker (from card.ts, not game.ts)
+import type { SkillCheckState } from '../../types/card'
 
 const mockAvatar: AvatarCard = {
   id: 'av1', name: 'Test', type: 'avatar', element: 'fire',
   subType: 'kujana', level: 1, health: 6, rarity: 'Common',
 }
 
-const mockGameState: GameState = {
+const mockGameState: SkillCheckState = {
   player: {
     hand: [], spektraPile: [], usedSpektraPile: [],
     activeAvatar: mockAvatar, reserveAvatars: [],
