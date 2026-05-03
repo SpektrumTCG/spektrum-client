@@ -33,16 +33,18 @@ export class EnhancedAI extends BaseAI {
       }
     }
 
-    // Evaluate spektra building
-    const spektraScore = this.scoreSpektraNeed(player)
-    if (spektraScore > 40) {
-      const nonAvatars = player.hand.filter(c => c.type !== 'avatar')
-      if (nonAvatars.length > 0) {
-        candidates.push({
-          type: 'addToSpektra', cardId: nonAvatars[0].id,
-          reasoning: 'Optimal spektra build',
-          priority: spektraScore,
-        })
+    // Evaluate spektra building (respect 1-per-turn limit)
+    if (player.avatarToSpektraCount < 1) {
+      const spektraScore = this.scoreSpektraNeed(player)
+      if (spektraScore > 40) {
+        const nonAvatars = player.hand.filter(c => c.type !== 'avatar')
+        if (nonAvatars.length > 0) {
+          candidates.push({
+            type: 'addToSpektra', cardId: nonAvatars[0].id,
+            reasoning: 'Optimal spektra build',
+            priority: spektraScore,
+          })
+        }
       }
     }
 

@@ -146,6 +146,8 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
   const [placementEffect, setPlacementEffect] = useState<{ card: Card; fromX: number; fromY: number; toX: number; toY: number } | null>(null)
 
   const gameLogRef = useRef<HTMLDivElement>(null)
+  const handContainerRef = useRef<HTMLDivElement>(null)
+  const [handContainerWidth, setHandContainerWidth] = useState(400)
   const hasInitialized = useRef(false)
   const lastAutoAdvanceKey = useRef('')
 
@@ -185,6 +187,31 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     else gameStore.endTurn()
   }, [isAnteGame, isMultiplayer, sendAnteAction, sendActionToServer])
 
+  // Shared neutral-wildcard spektra check matching engine logic
+  const checkSpektraCost = useCallback((cost: string[]): boolean => {
+    if (!cost || cost.length === 0 || !playerState) return true
+    if (playerState.spektraPile.length < cost.length) return false
+
+    const available: Record<string, number> = {}
+    let neutralAvail = 0
+    for (const sc of playerState.spektraPile) {
+      const el = (sc as any).element ?? 'neutral'
+      if (el === 'neutral') neutralAvail++
+      else available[el] = (available[el] ?? 0) + 1
+    }
+
+    let neutralRem = neutralAvail
+    let neutralNeeded = 0
+    for (const el of cost) {
+      if (el === 'neutral') { neutralNeeded++; continue }
+      if ((available[el] ?? 0) > 0) { available[el]!-- }
+      else if (neutralRem > 0) { neutralRem-- }
+      else return false
+    }
+    const leftover = Object.values(available).reduce((s, v) => s + v, 0)
+    return (leftover + neutralRem) >= neutralNeeded
+  }, [playerState])
+
   const dispatchCardAction = useCallback((card: Card, action: string) => {
     const isServerMode = isAnteGame || isMultiplayer
     const routeAction = isAnteGame ? sendAnteAction : sendActionToServer
@@ -201,20 +228,16 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
     // Single player
     if (action === 'active' || action === 'play') {
-      // Check spektra cost for spells
-      if (card.type === 'spell' || card.type === 'quickSpell') {
+      // Check spektra cost for spells and items
+      if (card.type === 'spell' || card.type === 'quickSpell' || card.type === 'item') {
         const cost = ((card as any).spektraCost ?? []) as string[]
-        if (cost.length > 0 && playerState) {
-          const available: Record<string, number> = {}
-          for (const sc of playerState.spektraPile) { const el = (sc as any).element ?? 'neutral'; available[el] = (available[el] ?? 0) + 1 }
-          const needed: Record<string, number> = {}
-          for (const el of cost) needed[el] = (needed[el] ?? 0) + 1
-          for (const [el, count] of Object.entries(needed)) {
-            if ((available[el] ?? 0) < count) {
-              toast.error(`Not enough spektra! Need: ${cost.join(', ')}`)
-              return
-            }
-          }
+        if (cost.length > 0 && !checkSpektraCost(cost)) {
+          toast.error(`Not enough spektra! Need: ${cost.join(', ')}`)
+          return
+        }
+        if (card.type === 'item' && playerState?.hasPlayedItemThisTurn) {
+          toast.error('You can only use 1 item per turn!')
+          return
         }
       }
       gameStore.playCard(card.id, 'active')
@@ -229,7 +252,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       }
       gameStore.addToSpektra(card.id)
     }
-  }, [isAnteGame, isMultiplayer, sendAnteAction, sendActionToServer, playerState, gamePhase])
+  }, [isAnteGame, isMultiplayer, sendAnteAction, sendActionToServer, playerState, gamePhase, checkSpektraCost])
 
   const dispatchEvolve = useCallback((card: Card, targetSlot: 'active' | number) => {
     if (isAnteGame) {
@@ -249,24 +272,18 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     const skills = avatar.skills ?? [(avatar as any).skill1, (avatar as any).skill2].filter(Boolean)
     const skill = skills[skillIndex]
 
-    // Check spektra cost
-    if (skill?.spektraCost && skill.spektraCost.length > 0 && playerState) {
-      const available: Record<string, number> = {}
-      for (const sc of playerState.spektraPile) { const el = (sc as any).element ?? 'neutral'; available[el] = (available[el] ?? 0) + 1 }
-      const needed: Record<string, number> = {}
-      for (const el of skill.spektraCost) needed[el] = (needed[el] ?? 0) + 1
-      for (const [el, count] of Object.entries(needed)) {
-        if ((available[el] ?? 0) < count) {
-          toast.error(`Not enough spektra! Need: ${skill.spektraCost.join(', ')}`)
-          return
-        }
+    // Check spektra cost with neutral wildcard support
+    if (skill?.spektraCost && skill.spektraCost.length > 0) {
+      if (!checkSpektraCost(skill.spektraCost)) {
+        toast.error(`Not enough spektra! Need: ${skill.spektraCost.join(', ')}`)
+        return
       }
     }
 
     if (isAnteGame) sendAnteAction({ type: 'useAvatarSkill', data: { skillIndex: skillIndex + 1, target: 'opponent-avatar' } })
     else if (isMultiplayer) sendActionToServer({ type: 'useAvatarSkill', data: { skillIndex: skillIndex + 1, target: 'opponent-avatar' } })
     else gameStore.useSkill(skillIndex)
-  }, [isAnteGame, isMultiplayer, sendAnteAction, sendActionToServer, playerState])
+  }, [isAnteGame, isMultiplayer, sendAnteAction, sendActionToServer, playerState, checkSpektraCost])
 
   const isCardPlayable = useCallback((card: Card) => {
     if (!playerState) return false
@@ -274,13 +291,23 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     if (card.type === 'quickSpell') return playerState.activeAvatar !== null
     if (currentPlayer !== 'player' || (gamePhase !== 'main1' && gamePhase !== 'main2' && gamePhase !== 'battle')) return false
     if (card.type === 'avatar') return true
+    if (card.type === 'item') return playerState.activeAvatar !== null && !playerState.hasPlayedItemThisTurn
     return playerState.activeAvatar !== null
   }, [playerState, gamePhase, currentPlayer])
 
   // ── Interaction handlers ──
 
   const handleHandCardClick = useCallback((card: Card) => {
-    if (selectedCardId === card.id) { setSelectedCardId(null); return }
+    // Clicking a selected item card plays it directly (items target self)
+    if (selectedCardId === card.id) {
+      if (card.type === 'item') {
+        dispatchCardAction(card, 'play')
+        setSelectedCardId(null)
+        return
+      }
+      setSelectedCardId(null)
+      return
+    }
     // During opponent turn, only quick spells
     if (currentPlayer !== 'player' && card.type !== 'quickSpell') {
       shake(`hand-${card.id}`, "It's not your turn!")
@@ -466,6 +493,18 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       if (winnerId) reportVictory(winnerId)
     }
   }, [game?.winner, isAnteMode, reportVictory, playerId, opponentId, playerState?.id])
+
+  // Track hand container width for adaptive card layout
+  useEffect(() => {
+    const el = handContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) setHandContainerWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    setHandContainerWidth(el.clientWidth)
+    return () => ro.disconnect()
+  }, [])
 
   // Auto-scroll battle log
   useEffect(() => {
@@ -961,37 +1000,66 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
               Your Hand ({playerState?.hand?.length || 0} cards)
             </h3>
             <div
-              className="bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30 flex gap-2 flex-wrap"
-              style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)', minHeight: '110px' }}
+              ref={handContainerRef}
+              className="bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30 relative"
+              style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)', minHeight: '130px' }}
             >
-              {(playerState?.hand as Card[] | undefined)?.map((card) => {
-                const hid = `hand-${card.id}`
-                const isSelected = selectedCardId === card.id
-                const playable = isCardPlayable(card)
-                return (
-                  <div
-                    key={card.id}
-                    onClick={() => handleHandCardClick(card)}
-                    style={{ cursor: 'pointer' }}
-                    className={`
-                      transition-all duration-200 rounded-lg
-                      ${playable ? 'ring-1 ring-orange-500/40' : ''}
-                      ${isSelected ? 'ring-4 ring-white shadow-xl shadow-white/40 scale-110' : ''}
-                      ${shakingId === hid ? 'animate-shake' : ''}
-                    `}
-                  >
-                    <Card2D
-                      card={card}
-                      isPlayable={playable || isSelected}
-                      isInHand={false}
-                      scale={0.85}
-                      onClick={() => {}}
-                    />
-                  </div>
-                )
-              })}
-              {(!playerState?.hand || playerState.hand.length === 0) && (
-                <span className="text-xs text-gray-500 italic self-center">Hand is empty</span>
+              {(playerState?.hand as Card[] | undefined)?.length ? (
+                <div className="flex items-end" style={{ minHeight: '120px', paddingTop: '10px' }}>
+                  {(playerState?.hand as Card[]).map((card, index) => {
+                    const hid = `hand-${card.id}`
+                    const isSelected = selectedCardId === card.id
+                    const playable = isCardPlayable(card)
+                    const total = playerState!.hand.length
+                    const cardWidth = 102 // 120 * 0.85
+                    const containerW = handContainerWidth - 16 // minus padding
+                    // If all cards fit side-by-side with 6px gap, show them full width
+                    const totalFullWidth = total * cardWidth + (total - 1) * 6
+                    const fitsFullWidth = totalFullWidth <= containerW
+                    return (
+                      <div
+                        key={card.id}
+                        onClick={() => handleHandCardClick(card)}
+                        className={`
+                          relative transition-all duration-200 rounded-lg flex-shrink-0
+                          ${shakingId === hid ? 'animate-shake' : ''}
+                        `}
+                        style={{
+                          cursor: 'pointer',
+                          width: fitsFullWidth
+                            ? `${cardWidth}px`
+                            : index === total - 1
+                              ? `${cardWidth}px`
+                              : `${Math.max(30, (containerW - cardWidth) / (total - 1))}px`,
+                          marginRight: fitsFullWidth && index < total - 1 ? '6px' : '0px',
+                          zIndex: isSelected ? 50 : index,
+                          marginTop: isSelected ? '-16px' : '0',
+                          filter: isSelected ? 'drop-shadow(0 0 12px rgba(255,255,255,0.5))' : undefined,
+                        }}
+                      >
+                        <div
+                          className={`
+                            transition-all duration-200 rounded-lg
+                            ${playable && !isSelected ? 'ring-1 ring-orange-500/40' : ''}
+                            ${isSelected ? 'ring-4 ring-white shadow-xl shadow-white/40' : ''}
+                          `}
+                        >
+                          <Card2D
+                            card={card}
+                            isPlayable={playable || isSelected}
+                            isInHand={false}
+                            scale={0.85}
+                            onClick={() => {}}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center" style={{ minHeight: '110px' }}>
+                  <span className="text-xs text-gray-500 italic">Hand is empty</span>
+                </div>
               )}
             </div>
           </div>

@@ -98,10 +98,10 @@ export function refreshPhase(state: GameState): GameState {
   const pi = state.currentPlayerIndex
   const player = state.players[pi]
 
-  // Move used spektra back to available
+  // Used spektra are consumed permanently — do NOT restore them
   const refreshedPlayer: Player = {
     ...player,
-    spektraPile: [...player.spektraPile, ...player.usedSpektraPile],
+    // spektraPile stays as-is (already reduced by consumeSpektra)
     usedSpektraPile: [],
     avatarToSpektraCount: 0,
     hasPlayedItemThisTurn: false,
@@ -220,41 +220,89 @@ export function playAvatar(
 
 export function hasEnoughSpektra(player: Player, cost: ElementType[]): boolean {
   if (!cost || cost.length === 0) return true
-  // Simple check: player needs at least as many spektra cards as the cost length
-  // Element-specific matching: count available elements
+
+  // Count available elements in spektra pile
   const available: Record<string, number> = {}
+  let neutralAvailable = 0
   for (const card of player.spektraPile) {
     const el = card.element ?? 'neutral'
-    available[el] = (available[el] ?? 0) + 1
+    if (el === 'neutral') {
+      neutralAvailable++
+    } else {
+      available[el] = (available[el] ?? 0) + 1
+    }
   }
 
+  // Count needed elements — "neutral" in cost = wildcard (any element pays)
+  let neutralNeeded = 0
   const needed: Record<string, number> = {}
   for (const el of cost) {
-    needed[el] = (needed[el] ?? 0) + 1
+    if (el === 'neutral') {
+      neutralNeeded++
+    } else {
+      needed[el] = (needed[el] ?? 0) + 1
+    }
   }
 
+  // Match specific element costs first; shortfall can be covered by neutral cards
+  let neutralRemaining = neutralAvailable
   for (const [element, count] of Object.entries(needed)) {
-    if ((available[element] ?? 0) < count) return false
+    const have = available[element] ?? 0
+    const shortfall = count - have
+    if (shortfall > 0) {
+      // Try to cover shortfall with neutral cards (neutral pays for any element)
+      if (neutralRemaining >= shortfall) {
+        neutralRemaining -= shortfall
+      } else {
+        return false
+      }
+    }
   }
-  return true
+
+  // "Neutral" cost entries are wildcards — any remaining card (including neutral) can pay
+  const totalRemaining =
+    Object.values(available).reduce((sum, v) => sum + v, 0)
+    - Object.values(needed).reduce((sum, v) => sum + v, 0)
+    + neutralRemaining
+  // totalRemaining = leftover specific cards + leftover neutral cards
+  // Specific cards that were over-allocated from the needed check above still count
+  const leftoverSpecific = Object.entries(available).reduce((sum, [el, v]) => {
+    return sum + Math.max(0, v - (needed[el] ?? 0))
+  }, 0)
+
+  return (leftoverSpecific + neutralRemaining) >= neutralNeeded
 }
 
 export function consumeSpektra(state: GameState, playerIndex: 0 | 1, cost: ElementType[]): GameState {
   if (!cost || cost.length === 0) return state
   const player = state.players[playerIndex]
   const remaining = [...player.spektraPile]
-  const used = [...player.usedSpektraPile]
+  const consumed: Card[] = []
 
-  for (const element of cost) {
-    const idx = remaining.findIndex(c => c.element === element)
-    if (idx === -1) return state // Can't afford — shouldn't happen if hasEnoughSpektra was checked
-    used.push(remaining.splice(idx, 1)[0])
+  // Pay specific element costs first, then wildcards (neutral costs)
+  const specificCosts = cost.filter(el => el !== 'neutral')
+  const neutralCostCount = cost.length - specificCosts.length
+
+  for (const element of specificCosts) {
+    // Try exact element match first
+    let idx = remaining.findIndex(c => (c.element ?? 'neutral') === element)
+    // Fall back to neutral card (neutral pays for any element)
+    if (idx === -1) idx = remaining.findIndex(c => (c.element ?? 'neutral') === 'neutral')
+    if (idx === -1) return state
+    consumed.push(remaining.splice(idx, 1)[0])
   }
 
+  // Neutral cost = wildcard, any remaining card can pay
+  for (let i = 0; i < neutralCostCount; i++) {
+    if (remaining.length === 0) return state
+    consumed.push(remaining.splice(0, 1)[0])
+  }
+
+  // Consumed spektra are permanently spent — go to graveyard
   return updatePlayer(state, playerIndex, {
     ...player,
     spektraPile: remaining,
-    usedSpektraPile: used,
+    graveyard: [...player.graveyard, ...consumed],
   })
 }
 
@@ -473,6 +521,146 @@ export function playSpell(state: GameState, playerIndex: 0 | 1, cardId: string):
   return checkDefeatedAvatars(next)
 }
 
+// ─── Item execution ─────────────────────────────────────────────────────────
+
+export function playItem(state: GameState, playerIndex: 0 | 1, cardId: string): GameState {
+  const player = state.players[playerIndex]
+  if (player.hasPlayedItemThisTurn) return state // 1 item per turn
+
+  const card = player.hand.find(c => c.id === cardId)
+  if (!card || card.type !== 'item') return state
+
+  const itemCard = card as import('../types/card').ActionCard
+
+  // Check spektra cost
+  const cost = (itemCard.spektraCost ?? []) as ElementType[]
+  if (!hasEnoughSpektra(player, cost)) return state
+
+  // Consume spektra
+  let next = consumeSpektra(state, playerIndex, cost)
+
+  // Remove from hand, add to discard pile, mark item played
+  const updatedPlayer = next.players[playerIndex]
+  next = updatePlayer(next, playerIndex, {
+    ...updatedPlayer,
+    hand: updatedPlayer.hand.filter(c => c.id !== cardId),
+    discardPile: [...updatedPlayer.discardPile, card],
+    hasPlayedItemThisTurn: true,
+  })
+
+  // Apply item effect
+  const oppIdx = (playerIndex === 0 ? 1 : 0) as 0 | 1
+  const effectType = itemCard.effectType ?? 'none'
+  const effectValue = itemCard.effectValue ?? 0
+  const effectValue2 = itemCard.effectValue2 ?? 0
+
+  if (effectType === 'heal') {
+    // Heal active avatar
+    const p = next.players[playerIndex]
+    if (p.activeAvatar) {
+      const currentDmg = p.activeAvatar.counters?.damage ?? 0
+      const healed = Math.max(0, currentDmg - effectValue)
+      const updated: AvatarCard = {
+        ...p.activeAvatar,
+        counters: { ...(p.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: healed },
+      }
+      next = updatePlayer(next, playerIndex, { ...p, activeAvatar: updated })
+    }
+  } else if (effectType === 'draw') {
+    for (let i = 0; i < effectValue; i++) {
+      next = drawCard(next, playerIndex)
+    }
+  } else if (effectType === 'discard_draw') {
+    // Discard entire hand, then draw effectValue cards
+    const p = next.players[playerIndex]
+    next = updatePlayer(next, playerIndex, {
+      ...p,
+      hand: [],
+      discardPile: [...p.discardPile, ...p.hand],
+    })
+    for (let i = 0; i < effectValue; i++) {
+      next = drawCard(next, playerIndex)
+    }
+  } else if (effectType === 'discard_heal') {
+    // Discard effectValue cards from hand, then heal effectValue2
+    const p = next.players[playerIndex]
+    const toDiscard = p.hand.slice(0, effectValue)
+    next = updatePlayer(next, playerIndex, {
+      ...p,
+      hand: p.hand.slice(effectValue),
+      discardPile: [...p.discardPile, ...toDiscard],
+    })
+    const p2 = next.players[playerIndex]
+    if (p2.activeAvatar) {
+      const currentDmg = p2.activeAvatar.counters?.damage ?? 0
+      const healed = Math.max(0, currentDmg - effectValue2)
+      const updated: AvatarCard = {
+        ...p2.activeAvatar,
+        counters: { ...(p2.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: healed },
+      }
+      next = updatePlayer(next, playerIndex, { ...p2, activeAvatar: updated })
+    }
+  } else if (effectType === 'discard_retrieve') {
+    // Discard effectValue cards, then retrieve effectValue2 avatar(s) from graveyard
+    const p = next.players[playerIndex]
+    const toDiscard = p.hand.slice(0, effectValue)
+    next = updatePlayer(next, playerIndex, {
+      ...p,
+      hand: p.hand.slice(effectValue),
+      discardPile: [...p.discardPile, ...toDiscard],
+    })
+    const p2 = next.players[playerIndex]
+    const avatarsInGrave = p2.graveyard.filter(c => c.type === 'avatar')
+    const retrieved = avatarsInGrave.slice(0, effectValue2)
+    if (retrieved.length > 0) {
+      next = updatePlayer(next, playerIndex, {
+        ...p2,
+        hand: [...p2.hand, ...retrieved],
+        graveyard: p2.graveyard.filter(c => !retrieved.some(r => r.id === c.id)),
+      })
+    }
+  } else if (effectType === 'discard_search') {
+    // Discard effectValue avatar cards, search deck for same-element avatar
+    const p = next.players[playerIndex]
+    const avatarsInHand = p.hand.filter(c => c.type === 'avatar')
+    const toDiscard = avatarsInHand.slice(0, effectValue)
+    if (toDiscard.length > 0) {
+      const searchElement = (toDiscard[0] as AvatarCard).element
+      const found = p.deck.find(c => c.type === 'avatar' && c.element === searchElement)
+      let newHand = p.hand.filter(c => !toDiscard.some(d => d.id === c.id))
+      let newDeck = [...p.deck]
+      if (found) {
+        newHand = [...newHand, found]
+        newDeck = newDeck.filter(c => c.id !== found.id)
+      }
+      next = updatePlayer(next, playerIndex, {
+        ...p,
+        hand: newHand,
+        deck: newDeck,
+        discardPile: [...p.discardPile, ...toDiscard],
+      })
+    }
+  } else if (effectType === 'damage') {
+    const opponent = next.players[oppIdx]
+    if (opponent.activeAvatar && effectValue > 0) {
+      const currentDmg = opponent.activeAvatar.counters?.damage ?? 0
+      const updated: AvatarCard = {
+        ...opponent.activeAvatar,
+        counters: { ...(opponent.activeAvatar.counters ?? { damage: 0, bleed: 0, shield: 0 }), damage: currentDmg + effectValue },
+      }
+      next = updatePlayer(next, oppIdx, { ...opponent, activeAvatar: updated })
+    }
+  }
+
+  next = {
+    ...next,
+    battleLog: [...next.battleLog, `${itemCard.name} used!`],
+    lastAction: `${itemCard.name} used!`,
+  }
+
+  return checkDefeatedAvatars(next)
+}
+
 // ─── Evolution ───────────────────────────────────────────────────────────────
 
 export function evolveAvatar(
@@ -617,31 +805,39 @@ function handleAvatarDefeat(state: GameState, playerIndex: 0 | 1, slot: 'active'
     battleLog: [...next.battleLog, `${defeatedAvatar.name} was defeated!`],
   }
 
-  // Check if player has no avatars left and must use a life card
-  const p = next.players[playerIndex]
-  if (!p.activeAvatar && p.reserveAvatars.length === 0) {
-    if (p.lifeCards.length > 0) {
-      // Life card goes to hand
-      const [lifeCard, ...remainingLife] = p.lifeCards
-      next = updatePlayer(next, playerIndex, {
-        ...next.players[playerIndex],
-        lifeCards: remainingLife,
-        hand: [...next.players[playerIndex].hand, lifeCard],
-      })
-      next = {
-        ...next,
-        battleLog: [...next.battleLog, `${p.name} loses a Life Card! (${remainingLife.length} remaining)`],
-      }
+  // Attacker takes a life card prize from the defeated player
+  const attackerIdx: 0 | 1 = playerIndex === 0 ? 1 : 0
+  const defeated = next.players[playerIndex]
+  if (defeated.lifeCards.length > 0) {
+    const [prizeCard, ...remainingLife] = defeated.lifeCards
+    const attacker = next.players[attackerIdx]
+    next = updatePlayer(next, playerIndex, {
+      ...next.players[playerIndex],
+      lifeCards: remainingLife,
+    })
+    next = updatePlayer(next, attackerIdx, {
+      ...next.players[attackerIdx],
+      hand: [...attacker.hand, prizeCard],
+    })
+    next = {
+      ...next,
+      battleLog: [...next.battleLog, `${attacker.name} takes a Life Card prize! (${defeated.name}: ${remainingLife.length} remaining)`],
     }
+  }
 
-    // Check win condition: no avatars, no life cards, no playable avatars in hand
-    const finalPlayer = next.players[playerIndex]
-    if (finalPlayer.lifeCards.length === 0 && !finalPlayer.activeAvatar && finalPlayer.reserveAvatars.length === 0) {
-      const hasPlayableAvatar = finalPlayer.hand.some(c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1)
-      if (!hasPlayableAvatar) {
-        const winnerId = next.players[playerIndex === 0 ? 1 : 0].id
-        next = { ...next, winner: winnerId, phase: 'game_over' }
-      }
+  // Check if defeated player must promote a reserve or use life cards
+  const p = next.players[playerIndex]
+  if (!p.activeAvatar && p.reserveAvatars.length === 0 && p.lifeCards.length > 0) {
+    // Life card goes to hand so they can deploy a new avatar
+    const [lifeCard, ...remainingLife] = p.lifeCards
+    next = updatePlayer(next, playerIndex, {
+      ...next.players[playerIndex],
+      lifeCards: remainingLife,
+      hand: [...next.players[playerIndex].hand, lifeCard],
+    })
+    next = {
+      ...next,
+      battleLog: [...next.battleLog, `${p.name} uses a Life Card! (${remainingLife.length} remaining)`],
     }
   }
 
@@ -672,8 +868,12 @@ export function checkWinner(state: GameState): string | null {
 
   for (const pi of [0, 1] as const) {
     const player = state.players[pi]
-    // Player loses if they have no avatars on field, no life cards, and no Level 1 avatars in hand
-    if (!player.activeAvatar && player.reserveAvatars.length === 0 && player.lifeCards.length === 0) {
+    // Lose if life cards reach 0
+    if (player.lifeCards.length === 0) {
+      return state.players[pi === 0 ? 1 : 0].id
+    }
+    // Lose if no active avatar, no reserve avatars, and no Level 1 avatar in hand to deploy
+    if (!player.activeAvatar && player.reserveAvatars.length === 0) {
       const hasPlayableAvatar = player.hand.some(c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1)
       if (!hasPlayableAvatar) {
         return state.players[pi === 0 ? 1 : 0].id

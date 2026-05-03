@@ -24,13 +24,15 @@ export class RegularAI extends BaseAI {
       }
     }
 
-    // Priority 2: Build spektra toward optimal
-    const optimalSpektra = Math.min(player.hand.length, 6)
-    if (player.spektraPile.length < optimalSpektra) {
-      const nonAvatars = player.hand.filter(c => c.type !== 'avatar')
-      const toAdd = nonAvatars.length > 0 ? nonAvatars[0] : player.hand[0]
-      if (toAdd) {
-        return { type: 'addToSpektra', cardId: toAdd.id, reasoning: 'Build spektra', priority: 70 }
+    // Priority 2: Build spektra toward optimal (respect 1-per-turn limit)
+    if (player.avatarToSpektraCount < 1) {
+      const optimalSpektra = Math.min(player.hand.length, 6)
+      if (player.spektraPile.length < optimalSpektra) {
+        const nonAvatars = player.hand.filter(c => c.type !== 'avatar')
+        const toAdd = nonAvatars.length > 0 ? nonAvatars[0] : player.hand[0]
+        if (toAdd) {
+          return { type: 'addToSpektra', cardId: toAdd.id, reasoning: 'Build spektra', priority: 70 }
+        }
       }
     }
 

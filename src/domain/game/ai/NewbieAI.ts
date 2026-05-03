@@ -15,8 +15,8 @@ export class NewbieAI extends BaseAI {
       return this.endPhase('No cards in hand')
     }
 
-    // Add to spektra if low
-    if (player.spektraPile.length < 3) {
+    // Add to spektra if low (respect 1-per-turn limit)
+    if (player.avatarToSpektraCount < 1 && player.spektraPile.length < 3) {
       const card = player.hand[Math.floor(Math.random() * player.hand.length)]
       return { type: 'addToSpektra', cardId: card.id, reasoning: 'Need spektra', priority: 50 }
     }

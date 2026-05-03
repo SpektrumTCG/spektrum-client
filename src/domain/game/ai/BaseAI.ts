@@ -47,8 +47,36 @@ export abstract class BaseAI {
     return { type: 'endPhase', reasoning: reason, priority: 0 }
   }
 
-  protected canAffordSpektra(cost: string[], spektraPile: unknown[]): boolean {
-    return spektraPile.length >= cost.length
+  protected canAffordSpektra(cost: string[] | undefined, spektraPile: Array<{ element?: string }>): boolean {
+    if (!cost || cost.length === 0) return true
+    if (spektraPile.length < cost.length) return false
+
+    // Count available elements
+    const available: Record<string, number> = {}
+    let neutralAvailable = 0
+    for (const card of spektraPile) {
+      const el = card.element ?? 'neutral'
+      if (el === 'neutral') neutralAvailable++
+      else available[el] = (available[el] ?? 0) + 1
+    }
+
+    // Check specific costs; shortfall covered by neutral cards
+    let neutralRemaining = neutralAvailable
+    let neutralNeeded = 0
+    for (const el of cost) {
+      if (el === 'neutral') { neutralNeeded++; continue }
+      if ((available[el] ?? 0) > 0) {
+        available[el]!--
+      } else if (neutralRemaining > 0) {
+        neutralRemaining--
+      } else {
+        return false
+      }
+    }
+
+    // Neutral costs are wildcards — any leftover card pays
+    const leftoverSpecific = Object.values(available).reduce((s, v) => s + v, 0)
+    return (leftoverSpecific + neutralRemaining) >= neutralNeeded
   }
 
   protected hasAffordableSkill(state: GameState, playerIndex: 0 | 1): boolean {

@@ -6,6 +6,7 @@ import {
   addToSpektra,
   playAvatar,
   playSpell,
+  playItem,
   executeSkill,
   evolveAvatar,
   endPhase,
@@ -100,6 +101,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       next = playAvatar(game, playerIndex, cardId, slot)
     } else if (card.type === 'spell' || card.type === 'quickSpell') {
       next = playSpell(game, playerIndex, cardId)
+    } else if (card.type === 'item') {
+      next = playItem(game, playerIndex, cardId)
     }
 
     const winner = checkWinner(next)
@@ -200,10 +203,10 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       return
     }
 
-    // Guard against infinite loops
+    // Guard against infinite loops — force advance and continue the AI loop
     if (actionCount >= AI_MAX_ACTIONS_PER_PHASE) {
       get().endPhase()
-      set({ isAIThinking: false })
+      setTimeout(() => get()._runAILoop(0), AI_ACTION_DELAY)
       return
     }
 
@@ -243,8 +246,17 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       return
     }
 
-    // Apply the decision
+    // Apply the decision and detect if state actually changed
+    const before = get().game
     get()._applyAIDecision(decision)
+    const after = get().game
+
+    // If action had no effect (silently rejected), end phase to avoid infinite loop
+    if (before === after) {
+      get().endPhase()
+      setTimeout(() => get()._runAILoop(0), AI_ACTION_DELAY)
+      return
+    }
 
     // Continue loop for more actions in same phase
     setTimeout(() => get()._runAILoop(actionCount + 1), AI_ACTION_DELAY)
