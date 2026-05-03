@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useMultiplayerStore } from '@/stores/useMultiplayerStore'
+import { useGameStore } from '@/features/game/store'
 import { toast } from 'sonner'
 import { useDeckStore } from '@/stores/useDeckStore'
 
@@ -123,11 +124,8 @@ export const useMultiplayerGameSync = () => {
 
     const handleGameStateUpdated = (data: any) => {
       try {
-        const applyFn = (useMultiplayerStore.getState() as any).applyServerGameState
-        if (typeof applyFn === 'function') {
-          if (data.gameState) applyFn(data.gameState)
-          else applyFn(data)
-        }
+        const serverView = data.gameState || data
+        useGameStore.getState().applyServerGameState(serverView)
       } catch {
         toast.error('Failed to sync game state')
       }
@@ -168,7 +166,7 @@ export const useMultiplayerGameSync = () => {
     }
 
     socket.on('game_state_updated', handleGameStateUpdated)
-    socket.on('game_action_rejected', handleActionRejected)
+    socket.on('action_rejected', handleActionRejected)
     socket.on('game_state_sync', handleGameStateSync)
     socket.on('reconnect_failed', () => {})
     socket.on('game_started', handleGameStarted)
@@ -177,7 +175,7 @@ export const useMultiplayerGameSync = () => {
 
     return () => {
       socket.off('game_state_updated', handleGameStateUpdated)
-      socket.off('game_action_rejected', handleActionRejected)
+      socket.off('action_rejected', handleActionRejected)
       socket.off('game_state_sync', handleGameStateSync)
       socket.off('game_started', handleGameStarted)
       socket.off('deck_rejected', handleDeckRejected)

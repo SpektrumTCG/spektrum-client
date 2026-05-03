@@ -470,10 +470,8 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
   }, [targetingSkill])
 
   const handleNextAction = useCallback(() => {
-    if (gamePhase === 'main1') {
-      routeEndPhase() // advance to battle
-    } else if (gamePhase === 'battle') {
-      routeEndTurn()
+    if (gamePhase === 'main1' || gamePhase === 'battle' || gamePhase === 'main2') {
+      routeEndPhase() // advance to next phase (main1→battle→main2→recheck→end)
     } else {
       routeEndTurn()
     }
@@ -518,9 +516,10 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     return () => window.removeEventListener('keydown', h)
   }, [cancelSelection])
 
-  // Auto-advance non-interactive phases
+  // Auto-advance non-interactive phases (single player / AI only — server handles this in multiplayer)
   useEffect(() => {
     if (!game || currentPlayer !== 'player' || game.winner) return
+    if (isMultiplayer || isAnteGame) return
     const key = `${gamePhase}-${turn}-${currentPlayerIndex}`
     if (lastAutoAdvanceKey.current === key) return
     if (['refresh', 'draw', 'recheck'].includes(gamePhase)) {
@@ -533,7 +532,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       const timer = setTimeout(() => routeEndTurn(), 500)
       return () => clearTimeout(timer)
     }
-  }, [gamePhase, turn, currentPlayer, currentPlayerIndex, game?.winner, routeEndPhase, routeEndTurn])
+  }, [gamePhase, turn, currentPlayer, currentPlayerIndex, game?.winner, isMultiplayer, isAnteGame, routeEndPhase, routeEndTurn])
 
   // Initialize game mode
   useEffect(() => {
@@ -558,7 +557,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
   const oppAvatarHp = oppAvatar ? oppAvatar.health - (oppAvatar.counters?.damage || 0) : 0
 
   // Contextual button label
-  const nextActionLabel = gamePhase === 'main1' ? 'Battle \u2192' : gamePhase === 'battle' ? 'End Turn \u2192' : 'End Turn \u2192'
+  const nextActionLabel = gamePhase === 'main1' ? 'Battle \u2192' : gamePhase === 'battle' ? 'Main 2 \u2192' : gamePhase === 'main2' ? 'End Turn \u2192' : 'End Turn \u2192'
 
   // ── Loading ──
   if (!game) {
@@ -1196,7 +1195,20 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                   Stay in Game
                 </button>
                 <button
-                  onClick={() => { setShowForfeitDialog(false); if (onForfeit) { onForfeit() } else { gameStore.resetGame(); router.push('/home') } }}
+                  onClick={() => {
+                    setShowForfeitDialog(false)
+                    if (onForfeit) { onForfeit() }
+                    else {
+                      // Notify server of forfeit in multiplayer/ante modes
+                      const mpSocket = useMultiplayerStore.getState().socket
+                      if ((isMultiplayer || isAnteGame) && mpSocket?.connected) {
+                        mpSocket.emit('forfeit_game')
+                      }
+                      useMultiplayerStore.getState().setIsMultiplayerSession(false)
+                      gameStore.resetGame()
+                      router.push('/home')
+                    }
+                  }}
                   className="px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm"
                 >
                   {anteBattle.isAnteMode ? 'Forfeit & Lose Card' : 'Leave & Forfeit'}

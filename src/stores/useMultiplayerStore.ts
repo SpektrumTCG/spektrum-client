@@ -80,7 +80,7 @@ interface MultiplayerState {
 
 // Socket URL — points directly to the Express server (not Next.js dev port)
 const getSocketURL = () =>
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000';
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   // Initial state

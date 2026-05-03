@@ -193,7 +193,7 @@ export function MultiplayerFeature() {
 
   if (currentRoom) {
     return (
-      <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+      <div className="flex flex-col items-center pb-24 overflow-y-auto pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
         <div className="max-w-md mx-auto p-4 w-full">
           <BackButton />
           <FadeInView>
@@ -336,7 +336,7 @@ export function MultiplayerFeature() {
   }
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pb-24 overflow-y-auto pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
         <BackButton />
         <FadeInView>

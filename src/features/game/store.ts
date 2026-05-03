@@ -37,6 +37,7 @@ interface GameStore {
   endTurn: () => void
   resetGame: () => void
   setAIDifficulty: (difficulty: AIDifficulty) => void
+  applyServerGameState: (serverView: any) => void
   _maybeRunAI: (game: GameState) => void
   _runAILoop: (actionCount: number) => void
   _applyAIDecision: (decision: AIDecision) => void
@@ -161,6 +162,74 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   resetGame: () => set({ game: null, isAIThinking: false }),
 
   setAIDifficulty: (difficulty) => set({ aiDifficulty: difficulty }),
+
+  applyServerGameState: (serverView: any) => {
+    // Map server player view to client GameState format.
+    // Server shape: { player, opponent, currentPlayer, gamePhase, turn, winner, logs, _seq }
+    // Client shape: { players: [Player, Player], currentPlayerIndex, phase, currentTurn, winner, battleLog, ... }
+
+    const mapServerPlayer = (sp: any, id: string, isActive: boolean): any => {
+      // For opponent, server sends deck:[] with deckCount — create placeholder array for .length
+      const deck = sp.deck && sp.deck.length > 0
+        ? sp.deck
+        : sp.deckCount
+          ? Array.from({ length: sp.deckCount }, (_, i) => ({ id: `hidden-${i}`, name: 'Hidden' }))
+          : []
+
+      return {
+        id,
+        name: sp.playerName || sp.playerId || id,
+        health: sp.health ?? 20,
+        maxHealth: 20,
+        energy: { fire: 0, water: 0, ground: 0, air: 0, neutral: 0 },
+        spektraPile: sp.spektraPile || [],
+        usedSpektraPile: sp.usedSpektraPile || [],
+        lifeCards: sp.lifeCards || [],
+        hand: sp.hand || [],
+        deck,
+        discardPile: [],
+        graveyard: sp.graveyard || [],
+        field: sp.fieldCards || [],
+        activeAvatar: sp.activeAvatar || null,
+        reserveAvatars: sp.reserveAvatars || [],
+        counters: {},
+        discardedThisTurn: [],
+        isActivePlayer: isActive,
+        avatarToSpektraCount: sp.avatarToSpektraCount ?? 0,
+        hasPlayedItemThisTurn: sp.hasPlayedItemThisTurn ?? false,
+        equipmentActivations: {},
+        needsToSelectReserveAvatar: sp.needsToSelectReserveAvatar ?? false,
+      }
+    }
+
+    const currentPlayer = serverView.currentPlayer // 'player' or 'opponent'
+    const currentPlayerIndex = currentPlayer === 'player' ? 0 : 1
+
+    // Map winner: server sends 'player'|'opponent'|'tie'|null, client expects player id or null
+    let winner: string | null = null
+    if (serverView.winner === 'player') winner = 'player-self'
+    else if (serverView.winner === 'opponent') winner = 'opponent-id'
+    else if (serverView.winner === 'tie') winner = 'tie'
+
+    const phase = serverView.gamePhase || 'setup'
+
+    const game: GameState = {
+      currentTurn: serverView.turn || 1,
+      phase: serverView.winner ? 'game_over' : phase,
+      players: [
+        mapServerPlayer(serverView.player, 'player-self', currentPlayerIndex === 0),
+        mapServerPlayer(serverView.opponent, 'opponent-id', currentPlayerIndex === 1),
+      ] as [any, any],
+      currentPlayerIndex: currentPlayerIndex as 0 | 1,
+      winner,
+      turnTimer: 0,
+      lastAction: '',
+      battleLog: serverView.logs || [],
+      effectStack: [],
+    }
+
+    set({ game })
+  },
 
   _maybeRunAI: (game) => {
     // AI is player index 1; only act on opponent's turn
