@@ -1,31 +1,63 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { Loader2, Sparkles } from "lucide-react"
 import { useWalletStore } from "@/stores/useWalletStore"
 import { useAudio } from "@/stores/useAudioStore"
-import { ProgressTracker } from "@/components/shared/ProgressTracker"
+import { useDeckStore } from "@/stores/useDeckStore"
+import { useGameMode } from "@/features/game/stores/useGameMode"
 import { FirstTimeWelcomePopup } from "@/components/shared/FirstTimeWelcomePopup"
-
-const ROLLING_IMAGES = [
-  "/ui/home/1.webp",
-  "/ui/home/2.webp",
-  "/ui/home/3.webp",
-  "/ui/home/4.webp",
-]
+import { NAV_HEIGHT } from "@/lib/constants"
 
 export function HomeFeature() {
   const router = useRouter()
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set())
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
   const [welcomeCheckDone, setWelcomeCheckDone] = useState(false)
+  const [animStep, setAnimStep] = useState(0)
 
-  const { walletAddress, isConnected } = useWalletStore()
-  const { playBackgroundMusic } = useAudio()
+  const { walletAddress, isConnected, isReconnecting, connectionStatus, playerProfile } = useWalletStore()
+  const { playBackgroundMusic, playButton } = useAudio()
+  const { ownedCards, decks } = useDeckStore()
+  const gameModePlayerName = useGameMode((s) => s.playerName)
 
-  useEffect(() => { playBackgroundMusic() }, [])
+  const playerName = useMemo(() => {
+    const fromProfile = playerProfile?.displayName?.trim()
+    const fromGameMode = gameModePlayerName?.trim()
+    if (fromProfile) return fromProfile
+    if (fromGameMode && fromGameMode !== "Player") return fromGameMode
+    return "Player"
+  }, [playerProfile, gameModePlayerName])
+
+  const { level, xpInLevel, xpToNext } = useMemo(() => {
+    const totalCards = ownedCards.length
+    const uniqueCards = new Set(ownedCards.map((c) => c.name)).size
+    const completedDecks = decks.filter((d: any) => d.cards.length >= 40).length
+    const mintedNFTs = totalCards
+    const baseExp = totalCards * 2 + uniqueCards * 5 + completedDecks * 20 + mintedNFTs * 10
+    return {
+      level: Math.floor(baseExp / 100) + 1,
+      xpInLevel: baseExp % 100,
+      xpToNext: 100,
+    }
+  }, [ownedCards, decks])
+
+  useEffect(() => {
+    playBackgroundMusic()
+  }, [])
+
+  // Staggered character animation: matches the loading screen choreography
+  useEffect(() => {
+    setAnimStep(0)
+    const timers = [
+      setTimeout(() => setAnimStep(1), 100),
+      setTimeout(() => setAnimStep(2), 300),
+      setTimeout(() => setAnimStep(3), 500),
+      setTimeout(() => setAnimStep(4), 900),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [])
 
   useEffect(() => {
     setWelcomeCheckDone(false)
@@ -36,13 +68,15 @@ export function HomeFeature() {
     const check = async () => {
       if (!isConnected || !walletAddress || welcomeCheckDone) return
       try {
-        const res = await fetch(`/api/player/welcome-status/${walletAddress}`, { credentials: 'include' })
+        const res = await fetch(`/api/player/welcome-status/${walletAddress}`, { credentials: "include" })
         if (res.ok) {
           const data = await res.json()
           if (!data.hasSeenWelcome) setShowWelcomePopup(true)
         }
       } catch {}
-      finally { setWelcomeCheckDone(true) }
+      finally {
+        setWelcomeCheckDone(true)
+      }
     }
     check()
   }, [isConnected, walletAddress, welcomeCheckDone])
@@ -60,83 +94,148 @@ export function HomeFeature() {
     setShowWelcomePopup(false)
   }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex(prev => (prev + 1) % ROLLING_IMAGES.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+  const xpPct = Math.min((xpInLevel / xpToNext) * 100, 100)
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto">
+    <div
+      className="fixed left-0 right-0 top-0 z-0 flex items-stretch justify-center bg-white"
+      style={{ bottom: NAV_HEIGHT }}
+    >
       <FirstTimeWelcomePopup
         isOpen={showWelcomePopup}
         onClose={() => setShowWelcomePopup(false)}
         onDismiss={handleWelcomeDismiss}
       />
 
-      <motion.div className="max-w-md mx-auto p-4" initial={{ opacity: 1, y: 0 }}>
-        <div className="text-center mb-6">
+      <div className="relative w-full max-w-[480px] h-full flex flex-col overflow-hidden bg-white">
+        {/* Layout already renders the global header — leave space for it (~48px) */}
+        <div className="shrink-0 h-12" aria-hidden />
+
+        {/* Logo */}
+        <motion.div
+          className="shrink-0 px-8 mt-1 z-10"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <img src="/ui/logo.png" alt="Spektrum Trading Card Game" className="w-48 h-auto mx-auto" />
+        </motion.div>
+
+        {/* Character composition */}
+        <div className="absolute inset-x-0 top-[18%] bottom-0 overflow-hidden pointer-events-none">
+          {/* Top diagonal stripe — left-anchored accent */}
           <img
-            src="/ui/logo.png"
-            alt="Spektrum Trading Card Game"
-            className="w-full max-w-sm mx-auto h-auto"
-            onError={e => { e.currentTarget.style.display = "none" }}
+            src="/ui/components/avatar-name/Vector.png"
+            alt=""
+            className="absolute top-[4%] left-0 w-[78%] h-[36%] object-fill transition-transform duration-700 ease-out z-0"
+            style={{ transform: animStep >= 1 ? "translateX(0)" : "translateX(-110%)" }}
           />
-          <p className="text-gray-400 text-sm mb-4 mt-2">Ready to battle in the world of Spektrum</p>
+          {/* Bottom diagonal band — extends across to back the SAPPHIRE label */}
+          <img
+            src="/ui/components/avatar-name/Vector1.png"
+            alt=""
+            className="absolute bottom-0 left-0 w-full h-[72%] object-fill transition-transform duration-700 ease-out z-0"
+            style={{ transform: animStep >= 2 ? "translateX(0)" : "translateX(-110%)" }}
+          />
+          {/* SAPPHIRE name — flush-right, taller, vertically centered against the band */}
+          <img
+            src="/ui/components/avatar-name/SAPPHIRE.png"
+            alt="SAPPHIRE"
+            className="absolute right-1 bottom-[44%] h-[42%] w-auto object-contain transition-transform duration-700 ease-out z-[1] drop-shadow-[0_4px_12px_rgba(15,26,40,0.25)]"
+            style={{ transform: animStep >= 3 ? "translateX(0)" : "translateX(200%)" }}
+          />
+          {/* Character — original size, lifted up so SAPPHIRE stays legible */}
+          <img
+            src="/ui/components/avatar-name/avatar.png"
+            alt="Character"
+            className="absolute bottom-[8%] left-1/2 h-[90%] w-auto object-contain transition-all duration-700 ease-out z-[2]"
+            style={{
+              transform: animStep >= 4 ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(100%)",
+              opacity: animStep >= 4 ? 1 : 0,
+            }}
+          />
+        </div>
 
-          <div
-            className="relative h-64 bg-gradient-to-b from-gray-900 to-gray-800 rounded-xl overflow-hidden mb-6 border-2 border-orange-500 shadow-lg"
-            style={{ boxShadow: "0 0 30px rgba(249, 115, 22, 0.3)" }}
-          >
-            <div
-              className="flex transition-transform duration-500 ease-in-out h-full"
-              style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+        {/* Spacer pushes the panel to the bottom */}
+        <div className="flex-1" />
+
+        {/* Bottom panel */}
+        <motion.div
+          className="relative z-10 shrink-0"
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+        >
+          <div className="relative bg-[#0f1a28]/95 backdrop-blur-sm rounded-t-2xl px-5 pt-4 pb-6 border-t border-x border-orange-500/40 mx-0">
+            {/* Decorative side ticks */}
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex flex-col gap-[3px]">
+              <div className="w-[3px] h-[10px] bg-cyan-400/60 rounded-full" />
+              <div className="w-[3px] h-[10px] bg-cyan-400/40 rounded-full" />
+              <div className="w-[3px] h-[10px] bg-cyan-400/60 rounded-full" />
+            </div>
+
+            {/* Player info row */}
+            <div className="flex items-center justify-between mb-3 ml-3">
+              <div className="min-w-0">
+                <span className="text-orange-400 text-sm font-bold">Hi! </span>
+                <span className="text-white text-sm font-semibold truncate">{playerName}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-600 text-white">
+                  LV {level}
+                </span>
+                {isReconnecting || connectionStatus === "connecting" ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-amber-950">
+                    <Loader2 size={10} className="animate-spin" />
+                    RECONNECTING
+                  </span>
+                ) : (
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      isConnected ? "bg-emerald-500 text-emerald-950" : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {isConnected ? "● CONNECTED" : "● DISCONNECTED"}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* XP bar */}
+            <div className="relative ml-3 w-[calc(100%-12px)] h-3 rounded-full bg-white/10 overflow-hidden ring-1 ring-white/5">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400 shadow-[0_0_12px_-2px_rgba(249,115,22,0.6)]"
+                initial={{ width: 0 }}
+                animate={{ width: `${xpPct}%` }}
+                transition={{ delay: 0.7, duration: 0.9, ease: "easeOut" }}
+              />
+            </div>
+            <p className="text-white/40 text-[10px] mt-1.5 ml-3 font-mono tracking-wider">
+              {xpInLevel} / {xpToNext} XP
+            </p>
+
+            {/* Tutorial CTA */}
+            <button
+              onClick={() => {
+                playButton()
+                router.push("/tutorial")
+              }}
+              className="relative mt-4 ml-3 w-[calc(100%-12px)] h-12 rounded-xl font-black tracking-[0.18em] text-sm uppercase overflow-hidden bg-gradient-to-br from-orange-400 to-amber-600 text-slate-950 shadow-[0_0_24px_-4px_rgba(249,115,22,0.7)] border border-orange-300/50 transition-transform active:scale-[0.98]"
             >
-              {ROLLING_IMAGES.map((image, index) => (
-                <div key={index} className="w-full h-full flex-shrink-0 flex items-center justify-center bg-gray-900">
-                  {imageLoadErrors.has(index) ? (
-                    <div className="text-center text-orange-400">
-                      <div className="text-4xl mb-2">?</div>
-                      <p className="text-sm">Card {index + 1}</p>
-                    </div>
-                  ) : (
-                    <img
-                      src={image}
-                      alt={`Card ${index + 1}`}
-                      className="w-full h-full object-contain"
-                      onError={() => setImageLoadErrors(prev => new Set(prev).add(index))}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {ROLLING_IMAGES.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`h-2 rounded-full transition-all ${index === currentImageIndex ? "bg-orange-400 w-6" : "bg-gray-600 w-2"}`}
-                  style={index === currentImageIndex ? { boxShadow: "0 0 10px rgba(249, 115, 22, 0.8)" } : {}}
-                />
-              ))}
-            </div>
+              <motion.span
+                className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
+                initial={{ x: "-50%" }}
+                animate={{ x: "450%" }}
+                transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 1.6, ease: "easeInOut" }}
+              />
+              <span className="relative inline-flex items-center justify-center gap-2">
+                <Sparkles size={16} strokeWidth={2.5} />
+                Start Tutorial
+              </span>
+            </button>
           </div>
-        </div>
-
-        <div className="mb-6">
-          <button
-            onClick={() => router.push("/tutorial")}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-4 px-4 rounded-xl font-bold text-lg hover:from-yellow-400 hover:to-orange-500 transition-all flex items-center justify-center shadow-lg border border-orange-400"
-            style={{ boxShadow: "0 0 25px rgba(249, 115, 22, 0.6)", letterSpacing: "0.05em" }}
-          >
-            <span className="text-orange-100">START TUTORIAL</span>
-          </button>
-        </div>
-
-        <ProgressTracker />
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }

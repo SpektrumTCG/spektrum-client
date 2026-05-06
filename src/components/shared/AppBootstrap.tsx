@@ -69,8 +69,7 @@ export function AppBootstrap() {
       if (hasCallback) return
 
       await new Promise(r => setTimeout(r, 1500))
-      const success = await attemptAutoReconnect()
-      if (success) toast.success("Wallet reconnected!", { duration: 2000 })
+      await attemptAutoReconnect()
     }
 
     attemptReconnect()
