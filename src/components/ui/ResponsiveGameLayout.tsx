@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Settings, Home, Users, BookOpen } from 'lucide-react';
+import { Menu, X, Settings, Home, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatedButton } from './AnimatedButton';
 import { useAudio } from '@/stores/useAudioStore';
@@ -33,7 +33,6 @@ export function ResponsiveGameLayout({
   const menuItems = [
     { icon: Home, label: 'Home', path: '/home' },
     { icon: Users, label: 'Game Mode', path: '/game-mode' },
-    { icon: BookOpen, label: 'Library', path: '/library' },
     { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 

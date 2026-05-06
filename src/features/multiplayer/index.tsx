@@ -20,6 +20,13 @@ import {
   Hash,
   Copy,
   Sparkles,
+  ChevronRight,
+  Coins,
+  Wifi,
+  WifiOff,
+  Lock,
+  X,
+  DoorOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -621,130 +628,309 @@ export function MultiplayerFeature() {
     );
   }
 
+  const ConnectionPill = () => {
+    if (connectionStatus === 'connecting') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.18em] uppercase px-2 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          Connecting
+        </span>
+      );
+    }
+    if (connectionStatus === 'error') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.18em] uppercase px-2 py-1 rounded-full bg-red-500/15 text-red-300 border border-red-400/40 font-mono">
+          <WifiOff size={10} /> Offline
+        </span>
+      );
+    }
+    if (isConnected) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.18em] uppercase px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 font-mono">
+          <Wifi size={10} /> Online
+        </span>
+      );
+    }
+    return null;
+  };
+
+  type ModeAccent = {
+    ringIdle: string;
+    ringHover: string;
+    medallion: string;
+    iconColor: string;
+    glow: string;
+    chip: string;
+    chevron: string;
+    overlay: string;
+  };
+
+  const accents: Record<'casual' | 'ranked' | 'ante', ModeAccent> = {
+    casual: {
+      ringIdle: 'border-emerald-500/40',
+      ringHover: 'hover:border-emerald-400/80 hover:shadow-[0_0_24px_-8px_rgba(16,185,129,0.5)]',
+      medallion: 'bg-gradient-to-br from-emerald-500/25 to-teal-500/5 ring-1 ring-emerald-400/30',
+      iconColor: 'text-emerald-300',
+      glow: 'before:bg-emerald-500/8',
+      chip: 'bg-emerald-500/12 text-emerald-200 border-emerald-400/25',
+      chevron: 'text-emerald-300/50 group-hover:text-emerald-200',
+      overlay: 'from-emerald-500/8 to-transparent',
+    },
+    ranked: {
+      ringIdle: 'border-orange-500/60',
+      ringHover: 'hover:border-orange-400 hover:shadow-[0_0_28px_-6px_rgba(249,115,22,0.6)]',
+      medallion: 'bg-gradient-to-br from-orange-400/35 to-amber-500/10 ring-1 ring-orange-400/40',
+      iconColor: 'text-orange-300',
+      glow: 'before:bg-orange-500/10',
+      chip: 'bg-orange-500/15 text-orange-200 border-orange-400/30',
+      chevron: 'text-orange-300/60 group-hover:text-orange-200',
+      overlay: 'from-orange-500/12 to-transparent',
+    },
+    ante: {
+      ringIdle: 'border-red-600/50',
+      ringHover: 'hover:border-red-500 hover:shadow-[0_0_28px_-6px_rgba(220,38,38,0.6)]',
+      medallion: 'bg-gradient-to-br from-red-600/35 to-red-900/15 ring-1 ring-red-500/40',
+      iconColor: 'text-red-300',
+      glow: 'before:bg-red-600/10',
+      chip: 'bg-red-600/15 text-red-200 border-red-500/40',
+      chevron: 'text-red-300/60 group-hover:text-red-200',
+      overlay: 'from-red-600/12 to-transparent',
+    },
+  };
+
+  const ModeTile = ({
+    mode,
+    title,
+    tagline,
+    metaLabel,
+    metaIcon,
+    icon,
+    onClick,
+    locked,
+    lockHint,
+  }: {
+    mode: 'casual' | 'ranked' | 'ante';
+    title: string;
+    tagline: string;
+    metaLabel: string;
+    metaIcon?: React.ReactNode;
+    icon: React.ReactNode;
+    onClick: () => void;
+    locked?: boolean;
+    lockHint?: string;
+  }) => {
+    const a = accents[mode];
+    return (
+      <motion.button
+        onClick={onClick}
+        whileTap={{ scale: 0.99 }}
+        className={`group relative w-full overflow-hidden rounded-2xl border-2 ${a.ringIdle} ${a.ringHover} bg-slate-900 text-left transition-all`}
+      >
+        <div className={`absolute inset-0 bg-gradient-to-r ${a.overlay} pointer-events-none`} />
+        <div className="relative flex items-stretch gap-3 p-3">
+          {/* Medallion icon */}
+          <div className={`relative shrink-0 w-14 h-14 rounded-xl ${a.medallion} flex items-center justify-center`}>
+            <span className={`${a.iconColor}`}>{icon}</span>
+            {locked && (
+              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-800 ring-2 ring-slate-900 flex items-center justify-center">
+                <Lock size={10} className="text-amber-300" />
+              </div>
+            )}
+          </div>
+
+          {/* Content stack */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-black tracking-tight text-white truncate">{title}</h3>
+              <span className={`text-[9px] font-bold tracking-[0.18em] uppercase px-1.5 py-0.5 rounded border ${a.chip} font-mono shrink-0`}>
+                {mode === 'casual' ? 'Free' : mode === 'ranked' ? 'Ranked' : 'Wager'}
+              </span>
+            </div>
+            <p className="text-[12px] text-slate-400 mt-0.5 truncate">{tagline}</p>
+            <div className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-mono tracking-[0.14em] uppercase text-slate-500">
+              {metaIcon}
+              {locked && lockHint ? lockHint : metaLabel}
+            </div>
+          </div>
+
+          {/* Chevron */}
+          <div className="shrink-0 flex items-center pr-1">
+            <ChevronRight size={20} className={`${a.chevron} transition-colors`} strokeWidth={2.5} />
+          </div>
+        </div>
+      </motion.button>
+    );
+  };
+
+  const SectionLabel = ({ children, count }: { children: React.ReactNode; count?: number }) => (
+    <div className="flex items-center gap-2 mb-2 px-1">
+      <div className="h-px flex-1 bg-gradient-to-r from-slate-400/30 to-transparent" />
+      <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-slate-500 font-mono">
+        {children}
+        {typeof count === 'number' && (
+          <span className="ml-2 text-slate-400">· {count}</span>
+        )}
+      </span>
+      <div className="h-px flex-1 bg-gradient-to-l from-slate-400/30 to-transparent" />
+    </div>
+  );
+
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pb-24 overflow-y-auto pt-14" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
         <BackButton />
+
+        {/* Header strip — title + status pills */}
         <FadeInView>
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold text-orange-400 mb-1">Multiplayer</h1>
-            <p className="text-gray-400 text-sm">Challenge players worldwide</p>
+          <div className="mb-5 mt-1">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold tracking-[0.24em] text-slate-500 font-mono uppercase">Battle Hub</p>
+                <h1 className="text-3xl font-black tracking-tight bg-gradient-to-b from-orange-300 to-orange-500 bg-clip-text text-transparent leading-none mt-1">
+                  Multiplayer
+                </h1>
+              </div>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <ConnectionPill />
+                {walletAddress && (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.14em] px-2 py-1 rounded-full bg-slate-200 text-slate-700 border border-slate-300 font-mono">
+                    <Coins size={10} />
+                    {`${walletAddress.slice(0, 4)}…${walletAddress.slice(-4)}`}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </FadeInView>
 
-        {connectionStatus !== 'connected' && (
-          <FadeInView delay={0.1}>
-            <div className="mb-4 p-3 bg-gray-800 border-2 border-orange-500 rounded-lg text-center text-sm">
-              {connectionStatus === 'connecting' && (
-                <div className="flex items-center justify-center space-x-2">
-                  <LoadingSpinner size="sm" />
-                  <span className="text-white">Connecting to multiplayer server...</span>
-                </div>
-              )}
-              {connectionStatus === 'error' && (
-                <div className="text-red-400">Failed to connect to multiplayer server</div>
-              )}
-            </div>
-          </FadeInView>
-        )}
-
-        {!isSearchingForMatch && isConnected && (
-          <FadeInView delay={0.2}>
-            <div className="grid grid-cols-1 gap-3 mb-4">
-              <div
-                onClick={() => handleQuickMatch('casual')}
-                className="p-4 bg-gray-800 border-2 border-orange-500 rounded-xl cursor-pointer hover:border-orange-400 transition-all text-center"
-              >
-                <Gamepad2 className="mx-auto mb-2 text-orange-400" size={32} />
-                <h2 className="text-base font-bold text-white mb-1">Casual Match</h2>
-                <p className="text-gray-400 text-xs">Relaxed game, no pressure</p>
-              </div>
-
-              <div
-                onClick={() => handleQuickMatch('ranked')}
-                className="p-4 bg-gray-800 border-2 border-orange-500 rounded-xl cursor-pointer hover:border-orange-400 transition-all text-center"
-              >
-                <Trophy className="mx-auto mb-2 text-orange-400" size={32} />
-                <h2 className="text-base font-bold text-white mb-1">Ranked Match</h2>
-                <p className="text-gray-400 text-xs">Compete for ranking points</p>
-              </div>
-
-              <div
-                onClick={handleAnteMode}
-                className="p-4 bg-gray-800 border-2 border-red-500 rounded-xl cursor-pointer hover:border-red-400 transition-all text-center"
-              >
-                <div className="text-2xl mb-2 text-red-400 font-bold">!</div>
-                <h2 className="text-base font-bold text-white mb-1">Ante Mode</h2>
-                <p className="text-red-300 text-xs font-medium">Wager NFT cards</p>
-              </div>
-            </div>
-          </FadeInView>
-        )}
-
+        {/* Search overlay — replaces the mode list while matchmaking */}
         <AnimatePresence>
           {isSearchingForMatch && (
             <motion.div
-              className="mb-4 p-4 bg-gray-800 border-2 border-orange-500 rounded-lg text-center text-sm"
+              className="mb-4 relative overflow-hidden rounded-2xl border-2 border-orange-500/60 bg-gradient-to-br from-slate-900 to-slate-950 shadow-[0_0_28px_-8px_rgba(249,115,22,0.6)]"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <LoadingSpinner type="dots" />
-                <span className="text-white text-lg">Searching for {selectedMode} match...</span>
+              <motion.div
+                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(249,115,22,0.18),transparent_60%)]"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <div className="relative p-5 text-center">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-400/30 text-[10px] font-bold tracking-[0.22em] uppercase text-orange-300 font-mono mb-4">
+                  <Hourglass size={11} className="animate-spin" style={{ animationDuration: '2s' }} />
+                  Searching · {selectedMode}
+                </div>
+                <div className="text-3xl font-black text-white tabular-nums tracking-tight mb-1">
+                  <AnimatedCounter value={searchDuration} suffix="s" />
+                </div>
+                <p className="text-xs text-slate-400 mb-4">Finding a worthy opponent…</p>
+                <button
+                  onClick={handleStopSearch}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-rose-500/20 hover:text-rose-300 text-white/70 border border-white/10 hover:border-rose-400/40 text-xs font-bold tracking-[0.16em] uppercase transition-all"
+                >
+                  <X size={14} /> Cancel Search
+                </button>
               </div>
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <Clock size={16} className="text-gray-400" />
-                <AnimatedCounter value={searchDuration} suffix="s" className="text-gray-400" />
-              </div>
-              <AnimatedButton onClick={handleStopSearch} variant="secondary" size="lg">
-                Cancel Search
-              </AnimatedButton>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {isConnected && (
-          <FadeInView delay={0.4}>
-            <div className="p-4 bg-gray-800 border-2 border-orange-500 rounded-xl">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-bold text-orange-400">Custom Rooms</h2>
-                <button
-                  onClick={() => setShowCreateRoom(true)}
-                  className="bg-gradient-to-r from-spektrum-orange to-orange-500 text-white hover:from-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg text-sm font-semibold"
-                >
-                  <Plus size={14} className="inline mr-1" />
-                  Create
-                </button>
-              </div>
+        {/* Connection error banner */}
+        {connectionStatus === 'error' && !isSearchingForMatch && (
+          <FadeInView delay={0.05}>
+            <div className="mb-4 p-3 bg-rose-500/10 border-2 border-rose-500/40 rounded-xl flex items-center gap-2 text-sm">
+              <WifiOff size={16} className="text-rose-300 shrink-0" />
+              <span className="text-rose-200">Couldn't reach the multiplayer server.</span>
+            </div>
+          </FadeInView>
+        )}
 
+        {/* Quick Match section */}
+        {!isSearchingForMatch && isConnected && (
+          <FadeInView delay={0.15}>
+            <SectionLabel>Quick Match</SectionLabel>
+            <div className="space-y-2.5 mb-5">
+              <ModeTile
+                mode="casual"
+                title="Casual Match"
+                tagline="Relaxed game · no pressure"
+                metaLabel="No rank impact"
+                metaIcon={<Gamepad2 size={11} />}
+                icon={<Gamepad2 size={26} strokeWidth={2.2} />}
+                onClick={() => handleQuickMatch('casual')}
+              />
+              <ModeTile
+                mode="ranked"
+                title="Ranked Match"
+                tagline="Climb the season ladder"
+                metaLabel="Earn ranking points"
+                metaIcon={<Trophy size={11} />}
+                icon={<Trophy size={26} strokeWidth={2.2} />}
+                onClick={() => handleQuickMatch('ranked')}
+              />
+            </div>
+          </FadeInView>
+        )}
+
+        {/* High-Stakes section */}
+        {!isSearchingForMatch && isConnected && (
+          <FadeInView delay={0.25}>
+            <SectionLabel>High Stakes</SectionLabel>
+            <div className="mb-5">
+              <ModeTile
+                mode="ante"
+                title="Ante Mode"
+                tagline="Wager NFT cards · winner takes all"
+                metaLabel="Wallet required · NFT stakes"
+                metaIcon={<Coins size={11} />}
+                icon={<Coins size={26} strokeWidth={2.2} />}
+                onClick={handleAnteMode}
+                locked={!walletAddress}
+                lockHint="Connect wallet to play"
+              />
+            </div>
+          </FadeInView>
+        )}
+
+        {/* Custom Rooms section */}
+        {isConnected && (
+          <FadeInView delay={0.35}>
+            <SectionLabel>
+              Custom Rooms
+              {availableRooms.length > 0 ? <span className="ml-2 text-slate-500">· {availableRooms.length} live</span> : null}
+            </SectionLabel>
+
+            <div className="rounded-2xl border-2 border-orange-500/50 bg-slate-900 overflow-hidden">
               <AnimatePresence>
                 {showCreateRoom && (
                   <motion.div
-                    className="mb-3 p-3 bg-gray-700 rounded border-2 border-orange-500"
+                    className="border-b border-orange-500/20"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                   >
-                    <div className="space-y-2">
+                    <div className="p-3 space-y-2 bg-slate-950/40">
                       <input
                         type="text"
-                        placeholder="Room Name"
+                        placeholder="Name your room…"
                         value={roomName}
                         onChange={(e) => setRoomName(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder-gray-400 text-sm"
+                        className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 focus:border-orange-400 rounded-lg text-white placeholder-slate-500 text-sm outline-none transition-colors"
                         maxLength={50}
+                        autoFocus
                       />
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={handleCreateRoom}
-                          className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white py-2 rounded-lg text-sm font-semibold hover:from-orange-500 hover:to-orange-600"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-br from-orange-400 to-amber-600 text-slate-950 py-2 rounded-lg text-xs font-black tracking-[0.16em] uppercase hover:brightness-110 transition-all"
                         >
-                          Create
+                          <DoorOpen size={14} /> Create Room
                         </button>
                         <button
                           onClick={() => { setShowCreateRoom(false); setRoomName(''); }}
-                          className="flex-1 bg-gray-700 text-gray-300 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600"
+                          className="px-4 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded-lg text-xs font-bold tracking-[0.16em] uppercase transition-colors"
                         >
                           Cancel
                         </button>
@@ -754,39 +940,88 @@ export function MultiplayerFeature() {
                 )}
               </AnimatePresence>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {availableRooms.length === 0 ? (
-                  <div className="text-center py-4 text-gray-400 text-xs">No rooms available</div>
+              {/* Room list */}
+              <div className="max-h-56 overflow-y-auto">
+                {availableRooms.length === 0 && !showCreateRoom ? (
+                  <div className="px-4 py-6 text-center">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-orange-500/10 border border-orange-400/20 flex items-center justify-center mb-2">
+                      <DoorOpen size={18} className="text-orange-400/70" />
+                    </div>
+                    <p className="text-sm text-white font-semibold">No rooms yet</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Be the first to open a private match.</p>
+                  </div>
                 ) : (
-                  availableRooms.slice(0, 4).map((room) => (
-                    <motion.div
-                      key={room.id}
-                      className="flex items-center justify-between p-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors text-xs"
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-medium truncate">{room.name}</h3>
-                        <p className="text-gray-400 text-xs truncate">{room.players.length}/{room.maxPlayers}</p>
-                      </div>
-                      <button
-                        onClick={() => handleJoinRoom(room.id)}
-                        disabled={room.players.length >= room.maxPlayers}
-                        className="ml-2 bg-gradient-to-r from-spektrum-orange to-orange-500 text-white hover:from-orange-600 hover:to-orange-700 disabled:bg-gray-600 disabled:text-gray-400 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"
-                      >
-                        {room.players.length >= room.maxPlayers ? 'Full' : 'Join'}
-                      </button>
-                    </motion.div>
-                  ))
+                  <div className="divide-y divide-white/5">
+                    {availableRooms.slice(0, 6).map((room, idx) => {
+                      const full = room.players.length >= room.maxPlayers;
+                      return (
+                        <motion.div
+                          key={room.id}
+                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/[0.03] transition-colors"
+                          initial={{ x: -16, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: idx * 0.04 }}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-slate-800 ring-1 ring-white/10 flex items-center justify-center shrink-0">
+                            <DoorOpen size={14} className="text-orange-400/80" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white text-sm font-semibold truncate leading-tight">{room.name}</h3>
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono tracking-wider text-slate-500 mt-0.5">
+                              <Users size={10} />
+                              {room.players.length}/{room.maxPlayers}
+                              {full && <span className="text-rose-400/80 ml-1">· Full</span>}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleJoinRoom(room.id)}
+                            disabled={full}
+                            className={`shrink-0 px-3 h-8 rounded-lg text-[11px] font-black tracking-[0.16em] uppercase transition-all ${
+                              full
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                : 'bg-gradient-to-br from-orange-400 to-amber-600 text-slate-950 hover:brightness-110'
+                            }`}
+                          >
+                            {full ? 'Full' : 'Join'}
+                          </button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
+
+              {/* Create room footer button */}
+              {!showCreateRoom && (
+                <button
+                  onClick={() => setShowCreateRoom(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold tracking-[0.18em] uppercase text-orange-300 hover:text-orange-200 hover:bg-orange-500/10 border-t border-orange-500/20 transition-colors"
+                >
+                  <Plus size={14} strokeWidth={2.5} />
+                  New Room
+                </button>
+              )}
             </div>
           </FadeInView>
         )}
 
-        <div className="mt-4">
-          <SolanaWalletConnect onConnected={(address) => setWalletAddress(address)} />
-        </div>
+        {/* Wallet — small footer slot only when not yet connected */}
+        {!walletAddress && (
+          <FadeInView delay={0.45}>
+            <div className="mt-5 p-3 rounded-xl border-2 border-slate-300 bg-slate-100 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-slate-200 ring-1 ring-slate-300 flex items-center justify-center shrink-0">
+                <Coins size={16} className="text-slate-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-800">Wallet not connected</p>
+                <p className="text-[11px] text-slate-500">Connect to unlock Ante Mode &amp; NFT rewards.</p>
+              </div>
+              <div className="shrink-0">
+                <SolanaWalletConnect onConnected={(address) => setWalletAddress(address)} />
+              </div>
+            </div>
+          </FadeInView>
+        )}
 
         {showAnteMode && walletAddress && (
           <AnteModeManager

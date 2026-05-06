@@ -373,7 +373,56 @@ function DevUtilsTab() {
   const { boosterPacks } = useInventoryStore()
   const [confirmReset, setConfirmReset] = useState(false)
 
-  const handleAddStarterPack = () => {
+  const persistCardsToDb = async (cardsToPersist: Card[]): Promise<{ ok: boolean; reason?: string }> => {
+    const { useWalletStore } = await import("@/stores/useWalletStore")
+    const walletState = useWalletStore.getState()
+    if (!walletState.walletAddress || !walletState.isConnected) {
+      return { ok: false, reason: "wallet not connected" }
+    }
+
+    // Establish a session so /api/cards/add accepts the request.
+    try {
+      await fetch("/api/player/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ walletAddress: walletState.walletAddress }),
+      })
+    } catch {
+      // /api/cards/add will reject with 401 if this failed; we surface that below.
+    }
+
+    // The DB only stores cardId + quantity; rarity is hydrated from the cards
+    // catalog on read. Group duplicates so each cardId is sent once with the
+    // correct quantity.
+    const counts = new Map<string, number>()
+    for (const card of cardsToPersist) {
+      const id = (card as any).cardId || card.id
+      if (!id) continue
+      counts.set(id, (counts.get(id) || 0) + 1)
+    }
+
+    const payload = Array.from(counts.entries()).map(([cardId, quantity]) => ({
+      cardId,
+      quantity,
+      source: "dev_tools",
+    }))
+
+    const response = await fetch("/api/cards/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ cards: payload }),
+    })
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      return { ok: false, reason: err.details ? JSON.stringify(err.details) : err.error || `HTTP ${response.status}` }
+    }
+    return { ok: true }
+  }
+
+  const handleAddStarterPack = async () => {
     const allCards = getAvailableCards()
     if (allCards.length === 0) {
       toast.error("No cards in catalog — sync from DB first")
@@ -381,17 +430,29 @@ function DevUtilsTab() {
     }
     const starter = allCards.slice(0, 20)
     addCards(starter)
-    toast.success(`Added ${starter.length} starter cards to collection`)
+    const dbResult = await persistCardsToDb(starter)
+    if (dbResult.ok) {
+      await syncCardsFromDatabase()
+      toast.success(`Added ${starter.length} starter cards (synced to DB)`)
+    } else {
+      toast.warning(`Added ${starter.length} cards locally only — ${dbResult.reason}`)
+    }
   }
 
-  const handleAddAllCards = () => {
+  const handleAddAllCards = async () => {
     const allCards = getAvailableCards()
     if (allCards.length === 0) {
       toast.error("No cards in catalog — sync from DB first")
       return
     }
     addCards(allCards)
-    toast.success(`Added ${allCards.length} cards to collection`)
+    const dbResult = await persistCardsToDb(allCards)
+    if (dbResult.ok) {
+      await syncCardsFromDatabase()
+      toast.success(`Added ${allCards.length} cards (synced to DB)`)
+    } else {
+      toast.warning(`Added ${allCards.length} cards locally only — ${dbResult.reason}`)
+    }
   }
 
   const handleResetCollection = () => {

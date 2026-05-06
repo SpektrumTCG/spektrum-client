@@ -20,13 +20,6 @@ const ShopIcon = () => (
   </svg>
 )
 
-const LibraryIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-  </svg>
-)
-
 const AchievementsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
     <circle cx="12" cy="8" r="6"/>
@@ -73,7 +66,6 @@ const PRIMARY_NAV = [
 const isDev = process.env.NODE_ENV === "development"
 
 const MORE_NAV = [
-  { path: "/library", label: "Library", icon: <LibraryIcon /> },
   { path: "/achievements", label: "Achievements", icon: <AchievementsIcon /> },
   ...(isDev ? [{ path: "/dev-tools", label: "Dev Tools", icon: <SettingsIcon /> }] : []),
 ]

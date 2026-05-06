@@ -6,6 +6,7 @@ import { anteMatchmaking, cardToWageredCard, type WageredCard, type MatchFoundDa
 import type { Card } from '@/domain/game/types';
 import { useDeckStore } from '@/stores/useDeckStore';
 import { useAnteBattleStore } from '@/stores/useAnteBattleStore';
+import { useGameStore } from '@/features/game/store';
 import { WagerCardSelector } from './WagerCardSelector';
 import { MatchmakingScreen } from './MatchmakingScreen';
 import { MatchConfirmationModal } from './MatchConfirmationModal';
@@ -23,7 +24,20 @@ type AnteState = 'selecting' | 'matchmaking' | 'match_found' | 'confirmed' | 'in
 
 export function AnteModeManager({ userCards, playerId, walletAddress, onClose }: AnteModeManagerProps) {
   const router = useRouter();
-  const { addCard, removeCard, ownedCards, decks, activeDeckId } = useDeckStore();
+  const { addCard, removeCard, ownedCards, decks, activeDeckId, syncCardsFromDatabase } = useDeckStore();
+
+  // Pull fresh card ownership from the server when the modal opens. On alt
+  // accounts (or any session where the deck store hasn't yet rehydrated +
+  // synced) `userCards`/`ownedCards` can still be empty even though the player
+  // owns Rare/Super Rare cards in the DB — without this re-sync the wager
+  // selector renders "No eligible cards".
+  useEffect(() => {
+    syncCardsFromDatabase().catch(() => { /* sync is supplementary */ });
+  }, [syncCardsFromDatabase, walletAddress]);
+
+  // If the prop list is still empty after sync, fall back to the live store
+  // value (which the sync will have just refreshed).
+  const effectiveUserCards = userCards.length > 0 ? userCards : ownedCards;
   const { setAnteBattle } = useAnteBattleStore();
   const [state, setState] = useState<AnteState>('selecting');
   const [wageredCard, setWageredCard] = useState<WageredCard | null>(null);
@@ -33,11 +47,32 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
 
   const wageredCardRef = useRef<WageredCard | null>(null);
   const matchDataRef = useRef<MatchFoundData | null>(null);
+  const stateRef = useRef<AnteState>('selecting');
 
   useEffect(() => { wageredCardRef.current = wageredCard; }, [wageredCard]);
   useEffect(() => { matchDataRef.current = matchData; }, [matchData]);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  // Stable refs so the callback effect can stay mount-only without going stale.
+  const effectiveUserCardsRef = useRef(effectiveUserCards);
+  const ownedCardsRef = useRef(ownedCards);
+  const addCardRef = useRef(addCard);
+  const removeCardRef = useRef(removeCard);
+  const setAnteBattleRef = useRef(setAnteBattle);
+  const routerRef = useRef(router);
+  useEffect(() => { effectiveUserCardsRef.current = effectiveUserCards; }, [effectiveUserCards]);
+  useEffect(() => { ownedCardsRef.current = ownedCards; }, [ownedCards]);
+  useEffect(() => { addCardRef.current = addCard; }, [addCard]);
+  useEffect(() => { removeCardRef.current = removeCard; }, [removeCard]);
+  useEffect(() => { setAnteBattleRef.current = setAnteBattle; }, [setAnteBattle]);
+  useEffect(() => { routerRef.current = router; }, [router]);
 
   useEffect(() => {
+    // Mount-only: connect once, register callbacks once, and only tear the
+    // socket down on actual unmount. Re-running this effect on every change
+    // to userCards/ownedCards would cancel the queue mid-search and bounce
+    // the socket, which the server interprets as a forfeit (the battle would
+    // be deleted and the opponent would see "battle not found").
     anteMatchmaking.connect();
 
     anteMatchmaking.setCallbacks({
@@ -47,13 +82,13 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
         setState('match_found');
         toast.success('Opponent found!');
       },
-      onBattleStart: (battleId) => {
+      onBattleStart: (battleId, gameState) => {
         setState('in_battle');
 
         const currentWager = wageredCardRef.current;
         const currentMatch = matchDataRef.current;
         if (currentWager && currentMatch) {
-          setAnteBattle(
+          setAnteBattleRef.current(
             battleId,
             currentWager,
             currentMatch.opponent.wageredCard,
@@ -62,17 +97,31 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
           );
         }
 
-        router.push('/game');
+        // Hydrate the local game store with the server's initial player view
+        // BEFORE navigating. Without this the GameBoard mounts with `game ===
+        // null` and stays on the "Loading Battle" screen forever, since the
+        // ante socket sends gameState only inside `battle_start` and the
+        // subsequent `ante_game_state_updated` events.
+        if (gameState) {
+          try {
+            useGameStore.getState().applyServerGameState(gameState);
+          } catch {
+            // Falling through is non-fatal — useAnteGameSync will retry on
+            // the next ante_game_state_updated payload.
+          }
+        }
+
+        routerRef.current.push('/game');
       },
       onBattleCompleted: (data) => {
         const won = data.winnerId === playerId;
 
         if (won && data.wonCard) {
-          const wonCard = userCards.find(c => c.id === data.wonCard!.cardId || c.name === data.wonCard!.cardName);
-          if (wonCard) addCard(wonCard);
+          const wonCard = effectiveUserCardsRef.current.find(c => c.id === data.wonCard!.cardId || c.name === data.wonCard!.cardName);
+          if (wonCard) addCardRef.current(wonCard);
         } else if (!won && data.lostCard) {
-          const lostCard = ownedCards.find(c => c.id === data.lostCard!.cardId || c.name === data.lostCard!.cardName);
-          if (lostCard) removeCard(lostCard.id);
+          const lostCard = ownedCardsRef.current.find(c => c.id === data.lostCard!.cardId || c.name === data.lostCard!.cardName);
+          if (lostCard) removeCardRef.current(lostCard.id);
         }
 
         setBattleResult({ won, data });
@@ -92,12 +141,19 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
     });
 
     return () => {
-      if (state === 'matchmaking') {
+      const liveState = stateRef.current;
+      if (liveState === 'matchmaking') {
         anteMatchmaking.cancelQueue(playerId);
       }
-      anteMatchmaking.disconnect();
+      // Do NOT disconnect once we've handed off to /game. GameBoard reuses
+      // this socket to send ante_game_action; tearing it down here is the
+      // forfeit path the server logs as "Ante battle X forfeited — Y disconnected".
+      const handingOffToGame = liveState === 'confirmed' || liveState === 'in_battle';
+      if (!handingOffToGame) {
+        anteMatchmaking.disconnect();
+      }
     };
-  }, [playerId, userCards, ownedCards, addCard, removeCard, router, setAnteBattle]);
+  }, [playerId]);
 
   const handleCardSelect = (card: Card) => {
     const wager = cardToWageredCard(card, walletAddress);
@@ -166,7 +222,7 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
     <>
       {state === 'selecting' && (
         <WagerCardSelector
-          cards={userCards}
+          cards={effectiveUserCards}
           onSelectCard={handleCardSelect}
           onCancel={handleClose}
         />

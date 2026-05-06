@@ -562,10 +562,65 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
   // ── Loading ──
   if (!game) {
     return (
-      <div className="w-full h-full bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading game...</p>
+      <div
+        className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950 overflow-hidden"
+        style={{ fontFamily: 'Inter, sans-serif' }}
+      >
+        {/* Atmospheric backdrop */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(249,115,22,0.18), transparent 70%), radial-gradient(ellipse 60% 50% at 50% 90%, rgba(15,23,42,0.5), transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='64' viewBox='0 0 56 64'><path d='M28 0L56 16v32L28 64L0 48V16z' fill='none' stroke='white' stroke-width='1'/></svg>\")",
+            backgroundSize: '56px 64px',
+          }}
+        />
+
+        <div className="relative flex flex-col items-center text-center px-6">
+          {/* Spinner composition: outer orbital ring + inner pulse + center swords */}
+          <div className="relative w-32 h-32 mb-6">
+            {/* Outer orbital ring (orange) */}
+            <div className="absolute inset-0 rounded-full border-2 border-orange-500/20" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-orange-400 border-r-orange-500/60 animate-spin" style={{ animationDuration: '1.4s' }} />
+
+            {/* Mid ring (slow reverse) */}
+            <div className="absolute inset-3 rounded-full border border-white/5" />
+            <div
+              className="absolute inset-3 rounded-full border border-transparent border-b-amber-300/70"
+              style={{ animation: 'spin 2.4s linear infinite reverse' }}
+            />
+
+            {/* Inner core */}
+            <div className="absolute inset-7 rounded-full bg-gradient-to-br from-orange-500/30 to-amber-600/10 ring-1 ring-orange-400/30 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse shadow-[0_0_16px_4px_rgba(249,115,22,0.6)]" />
+            </div>
+
+            {/* Corner hex ticks for sci-fi feel */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-orange-400" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-orange-400/40" />
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.28em] uppercase px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-400/30 font-mono mb-3">
+            <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
+            Preparing Match
+          </div>
+
+          <h1 className="text-2xl font-black tracking-tight text-white leading-tight">Loading Battle</h1>
+          <p className="text-sm text-slate-400 mt-1">Shuffling decks &amp; syncing arena…</p>
+
+          {/* Bouncing dots */}
+          <div className="flex items-center gap-1.5 mt-5">
+            <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" />
+            <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0.15s' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0.3s' }} />
+          </div>
         </div>
       </div>
     )
@@ -652,10 +707,10 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
             <span
               className="px-2 py-0.5 rounded text-xs"
               style={{
-                backgroundColor: isMultiplayer ? '#FF6B35' : gameMode.mode === 'playerVsAI' ? '#8B0000' : gameMode.mode === 'singlePlayer' ? '#006400' : '#555',
+                backgroundColor: isAnteGame ? '#B91C1C' : isMultiplayer ? '#FF6B35' : gameMode.mode === 'playerVsAI' ? '#8B0000' : gameMode.mode === 'singlePlayer' ? '#006400' : '#555',
               }}
             >
-              {isMultiplayer ? `VS ${opponentName}` : gameMode.mode === 'playerVsAI' ? `VS AI - ${gameMode.aiDifficulty.charAt(0).toUpperCase() + gameMode.aiDifficulty.slice(1)}` : gameMode.mode === 'singlePlayer' ? 'Practice' : ''}
+              {isAnteGame ? 'WAGER BATTLE' : isMultiplayer ? `VS ${opponentName}` : gameMode.mode === 'playerVsAI' ? `VS AI - ${gameMode.aiDifficulty.charAt(0).toUpperCase() + gameMode.aiDifficulty.slice(1)}` : gameMode.mode === 'singlePlayer' ? 'Practice' : ''}
             </span>
           </div>
         </div>

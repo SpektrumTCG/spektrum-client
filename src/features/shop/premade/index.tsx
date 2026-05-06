@@ -108,7 +108,7 @@ export function PremadeDecksFeature() {
       if (deckCards.length > 0) addCards(deckCards as any)
       setPurchasedDecks((prev) => new Set([...prev, selectedDeck.id]))
       toast.success(`Purchased ${selectedDeck.name}! ${result.totalCards ?? deckCards.length} cards added to your collection.`)
-      router.push("/library")
+      router.push("/cards")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to purchase deck")
     } finally {

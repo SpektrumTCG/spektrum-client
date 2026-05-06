@@ -33,11 +33,14 @@ class AnteMatchmakingService {
   private socket: Socket | null = null;
   private callbacks: {
     onMatchFound?: (data: MatchFoundData) => void;
-    onBattleStart?: (battleId: string) => void;
+    onBattleStart?: (battleId: string, gameState?: any) => void;
     onBattleCompleted?: (data: BattleCompletedData) => void;
     onQueueJoined?: (data: { rarity: CardRarity; position: number }) => void;
     onQueueCancelled?: () => void;
     onError?: (message: string) => void;
+    onGameStateUpdated?: (gameState: any) => void;
+    onActionRejected?: (data: { action: string; error: string }) => void;
+    onOpponentDisconnected?: (data: { battleId: string; reason: string }) => void;
   } = {};
 
   connect() {
@@ -53,12 +56,24 @@ class AnteMatchmakingService {
       this.callbacks.onMatchFound?.(data);
     });
 
-    this.socket.on('battle_start', (data: { battleId: string }) => {
-      this.callbacks.onBattleStart?.(data.battleId);
+    this.socket.on('battle_start', (data: { battleId: string; gameState?: any }) => {
+      this.callbacks.onBattleStart?.(data.battleId, data.gameState);
     });
 
     this.socket.on('battle_completed', (data: BattleCompletedData) => {
       this.callbacks.onBattleCompleted?.(data);
+    });
+
+    this.socket.on('ante_game_state_updated', (data: { gameState: any }) => {
+      this.callbacks.onGameStateUpdated?.(data.gameState);
+    });
+
+    this.socket.on('ante_action_rejected', (data: { action: string; error: string }) => {
+      this.callbacks.onActionRejected?.(data);
+    });
+
+    this.socket.on('battle_opponent_disconnected', (data: { battleId: string; reason: string }) => {
+      this.callbacks.onOpponentDisconnected?.(data);
     });
 
     this.socket.on('queue_joined', (data: { rarity: CardRarity; position: number }) => {
@@ -104,6 +119,11 @@ class AnteMatchmakingService {
   sendAnteAction(battleId: string, action: any) {
     if (!this.socket?.connected) return;
     this.socket.emit('ante_game_action', { battleId, action });
+  }
+
+  requestState(battleId: string, playerId?: string) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('request_ante_state', { battleId, playerId });
   }
 
   setCallbacks(callbacks: typeof this.callbacks) {

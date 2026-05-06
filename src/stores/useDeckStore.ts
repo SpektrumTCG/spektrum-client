@@ -8,6 +8,25 @@ import { getBaseCardId } from '@/lib/rarityUtils';
 import { useAchievementsStore } from '@/stores/useAchievementsStore';
 import { useCardCatalogStore } from '@/stores/useCardCatalogStore';
 
+function formatDeckSaveError(err: any, status: number): string {
+  // The server returns zod issues as an array of objects under `details` for
+  // validation failures, and a plain string under `details` for business-rule
+  // failures. JSON.stringify-ing the array produces "[object Object]" via
+  // String(err) — extract a readable message instead.
+  if (typeof err?.details === 'string') return err.details;
+  if (Array.isArray(err?.details) && err.details.length > 0) {
+    return err.details
+      .map((d: any) => {
+        const path = Array.isArray(d?.path) ? d.path.join('.') : '';
+        const msg = d?.message || 'invalid';
+        return path ? `${path}: ${msg}` : msg;
+      })
+      .join('; ');
+  }
+  if (typeof err?.error === 'string') return err.error;
+  return `Server returned ${status}`;
+}
+
 function applyDbCatalogToCards(cards: Card[]): Card[] {
   const { catalog, isLoaded } = useCardCatalogStore.getState();
   if (!isLoaded || catalog.size === 0) return cards;
@@ -139,7 +158,7 @@ export const useDeckStore = create<DeckStore>()(
 
             const ownedCards = cards.filter(c => !((c as any).cardId || c.id).includes('-demo-'));
             const cardIds = ownedCards.map(c => (c as any).cardId || c.id);
-            await fetch('/api/decks/save', {
+            const response = await fetch('/api/decks/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -152,6 +171,10 @@ export const useDeckStore = create<DeckStore>()(
                 isActive: currentDecks.length === 0 ? 1 : 0
               })
             });
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.details || err.error || `Server returned ${response.status}`);
+            }
             toastInner.success('Deck saved to database!', { duration: 2000 });
           } catch (error: any) {
             toast.error(`Failed to save deck: ${error.message || 'Unknown error'}`, { duration: 5000 });
@@ -191,7 +214,7 @@ export const useDeckStore = create<DeckStore>()(
                 .filter(c => !((c as any).cardId || c.id).includes('-demo-'))
                 .map(c => (c as any).cardId || c.id);
               const coverCardId = updatedDeck.coverCardId || null;
-              await fetch('/api/decks/save', {
+              const response = await fetch('/api/decks/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -204,6 +227,14 @@ export const useDeckStore = create<DeckStore>()(
                   isActive: get().activeDeckId === id ? 1 : 0
                 })
               });
+              if (!response.ok) {
+                // Surface the real server error instead of silently lying to the
+                // user with a success toast. Without this, the save would fail
+                // (e.g. card-ownership validation) and the next refresh would
+                // wipe out the local edits via syncDecksFromDatabase.
+                const err = await response.json().catch(() => ({}));
+                throw new Error(formatDeckSaveError(err, response.status));
+              }
               toastInner.success('Deck changes saved!', { duration: 2000 });
             }
           } catch (error: any) {
@@ -393,6 +424,15 @@ export const useDeckStore = create<DeckStore>()(
             localCardMap.set(c.id, c);
             if ((c as any).cardId) {
               localCardMap.set((c as any).cardId, c);
+            }
+            // Also index by cardNumber. Starter-deck rows persist the
+            // cardNumber (e.g. "RED-001") as the player_cards.cardId when the
+            // starter row has no explicit cardId, so the dbCard.cardId we
+            // receive may match a registry card by its cardNumber rather than
+            // its primary id. Without this lookup the registry merge is skipped
+            // and the resulting owned card loses its rarity.
+            if ((c as any).cardNumber) {
+              localCardMap.set((c as any).cardNumber, c);
             }
           }
 
