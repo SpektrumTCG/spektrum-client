@@ -197,20 +197,32 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
           localStorage.setItem('multiplayer_player_id', persistentId);
         }
 
-        // Try to get wallet address and display name
+        // Resolve display name: wallet profile > game-mode custom name > default
         let walletAddress: string | null = null;
-        let displayName = `Player_${persistentId.substr(0, 8)}`;
+        let savedProfileName: string | null = null;
+        let gameModeName: string | null = null;
 
         try {
           const { useWalletStore } = await import('@/stores/useWalletStore');
           const walletState = useWalletStore.getState();
           walletAddress = walletState.walletAddress;
-          if (walletState.playerProfile?.displayName) {
-            displayName = walletState.playerProfile.displayName;
-          }
+          savedProfileName = walletState.playerProfile?.displayName?.trim() || null;
         } catch {
-          // Wallet store unavailable; proceed with defaults
+          // Wallet store unavailable; proceed
         }
+
+        try {
+          const { useGameMode } = await import('@/features/game/stores/useGameMode');
+          const name = useGameMode.getState().playerName?.trim();
+          if (name) gameModeName = name;
+        } catch {
+          // Game-mode store unavailable; proceed
+        }
+
+        const displayName =
+          savedProfileName ||
+          (gameModeName && gameModeName !== 'Player' ? gameModeName : null) ||
+          `Player_${persistentId.substr(0, 8)}`;
 
         const playerData = {
           playerId: persistentId,

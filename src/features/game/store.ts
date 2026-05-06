@@ -28,6 +28,7 @@ interface GameStore {
   game: GameState | null
   aiDifficulty: AIDifficulty
   isAIThinking: boolean
+  _lastServerSeq: number
   startGame: (playerDeck: Card[], difficulty?: AIDifficulty) => void
   playCard: (cardId: string, slot?: 'active' | number) => void
   addToSpektra: (cardId: string) => void
@@ -47,6 +48,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   game: null,
   aiDifficulty: 'regular',
   isAIThinking: false,
+  _lastServerSeq: 0,
 
   startGame: (playerDeck, difficulty = get().aiDifficulty) => {
     const allCards = cardRegistry.getAllCards()
@@ -159,7 +161,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     if (!winner) get()._maybeRunAI(committed)
   },
 
-  resetGame: () => set({ game: null, isAIThinking: false }),
+  resetGame: () => set({ game: null, isAIThinking: false, _lastServerSeq: 0 }),
 
   setAIDifficulty: (difficulty) => set({ aiDifficulty: difficulty }),
 
@@ -167,6 +169,13 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     // Map server player view to client GameState format.
     // Server shape: { player, opponent, currentPlayer, gamePhase, turn, winner, logs, _seq }
     // Client shape: { players: [Player, Player], currentPlayerIndex, phase, currentTurn, winner, battleLog, ... }
+
+    // Drop stale frames — server tags every broadcast with a monotonic _seq.
+    // Out-of-order packets would rewind the UI, so we only apply frames newer than
+    // what we already rendered. The 0 fallback lets full state-syncs pass on reconnect.
+    const seq = typeof serverView._seq === 'number' ? serverView._seq : 0
+    const lastSeq = get()._lastServerSeq
+    if (seq > 0 && seq <= lastSeq) return
 
     const mapServerPlayer = (sp: any, id: string, isActive: boolean): any => {
       // For opponent, server sends deck:[] with deckCount — create placeholder array for .length
@@ -176,21 +185,28 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           ? Array.from({ length: sp.deckCount }, (_, i) => ({ id: `hidden-${i}`, name: 'Hidden' }))
           : []
 
+      // HP comes from active avatar's health minus damage counter (life cards are separate).
+      // Fallback 20/20 only when no avatar is in play (e.g. setup phase).
+      const activeAvatar = sp.activeAvatar || null
+      const avatarMaxHp = activeAvatar?.health ?? 20
+      const avatarDmg = activeAvatar?.counters?.damage ?? 0
+      const avatarHp = Math.max(0, avatarMaxHp - avatarDmg)
+
       return {
         id,
         name: sp.playerName || sp.playerId || id,
-        health: sp.health ?? 20,
-        maxHealth: 20,
+        health: avatarHp,
+        maxHealth: avatarMaxHp,
         energy: { fire: 0, water: 0, ground: 0, air: 0, neutral: 0 },
         spektraPile: sp.spektraPile || [],
         usedSpektraPile: sp.usedSpektraPile || [],
         lifeCards: sp.lifeCards || [],
         hand: sp.hand || [],
         deck,
-        discardPile: [],
+        discardPile: sp.discardPile || [],
         graveyard: sp.graveyard || [],
         field: sp.fieldCards || [],
-        activeAvatar: sp.activeAvatar || null,
+        activeAvatar,
         reserveAvatars: sp.reserveAvatars || [],
         counters: {},
         discardedThisTurn: [],
@@ -199,6 +215,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         hasPlayedItemThisTurn: sp.hasPlayedItemThisTurn ?? false,
         equipmentActivations: {},
         needsToSelectReserveAvatar: sp.needsToSelectReserveAvatar ?? false,
+        needsToDiscardCards: sp.needsToDiscardCards ?? false,
       }
     }
 
@@ -228,7 +245,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       effectStack: [],
     }
 
-    set({ game })
+    set({ game, _lastServerSeq: seq })
   },
 
   _maybeRunAI: (game) => {

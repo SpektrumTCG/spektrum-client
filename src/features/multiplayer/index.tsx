@@ -16,6 +16,8 @@ import { BackButton } from '@/components/shared/BackButton';
 import { useMultiplayerStore } from '@/stores/useMultiplayerStore';
 import { useAudio } from '@/stores/useAudioStore';
 import { useDeckStore } from '@/stores/useDeckStore';
+import { useGameMode } from '@/features/game/stores/useGameMode';
+import { useWalletStore } from '@/stores/useWalletStore';
 import { SolanaWalletConnect } from '@/components/shared/SolanaWalletConnect';
 import { AnteModeManager } from '@/components/shared/ante/AnteModeManager';
 
@@ -30,6 +32,8 @@ export function MultiplayerFeature() {
 
   const { playButton, playSuccess } = useAudio();
   const { decks, activeDeckId, ownedCards } = useDeckStore();
+  const gameModePlayerName = useGameMode((s) => s.playerName);
+  const walletProfileName = useWalletStore((s) => s.playerProfile?.displayName ?? null);
 
   const {
     socket,
@@ -119,6 +123,26 @@ export function MultiplayerFeature() {
       setSelectedDeckId(activeDeckId);
     }
   }, [currentRoom, activeDeckId, selectedDeckId]);
+
+  // Push the latest custom name to the server whenever it changes (or on mount once connected).
+  // The auto-registration in useMultiplayerStore only runs on the initial socket 'connect' event,
+  // so a name typed on /game-mode after the socket already connected wouldn't reach the server otherwise.
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const persistentId = typeof window !== 'undefined' ? localStorage.getItem('multiplayer_player_id') : null;
+    if (!persistentId) return;
+    const resolved =
+      walletProfileName?.trim() ||
+      (gameModePlayerName?.trim() && gameModePlayerName.trim() !== 'Player' ? gameModePlayerName.trim() : null) ||
+      `Player_${persistentId.substr(0, 8)}`;
+    if (currentPlayer && currentPlayer.name === resolved) return;
+    socket.emit('register_player', {
+      playerId: persistentId,
+      name: resolved,
+      avatar: null,
+      walletAddress: useWalletStore.getState().walletAddress,
+    });
+  }, [socket, isConnected, gameModePlayerName, walletProfileName, currentPlayer]);
 
   const handleQuickMatch = async (mode: 'casual' | 'ranked') => {
     playButton();

@@ -68,6 +68,13 @@ export default function GameModePage() {
         throw new Error(err.error || 'Failed to save name')
       }
       gameMode.setPlayerName(playerName)
+      // Keep the wallet store's playerProfile in sync so other surfaces
+      // (e.g. the multiplayer lobby) read the updated displayName.
+      useWalletStore.setState((s) => ({
+        playerProfile: s.playerProfile
+          ? { ...s.playerProfile, displayName: playerName }
+          : { displayName: playerName, gamesPlayed: 0, gamesWon: 0, gamesLost: 0, country: null, region: null },
+      }))
       toast.success('Name saved!')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save name')
