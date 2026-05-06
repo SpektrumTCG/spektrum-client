@@ -3,7 +3,24 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Clock, Trophy, Gamepad2 } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  Clock,
+  Trophy,
+  Gamepad2,
+  Crown,
+  Check,
+  Layers,
+  Eye,
+  EyeOff,
+  LogOut,
+  Hourglass,
+  Swords,
+  Hash,
+  Copy,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ResponsiveGameLayout } from '@/components/ui/ResponsiveGameLayout';
@@ -13,7 +30,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { FadeInView } from '@/components/ui/FadeInView';
 import { BackButton } from '@/components/shared/BackButton';
-import { useMultiplayerStore } from '@/stores/useMultiplayerStore';
+import { useMultiplayerStore, type Player } from '@/stores/useMultiplayerStore';
 import { useAudio } from '@/stores/useAudioStore';
 import { useDeckStore } from '@/stores/useDeckStore';
 import { useGameMode } from '@/features/game/stores/useGameMode';
@@ -124,6 +141,20 @@ export function MultiplayerFeature() {
     }
   }, [currentRoom, activeDeckId, selectedDeckId]);
 
+  // If the user navigates away from /multiplayer while still parked in a waiting/ready
+  // lobby (i.e. the game hasn't actually started), drop the room server-side. Without this,
+  // bottom-nav navigation leaves the player attached to the room and the register_player
+  // reconnection path will silently re-join them on return.
+  useEffect(() => {
+    return () => {
+      const { currentRoom: roomAtUnmount, isMultiplayerSession, leaveRoom: leaveNow } =
+        useMultiplayerStore.getState();
+      if (roomAtUnmount && !isMultiplayerSession && roomAtUnmount.status !== 'playing') {
+        leaveNow();
+      }
+    };
+  }, []);
+
   // Push the latest custom name to the server whenever it changes (or on mount once connected).
   // The auto-registration in useMultiplayerStore only runs on the initial socket 'connect' event,
   // so a name typed on /game-mode after the socket already connected wouldn't reach the server otherwise.
@@ -216,144 +247,375 @@ export function MultiplayerFeature() {
   };
 
   if (currentRoom) {
+    const host = currentRoom.players.find((p) => p.isHost) ?? currentRoom.players[0];
+    const guest = currentRoom.players.find((p) => !p.isHost) ?? currentRoom.players[1];
+    const meId = currentPlayer?.id;
+    const allReady = currentRoom.players.length === currentRoom.maxPlayers && currentRoom.players.every((p) => p.isReady);
+    const opponentMissing = currentRoom.players.length < currentRoom.maxPlayers;
+
+    let phaseLabel = 'WAITING FOR OPPONENT';
+    let phaseTone = 'text-amber-300 bg-amber-500/10 border-amber-500/30';
+    if (currentRoom.status === 'playing') {
+      phaseLabel = 'MATCH IN PROGRESS';
+      phaseTone = 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30';
+    } else if (allReady) {
+      phaseLabel = 'BOTH READY · LAUNCHING';
+      phaseTone = 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30';
+    } else if (!opponentMissing) {
+      phaseLabel = 'READY CHECK';
+      phaseTone = 'text-orange-300 bg-orange-500/10 border-orange-500/40';
+    }
+
+    const modeLabel = (currentRoom.gameMode || 'casual').toUpperCase();
+    const modeAccent =
+      currentRoom.gameMode === 'ranked'
+        ? 'from-violet-500/20 to-fuchsia-500/10 text-violet-200 border-violet-400/40'
+        : currentRoom.gameMode === 'tournament'
+          ? 'from-amber-500/20 to-orange-500/10 text-amber-200 border-amber-400/40'
+          : 'from-orange-500/20 to-orange-500/5 text-orange-200 border-orange-400/40';
+
+    const tribeAccent: Record<string, { bar: string; chip: string; glow: string }> = {
+      water: { bar: 'from-sky-400 to-cyan-500', chip: 'bg-sky-500/15 text-sky-200 border-sky-400/30', glow: 'shadow-[0_0_24px_-6px_rgba(56,189,248,0.55)]' },
+      fire: { bar: 'from-orange-400 to-rose-500', chip: 'bg-orange-500/15 text-orange-200 border-orange-400/30', glow: 'shadow-[0_0_24px_-6px_rgba(251,113,133,0.55)]' },
+      earth: { bar: 'from-amber-500 to-emerald-500', chip: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30', glow: 'shadow-[0_0_24px_-6px_rgba(16,185,129,0.55)]' },
+      air: { bar: 'from-zinc-200 to-violet-300', chip: 'bg-violet-500/15 text-violet-200 border-violet-400/30', glow: 'shadow-[0_0_24px_-6px_rgba(167,139,250,0.55)]' },
+    };
+    const tribeOf = (t?: string) => tribeAccent[(t || '').toLowerCase()] ?? { bar: 'from-orange-400 to-amber-500', chip: 'bg-orange-500/15 text-orange-200 border-orange-400/30', glow: 'shadow-[0_0_24px_-6px_rgba(251,146,60,0.5)]' };
+
+    const copyRoomCode = () => {
+      try {
+        navigator.clipboard?.writeText(currentRoom.id);
+        toast.success('Room code copied');
+        playButton();
+      } catch {
+        toast.error('Could not copy');
+      }
+    };
+
+    const PlayerSlot = ({
+      player,
+      side,
+    }: {
+      player?: Player;
+      side: 'left' | 'right';
+    }) => {
+      const ready = !!player?.isReady;
+      const empty = !player;
+      const isMe = player?.id === meId;
+      const ringColor = empty
+        ? 'ring-white/10'
+        : ready
+          ? 'ring-emerald-400/70'
+          : 'ring-orange-400/60';
+      const align = side === 'left' ? 'items-start text-left' : 'items-end text-right';
+      const initial = player?.name?.charAt(0)?.toUpperCase() ?? '?';
+
+      return (
+        <div className={`flex flex-col ${align} gap-2 flex-1 min-w-0`}>
+          <div className="relative">
+            <motion.div
+              className={`w-20 h-20 rounded-2xl ring-2 ${ringColor} bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center overflow-hidden relative`}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+            >
+              {empty ? (
+                <Hourglass size={26} className="text-white/30 animate-pulse" />
+              ) : (
+                <>
+                  <span className="text-3xl font-black text-white tracking-tight">{initial}</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                </>
+              )}
+              {ready && !empty && (
+                <motion.div
+                  className="absolute inset-0 rounded-2xl ring-2 ring-emerald-400/60"
+                  animate={{ opacity: [0.3, 0.9, 0.3] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              )}
+            </motion.div>
+            {player?.isHost && (
+              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/40 ring-2 ring-slate-900">
+                <Crown size={14} className="text-slate-900" />
+              </div>
+            )}
+          </div>
+
+          <div className={`flex flex-col ${side === 'right' ? 'items-end' : 'items-start'} min-w-0 w-full`}>
+            <div className="flex items-center gap-1.5 max-w-full">
+              {empty ? (
+                <span className="text-base font-semibold text-white/40 italic truncate">Searching…</span>
+              ) : (
+                <span className={`text-base font-bold tracking-tight truncate ${isMe ? 'text-orange-300' : 'text-white'}`}>
+                  {player!.name}
+                </span>
+              )}
+              {isMe && !empty && (
+                <span className="text-[9px] font-semibold tracking-[0.15em] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-400/30">
+                  YOU
+                </span>
+              )}
+            </div>
+
+            <div className="mt-1.5">
+              {empty ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
+                  empty slot
+                </span>
+              ) : ready ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-400/40">
+                  <Check size={10} strokeWidth={3} /> Ready
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 rounded-md bg-white/5 text-white/60 border border-white/10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Not ready
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const selectedDeck = decks.find((d) => d.id === selectedDeckId);
+    const tribe = tribeOf(selectedDeck?.tribe);
+
     return (
-      <div className="flex flex-col items-center pb-24 overflow-y-auto pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
-        <div className="max-w-md mx-auto p-4 w-full">
+      <div className="flex flex-col items-center pb-40 overflow-y-auto pt-14 min-h-dvh" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="max-w-md mx-auto px-4 w-full relative">
           <BackButton />
+
+          {/* Phase pill — what's actually happening */}
           <FadeInView>
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-orange-400 mb-1">{currentRoom.name}</h1>
-              <p className="text-gray-400 text-sm">{currentRoom.players.length}/{currentRoom.maxPlayers} players</p>
+            <div className="flex justify-center mt-2 mb-3">
+              <motion.div
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${phaseTone} backdrop-blur-sm`}
+                animate={allReady ? { scale: [1, 1.04, 1] } : {}}
+                transition={{ duration: 1.2, repeat: allReady ? Infinity : 0 }}
+              >
+                {allReady ? <Sparkles size={12} /> : <Hourglass size={12} />}
+                <span className="text-[10px] font-bold tracking-[0.22em] font-mono">{phaseLabel}</span>
+              </motion.div>
             </div>
           </FadeInView>
 
-          <div className="grid grid-cols-1 gap-4">
-            <FadeInView delay={0.2}>
-              <Card3D className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                  <Users className="mr-2" size={20} />
-                  Players
-                </h2>
-                <div className="space-y-3">
-                  {currentRoom.players.map((player, index) => (
-                    <motion.div
-                      key={player.id}
-                      className="flex items-center justify-between p-3 bg-gray-700 rounded"
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-spektrum-orange rounded-full flex items-center justify-center text-spektrum-dark font-bold">
-                          {player.name.charAt(0)}
-                        </div>
-                        <span className="text-white">{player.name}</span>
-                        {player.isHost && (
-                          <span className="text-xs bg-spektrum-orange text-spektrum-dark px-2 py-1 rounded">HOST</span>
-                        )}
-                      </div>
-                      <div className={`w-3 h-3 rounded-full ${player.isReady ? 'bg-green-500' : 'bg-gray-500'}`} />
-                    </motion.div>
-                  ))}
-                </div>
-              </Card3D>
-            </FadeInView>
+          {/* Title + room code */}
+          <FadeInView delay={0.05}>
+            <div className="text-center mb-5">
+              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-b from-orange-300 to-orange-500 bg-clip-text text-transparent leading-tight">
+                {currentRoom.name}
+              </h1>
+              <button
+                onClick={copyRoomCode}
+                className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-mono tracking-[0.18em] text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                <Hash size={10} />
+                {currentRoom.id.slice(0, 8).toUpperCase()}
+                <Copy size={10} />
+              </button>
+            </div>
+          </FadeInView>
 
-            <FadeInView delay={0.4}>
-              <Card3D className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Settings</h2>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Time Limit:</span>
-                    <span className="text-white">{formatTime(currentRoom.settings.timeLimit)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Spectators:</span>
-                    <span className="text-white">{currentRoom.settings.allowSpectators ? 'Allowed' : 'Not Allowed'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Status:</span>
-                    <span className={`capitalize ${
-                      currentRoom.status === 'waiting' ? 'text-yellow-400' :
-                      currentRoom.status === 'ready' ? 'text-blue-400' :
-                      currentRoom.status === 'playing' ? 'text-green-400' : 'text-gray-400'
-                    }`}>
-                      {currentRoom.status}
-                    </span>
-                  </div>
+          {/* VS Hero face-off */}
+          <FadeInView delay={0.1}>
+            <div className="relative rounded-3xl overflow-hidden mb-4 border-2 border-orange-500/80 bg-gradient-to-b from-slate-900 to-slate-950 shadow-[0_8px_32px_-12px_rgba(15,23,42,0.5)]">
+              {/* Diagonal accent split */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-30"
+                style={{
+                  background:
+                    'linear-gradient(115deg, rgba(249,115,22,0.18) 0%, rgba(249,115,22,0.18) 45%, transparent 50%, rgba(56,189,248,0.18) 55%, rgba(56,189,248,0.18) 100%)',
+                }}
+                aria-hidden
+              />
+              <div className="absolute top-3 left-3">
+                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r ${modeAccent} border text-[9px] font-bold tracking-[0.2em] font-mono backdrop-blur-sm`}>
+                  <Gamepad2 size={10} />
+                  {modeLabel}
                 </div>
-              </Card3D>
-            </FadeInView>
-          </div>
+              </div>
+              <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 text-[10px] font-mono tracking-wider text-white/50">
+                <Users size={11} />
+                {currentRoom.players.length}/{currentRoom.maxPlayers}
+              </div>
 
-          <FadeInView delay={0.6}>
-            <Card3D className="p-6 mt-6">
-              <h2 className="text-xl font-bold text-white mb-4">Select Your Deck</h2>
+              <div className="relative px-5 pt-12 pb-5 flex items-center gap-3">
+                <PlayerSlot player={host} side="left" />
+
+                {/* VS clash mark */}
+                <div className="relative flex flex-col items-center justify-center shrink-0 w-14">
+                  <motion.div
+                    className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(249,115,22,0.7)]"
+                    initial={{ rotate: -10, scale: 0 }}
+                    animate={{ rotate: 0, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 240, damping: 16, delay: 0.15 }}
+                  >
+                    <Swords size={20} className="text-slate-900" strokeWidth={2.5} />
+                    <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
+                  </motion.div>
+                  <span className="mt-1 text-[9px] font-black tracking-[0.3em] text-white/40 font-mono">VS</span>
+                </div>
+
+                <PlayerSlot player={guest} side="right" />
+              </div>
+            </div>
+          </FadeInView>
+
+          {/* Compact info strip */}
+          <FadeInView delay={0.2}>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-2.5 flex flex-col items-center justify-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[9px] font-mono tracking-[0.18em] uppercase">
+                  <Clock size={10} /> Time
+                </div>
+                <div className="mt-0.5 text-sm font-bold text-white tabular-nums">{formatTime(currentRoom.settings.timeLimit)}</div>
+              </div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-2.5 flex flex-col items-center justify-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[9px] font-mono tracking-[0.18em] uppercase">
+                  {currentRoom.settings.allowSpectators ? <Eye size={10} /> : <EyeOff size={10} />}
+                  Spectators
+                </div>
+                <div className="mt-0.5 text-sm font-bold text-white">
+                  {currentRoom.settings.allowSpectators ? 'Open' : 'Closed'}
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-2.5 flex flex-col items-center justify-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[9px] font-mono tracking-[0.18em] uppercase">
+                  <Trophy size={10} /> Mode
+                </div>
+                <div className="mt-0.5 text-sm font-bold text-white capitalize">{currentRoom.gameMode}</div>
+              </div>
+            </div>
+          </FadeInView>
+
+          {/* Deck loadout */}
+          <FadeInView delay={0.3}>
+            <div className="rounded-2xl border-2 border-orange-500/80 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden shadow-[0_8px_32px_-12px_rgba(15,23,42,0.5)]">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                <div className="flex items-center gap-2">
+                  <Layers size={14} className="text-orange-400" />
+                  <h2 className="text-xs font-bold tracking-[0.18em] uppercase text-white/80">Battle Deck</h2>
+                </div>
+                {selectedDeck && (
+                  <span className={`text-[9px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded border ${tribe.chip} font-mono`}>
+                    {selectedDeck.tribe || 'Mixed'}
+                  </span>
+                )}
+              </div>
+
               {decks.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-400 mb-3">You don't have any decks yet!</p>
+                <div className="px-4 pb-4 pt-2 text-center">
+                  <p className="text-white/50 text-sm mb-3">No decks yet — build one to enter battle.</p>
                   <AnimatedButton onClick={() => router.push('/cards')} variant="primary" size="sm">
-                    Create a Deck
+                    Build a Deck
                   </AnimatedButton>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {decks.map((deck) => (
-                    <motion.div
-                      key={deck.id}
-                      className={`p-3 rounded cursor-pointer transition-all ${
-                        selectedDeckId === deck.id
-                          ? 'bg-spektrum-orange text-spektrum-dark'
-                          : 'bg-gray-700 text-white hover:bg-gray-600'
-                      }`}
-                      onClick={() => { setSelectedDeckId(deck.id); playButton(); }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-bold">{deck.name}</h3>
-                          <p className={`text-sm ${selectedDeckId === deck.id ? 'text-spektrum-dark opacity-80' : 'text-gray-400'}`}>
-                            {deck.cards.length} cards{deck.tribe && ` • ${deck.tribe}`}
-                          </p>
-                        </div>
-                        {selectedDeckId === deck.id && (
-                          <div className="w-6 h-6 bg-spektrum-dark rounded-full flex items-center justify-center">
-                            <span className="text-spektrum-orange text-xs">&#10003;</span>
+                <div className="px-3 pb-3 space-y-1.5">
+                  {decks.map((deck) => {
+                    const active = selectedDeckId === deck.id;
+                    const t = tribeOf(deck.tribe);
+                    return (
+                      <motion.button
+                        key={deck.id}
+                        onClick={() => { setSelectedDeckId(deck.id); playButton(); }}
+                        whileTap={{ scale: 0.985 }}
+                        className={`w-full text-left flex items-stretch rounded-xl overflow-hidden border transition-all ${
+                          active
+                            ? `bg-white/[0.06] border-orange-400/50 ${t.glow}`
+                            : 'bg-white/[0.02] border-white/5 hover:border-white/15 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className={`w-1.5 bg-gradient-to-b ${t.bar} ${active ? 'opacity-100' : 'opacity-60'}`} />
+                        <div className="flex-1 flex items-center justify-between gap-3 px-3 py-2.5">
+                          <div className="min-w-0">
+                            <div className="font-bold text-white text-sm truncate">{deck.name}</div>
+                            <div className="text-[11px] text-white/50 font-mono tracking-wide mt-0.5">
+                              {deck.cards.length} cards
+                              {deck.tribe && <span className="opacity-60"> · {deck.tribe}</span>}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                              active
+                                ? 'bg-orange-500 text-slate-900 ring-2 ring-orange-300/40'
+                                : 'bg-white/5 text-white/30 ring-1 ring-white/10'
+                            }`}
+                          >
+                            {active && <Check size={14} strokeWidth={3} />}
+                          </div>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               )}
-            </Card3D>
+            </div>
           </FadeInView>
 
-          <FadeInView delay={0.8}>
-            <div className="flex justify-center space-x-4 mt-8">
-              <AnimatedButton
-                onClick={() => setPlayerReady(!currentPlayer?.isReady)}
-                variant={currentPlayer?.isReady ? "success" : "primary"}
-                size="lg"
-                disabled={!selectedDeckId}
-              >
-                {currentPlayer?.isReady ? 'Ready!' : 'Ready Up'}
-              </AnimatedButton>
-              <AnimatedButton
-                onClick={() => { leaveRoom(); setSelectedDeckId(null); router.push('/'); }}
-                variant="danger"
-                size="lg"
-              >
-                Leave Room
-              </AnimatedButton>
-            </div>
-            {!selectedDeckId && decks.length > 0 && (
-              <p className="text-center text-yellow-400 text-sm mt-3">
-                Please select a deck before readying up
+          {!selectedDeckId && decks.length > 0 && (
+            <FadeInView delay={0.4}>
+              <p className="text-center text-amber-400/90 text-xs mt-3 font-medium">
+                Select a deck before readying up.
               </p>
-            )}
-          </FadeInView>
+            </FadeInView>
+          )}
+        </div>
+
+        {/* Sticky CTA dock — anchored above the bottom nav */}
+        <div className="fixed inset-x-0 bottom-[72px] z-30 pointer-events-none">
+          <div className="max-w-md mx-auto px-4 pointer-events-auto">
+            <div className="relative rounded-2xl border border-white/10 bg-slate-950/85 backdrop-blur-xl p-3 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.6)]">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { leaveRoom(); setSelectedDeckId(null); }}
+                  className="shrink-0 h-12 w-12 rounded-xl flex items-center justify-center text-white/60 bg-white/5 hover:bg-rose-500/15 hover:text-rose-300 border border-white/10 hover:border-rose-400/40 transition-all"
+                  aria-label="Leave room"
+                >
+                  <LogOut size={18} />
+                </button>
+
+                <motion.button
+                  onClick={() => { setPlayerReady(!currentPlayer?.isReady); playButton(); }}
+                  disabled={!selectedDeckId}
+                  whileTap={!selectedDeckId ? undefined : { scale: 0.98 }}
+                  className={`relative flex-1 h-12 rounded-xl font-black tracking-[0.18em] text-sm uppercase overflow-hidden transition-all ${
+                    !selectedDeckId
+                      ? 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'
+                      : currentPlayer?.isReady
+                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-[0_0_24px_-4px_rgba(16,185,129,0.7)] border border-emerald-300/50'
+                        : 'bg-gradient-to-br from-orange-400 to-amber-600 text-slate-950 shadow-[0_0_24px_-4px_rgba(249,115,22,0.7)] border border-orange-300/50'
+                  }`}
+                >
+                  {/* Shine sweep */}
+                  {selectedDeckId && (
+                    <motion.span
+                      className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
+                      initial={{ x: '-50%' }}
+                      animate={{ x: '450%' }}
+                      transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.6, ease: 'easeInOut' }}
+                    />
+                  )}
+                  <span className="relative inline-flex items-center justify-center gap-2">
+                    {currentPlayer?.isReady ? (
+                      <>
+                        <Check size={16} strokeWidth={3} />
+                        Locked In
+                      </>
+                    ) : (
+                      <>
+                        <Swords size={16} strokeWidth={2.5} />
+                        Ready Up
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

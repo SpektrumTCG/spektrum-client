@@ -327,7 +327,15 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
     if (socket?.connected) {
       socket.emit('leave_room');
     }
-    set({ currentRoom: null });
+    // Clear all room-related state so the next /multiplayer visit lands on the
+    // mode-selection view instead of being silently re-attached to the lobby.
+    set({
+      currentRoom: null,
+      gameState: null,
+      gameActions: [],
+      pendingDeck: null,
+      isMultiplayerSession: false,
+    });
   },
 
   setPlayerReady: (ready: boolean) => {

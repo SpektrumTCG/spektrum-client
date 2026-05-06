@@ -1199,12 +1199,15 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                     setShowForfeitDialog(false)
                     if (onForfeit) { onForfeit() }
                     else {
-                      // Notify server of forfeit in multiplayer/ante modes
-                      const mpSocket = useMultiplayerStore.getState().socket
+                      // Notify server of forfeit in multiplayer/ante modes, then drop the
+                      // local room so revisiting /multiplayer shows mode selection (not the
+                      // stale lobby).
+                      const mpStore = useMultiplayerStore.getState()
+                      const mpSocket = mpStore.socket
                       if ((isMultiplayer || isAnteGame) && mpSocket?.connected) {
                         mpSocket.emit('forfeit_game')
                       }
-                      useMultiplayerStore.getState().setIsMultiplayerSession(false)
+                      mpStore.leaveRoom()
                       gameStore.resetGame()
                       router.push('/home')
                     }
