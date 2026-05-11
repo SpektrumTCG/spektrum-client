@@ -166,83 +166,45 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   setAIDifficulty: (difficulty) => set({ aiDifficulty: difficulty }),
 
   applyServerGameState: (serverView: any) => {
-    // Map server player view to client GameState format.
-    // Server shape: { player, opponent, currentPlayer, gamePhase, turn, winner, logs, _seq }
-    // Client shape: { players: [Player, Player], currentPlayerIndex, phase, currentTurn, winner, battleLog, ... }
+    // The server now runs the same shared engine as AI mode and emits a real
+    // client `GameState` with privacy already applied (opponent's hand /
+    // deck / life cards arrive as face-down placeholders, self is always at
+    // players[0] for rendering convenience). The mapper is therefore a
+    // near-passthrough — its only jobs are stale-frame rejection and a
+    // defensive shape backfill in case the payload is missing optional
+    // top-level fields like effectStack.
 
-    // Drop stale frames — server tags every broadcast with a monotonic _seq.
-    // Out-of-order packets would rewind the UI, so we only apply frames newer than
-    // what we already rendered. The 0 fallback lets full state-syncs pass on reconnect.
+    if (!serverView) return
+
+    // Drop stale frames — server tags every broadcast with a monotonic
+    // _seq. Out-of-order packets would rewind the UI; we only apply frames
+    // newer than what we already rendered. The 0 fallback lets full
+    // state-syncs (e.g. on reconnect) pass through.
     const seq = typeof serverView._seq === 'number' ? serverView._seq : 0
     const lastSeq = get()._lastServerSeq
     if (seq > 0 && seq <= lastSeq) return
 
-    const mapServerPlayer = (sp: any, id: string, isActive: boolean): any => {
-      // For opponent, server sends deck:[] with deckCount — create placeholder array for .length
-      const deck = sp.deck && sp.deck.length > 0
-        ? sp.deck
-        : sp.deckCount
-          ? Array.from({ length: sp.deckCount }, (_, i) => ({ id: `hidden-${i}`, name: 'Hidden' }))
-          : []
-
-      // HP comes from active avatar's health minus damage counter (life cards are separate).
-      // Fallback 20/20 only when no avatar is in play (e.g. setup phase).
-      const activeAvatar = sp.activeAvatar || null
-      const avatarMaxHp = activeAvatar?.health ?? 20
-      const avatarDmg = activeAvatar?.counters?.damage ?? 0
-      const avatarHp = Math.max(0, avatarMaxHp - avatarDmg)
-
-      return {
-        id,
-        name: sp.playerName || sp.playerId || id,
-        health: avatarHp,
-        maxHealth: avatarMaxHp,
-        energy: { fire: 0, water: 0, ground: 0, air: 0, neutral: 0 },
-        spektraPile: sp.spektraPile || [],
-        usedSpektraPile: sp.usedSpektraPile || [],
-        lifeCards: sp.lifeCards || [],
-        hand: sp.hand || [],
-        deck,
-        discardPile: sp.discardPile || [],
-        graveyard: sp.graveyard || [],
-        field: sp.fieldCards || [],
-        activeAvatar,
-        reserveAvatars: sp.reserveAvatars || [],
-        counters: {},
-        discardedThisTurn: [],
-        isActivePlayer: isActive,
-        avatarToSpektraCount: sp.avatarToSpektraCount ?? 0,
-        hasPlayedItemThisTurn: sp.hasPlayedItemThisTurn ?? false,
-        equipmentActivations: {},
-        needsToSelectReserveAvatar: sp.needsToSelectReserveAvatar ?? false,
-        needsToDiscardCards: sp.needsToDiscardCards ?? false,
-      }
+    // Defensive shape: serverView is already a GameState; clone the slots
+    // we use directly. Anything optional missing on the wire (effectStack,
+    // turnTimer, lastAction) gets a sensible default.
+    const players = Array.isArray(serverView.players) && serverView.players.length === 2
+      ? (serverView.players as [any, any])
+      : null
+    if (!players) {
+      // Payload doesn't conform — refuse to apply rather than corrupt state.
+      return
     }
 
-    const currentPlayer = serverView.currentPlayer // 'player' or 'opponent'
-    const currentPlayerIndex = currentPlayer === 'player' ? 0 : 1
-
-    // Map winner: server sends 'player'|'opponent'|'tie'|null, client expects player id or null
-    let winner: string | null = null
-    if (serverView.winner === 'player') winner = 'player-self'
-    else if (serverView.winner === 'opponent') winner = 'opponent-id'
-    else if (serverView.winner === 'tie') winner = 'tie'
-
-    const phase = serverView.gamePhase || 'setup'
-
     const game: GameState = {
-      currentTurn: serverView.turn || 1,
-      phase: serverView.winner ? 'game_over' : phase,
-      players: [
-        mapServerPlayer(serverView.player, 'player-self', currentPlayerIndex === 0),
-        mapServerPlayer(serverView.opponent, 'opponent-id', currentPlayerIndex === 1),
-      ] as [any, any],
-      currentPlayerIndex: currentPlayerIndex as 0 | 1,
-      winner,
-      turnTimer: 0,
-      lastAction: '',
-      battleLog: serverView.logs || [],
-      effectStack: [],
+      currentTurn: serverView.currentTurn ?? 1,
+      phase: serverView.phase ?? 'setup',
+      players,
+      currentPlayerIndex: (serverView.currentPlayerIndex ?? 0) as 0 | 1,
+      winner: serverView.winner ?? null,
+      turnTimer: serverView.turnTimer ?? 0,
+      lastAction: serverView.lastAction ?? '',
+      battleLog: Array.isArray(serverView.battleLog) ? serverView.battleLog : [],
+      effectStack: Array.isArray(serverView.effectStack) ? serverView.effectStack : [],
     }
 
     set({ game, _lastServerSeq: seq })
