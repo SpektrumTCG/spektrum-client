@@ -11,31 +11,38 @@ import type { BoosterVariant, BoosterPack } from "@/stores/useBoosterVariantStor
 type Step = "tier-selection" | "pack-selection" | "confirm"
 
 const EXPANSION = {
-  id: "fire-and-water",
-  name: "Fire and Water",
-  symbol: "🔥💧",
-  description: "The first Spektrum expansion featuring Fire and Water type cards.",
+  id: "genesis-series",
+  name: "Genesis Series",
   cardCount: 120,
   locked: false,
+}
+
+const ACTIVE_TIERS = ["Beginner", "Advanced"] as const
+
+const TIER_LABELS: Record<string, string> = {
+  Beginner: "Fire",
+  Advanced: "Water",
 }
 
 const TIER_IMAGES: Record<string, string> = {
   Beginner: "/boosters/beginner.png",
   Advanced: "/boosters/advanced.png",
-  Expert: "/boosters/expert.png",
 }
 
 const TIER_COLORS: Record<string, string> = {
-  Beginner: "from-green-600 to-green-800",
-  Advanced: "from-purple-600 to-purple-800",
-  Expert: "from-orange-600 to-orange-800",
+  Beginner: "from-red-600 to-orange-800",
+  Advanced: "from-blue-600 to-cyan-800",
 }
 
 const TIER_EMOJIS: Record<string, string> = {
-  Beginner: "📦",
-  Advanced: "⚡",
-  Expert: "💎",
+  Beginner: "🔥",
+  Advanced: "💧",
 }
+
+const UPCOMING_PACKS: Array<{ label: string; emoji: string; color: string }> = [
+  { label: "Ground", emoji: "⛰️", color: "from-amber-700 to-yellow-900" },
+  { label: "Air", emoji: "🌪️", color: "from-sky-500 to-indigo-700" },
+]
 
 export function BoosterFeature() {
   const router = useRouter()
@@ -115,49 +122,83 @@ export function BoosterFeature() {
         {step === "tier-selection" && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-orange-400 mb-1">Booster Packs</h1>
-              <p className="text-gray-400 text-sm">{EXPANSION.name} {EXPANSION.symbol}</p>
+              <h1 className="text-3xl font-bold text-orange-400 mb-1">Genesis Series</h1>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              {variantTemplates.map((tier) => (
-                <button
-                  key={tier.rarity}
-                  onClick={() => handleTierSelect(tier)}
-                  className="flex flex-col overflow-hidden rounded-2xl bg-gray-800 hover:scale-105 transition-transform duration-200 cursor-pointer border-2 border-transparent hover:border-orange-500 text-left"
-                >
-                  <div className="w-full aspect-[3/4] flex items-center justify-center">
-                    {TIER_IMAGES[tier.rarity] ? (
-                      <img
-                        src={TIER_IMAGES[tier.rarity]}
-                        alt={tier.rarity}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          const t = e.target as HTMLImageElement
-                          t.style.display = "none"
-                        }}
-                      />
-                    ) : (
-                      <div className={`w-full h-full bg-gradient-to-b ${TIER_COLORS[tier.rarity]} flex items-center justify-center`}>
-                        <span className="text-4xl">{TIER_EMOJIS[tier.rarity]}</span>
+            <div className="grid grid-cols-2 gap-3">
+              {variantTemplates
+                .filter((tier) => (ACTIVE_TIERS as readonly string[]).includes(tier.rarity))
+                .map((tier) => {
+                  const label = TIER_LABELS[tier.rarity] || tier.rarity
+                  return (
+                    <button
+                      key={tier.rarity}
+                      onClick={() => handleTierSelect(tier)}
+                      className="flex flex-col overflow-hidden rounded-2xl bg-gray-800 hover:scale-105 transition-transform duration-200 cursor-pointer border-2 border-transparent hover:border-orange-500 text-left"
+                    >
+                      <div className="w-full aspect-[3/4] flex items-center justify-center">
+                        {TIER_IMAGES[tier.rarity] ? (
+                          <img
+                            src={TIER_IMAGES[tier.rarity]}
+                            alt={label}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const t = e.target as HTMLImageElement
+                              t.style.display = "none"
+                            }}
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-b ${TIER_COLORS[tier.rarity]} flex items-center justify-center`}>
+                            <span className="text-4xl">{TIER_EMOJIS[tier.rarity]}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="p-2 text-center">
+                        <h3 className="text-sm font-bold text-white mb-1">{label}</h3>
+                        <p className="text-[10px] text-gray-400 mb-2 line-clamp-2">{tier.description}</p>
+                        <div className="bg-gray-900 rounded p-1.5 mb-2 space-y-0.5 text-[10px]">
+                          <div className="flex justify-between text-gray-300">
+                            <span>Price</span><span className="font-bold text-orange-400">${tier.price}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-300">
+                            <span>Cards</span><span className="font-bold">5</span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white text-xs font-semibold py-1 rounded">
+                          Select
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              {UPCOMING_PACKS.map((pack) => (
+                <div
+                  key={pack.label}
+                  className="flex flex-col overflow-hidden rounded-2xl bg-gray-800 border-2 border-transparent opacity-60 cursor-not-allowed text-left relative"
+                >
+                  <div className="w-full aspect-[3/4] relative">
+                    <div className={`w-full h-full bg-gradient-to-b ${pack.color} flex items-center justify-center`}>
+                      <span className="text-5xl grayscale">{pack.emoji}</span>
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-3xl">🔒</span>
+                    </div>
                   </div>
                   <div className="p-2 text-center">
-                    <h3 className="text-sm font-bold text-white mb-1">{tier.rarity}</h3>
-                    <p className="text-[10px] text-gray-400 mb-2 line-clamp-2">{tier.description}</p>
+                    <h3 className="text-sm font-bold text-white mb-1">{pack.label}</h3>
+                    <p className="text-[10px] text-gray-400 mb-2 line-clamp-2">Coming soon — stay tuned for the next expansion.</p>
                     <div className="bg-gray-900 rounded p-1.5 mb-2 space-y-0.5 text-[10px]">
                       <div className="flex justify-between text-gray-300">
-                        <span>Price</span><span className="font-bold text-orange-400">${tier.price}</span>
+                        <span>Status</span><span className="font-bold text-gray-500">Locked</span>
                       </div>
                       <div className="flex justify-between text-gray-300">
-                        <span>Cards</span><span className="font-bold">5</span>
+                        <span>Cards</span><span className="font-bold">—</span>
                       </div>
                     </div>
-                    <div className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white text-xs font-semibold py-1 rounded">
-                      Select
+                    <div className="w-full bg-gray-700 text-gray-400 text-xs font-semibold py-1 rounded">
+                      Upcoming
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </motion.div>
@@ -167,7 +208,7 @@ export function BoosterFeature() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-orange-400 mb-1">Choose Your Pack</h1>
-              <p className="text-gray-400 text-sm">{EXPANSION.name} — {selectedTier.rarity}</p>
+              <p className="text-gray-400 text-sm">{EXPANSION.name} — {TIER_LABELS[selectedTier.rarity] || selectedTier.rarity}</p>
               <div className="flex justify-center gap-2 mt-2">
                 <span className="bg-gray-800 text-orange-400 px-3 py-1 rounded text-sm font-bold">5 cards</span>
                 <span className="bg-gray-800 text-orange-400 px-3 py-1 rounded text-sm font-bold">${selectedTier.price}</span>
@@ -206,7 +247,7 @@ export function BoosterFeature() {
                 />
               </div>
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white">{selectedTier.rarity} Pack</h2>
+                <h2 className="text-xl font-bold text-white">{TIER_LABELS[selectedTier.rarity] || selectedTier.rarity} Pack</h2>
                 <p className="text-gray-400 text-sm">{EXPANSION.name}</p>
               </div>
               <div className="bg-gray-800 rounded-lg p-3 space-y-2 text-sm">

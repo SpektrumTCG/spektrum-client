@@ -24,6 +24,69 @@ import type { AIDifficulty, AIDecision } from '@/domain/game/types/ai'
 const AI_ACTION_DELAY = 800
 const AI_MAX_ACTIONS_PER_PHASE = 10
 
+// Build a single registry lookup that handles both modern prefixed IDs
+// (e.g. `fire-flame-flicker`) and legacy non-prefixed IDs (`flame-flicker`).
+// Server payloads can carry either, depending on the deck source.
+let _registryLookup: Map<string, Card> | null = null
+function getRegistryLookup(): Map<string, Card> {
+  if (_registryLookup) return _registryLookup
+  const map = new Map<string, Card>()
+  for (const c of cardRegistry.getAllCards()) {
+    map.set(c.id, c)
+    const num = (c as any).cardNumber
+    if (num && !map.has(num)) map.set(num, c)
+    // Strip element prefix so 'fire-flame-flicker' also resolves 'flame-flicker'
+    const stripped = c.id.replace(/^(fire|water|red|blue|neutral|earth|air|ground)-/, '')
+    if (stripped !== c.id && !map.has(stripped)) map.set(stripped, c)
+  }
+  _registryLookup = map
+  return map
+}
+
+function baseIdOf(card: any): string {
+  const raw = card?.cardId || card?.id || ''
+  return raw
+    .replace(/^(owned-|deck-[^-]+-)/, '')
+    .replace(/-copy-\d+(-\d+)?$/, '')
+    .replace(/-pack-\d+(-\w+)?$/, '')
+    .replace(/-\d+(-\d+)?$/, '')
+}
+
+function enrichCard<T extends { id?: string; art?: string; imagePath?: string } | null | undefined>(card: T): T {
+  if (!card || typeof card !== 'object') return card
+  const c = card as any
+  // Face-down placeholders (no real id) — leave as-is.
+  if (!c.id) return card
+  const lookup = getRegistryLookup()
+  const base = baseIdOf(c)
+  const hit = lookup.get(c.id) || (base && lookup.get(base))
+  if (!hit) return card
+  const merged: any = { ...hit, ...Object.fromEntries(Object.entries(c).filter(([, v]) => v !== undefined)) }
+  merged.imagePath = c.imagePath || (hit as any).imagePath || (hit as any).art
+  merged.art = c.art || (hit as any).art || (hit as any).imagePath
+  if (!c.skills?.length && (hit as any).skills?.length) merged.skills = (hit as any).skills
+  return merged as T
+}
+
+function enrichCardArray(arr: any): any {
+  if (!Array.isArray(arr)) return arr
+  return arr.map(enrichCard)
+}
+
+function enrichPlayerCards(player: any): any {
+  if (!player || typeof player !== 'object') return player
+  return {
+    ...player,
+    hand: enrichCardArray(player.hand),
+    deck: enrichCardArray(player.deck),
+    spektraPile: enrichCardArray(player.spektraPile),
+    lifeCards: enrichCardArray(player.lifeCards),
+    graveyard: enrichCardArray(player.graveyard),
+    reserveAvatars: enrichCardArray(player.reserveAvatars),
+    activeAvatar: enrichCard(player.activeAvatar),
+  }
+}
+
 interface GameStore {
   game: GameState | null
   aiDifficulty: AIDifficulty
@@ -187,13 +250,17 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     // Defensive shape: serverView is already a GameState; clone the slots
     // we use directly. Anything optional missing on the wire (effectStack,
     // turnTimer, lastAction) gets a sensible default.
-    const players = Array.isArray(serverView.players) && serverView.players.length === 2
+    const rawPlayers = Array.isArray(serverView.players) && serverView.players.length === 2
       ? (serverView.players as [any, any])
       : null
-    if (!players) {
+    if (!rawPlayers) {
       // Payload doesn't conform — refuse to apply rather than corrupt state.
       return
     }
+    // Enrich every card on the server view with art/imagePath/skills pulled
+    // from the local card registry — the server payload only carries gameplay
+    // state, so visual fields ride along on the client side.
+    const players = [enrichPlayerCards(rawPlayers[0]), enrichPlayerCards(rawPlayers[1])] as [any, any]
 
     const game: GameState = {
       currentTurn: serverView.currentTurn ?? 1,

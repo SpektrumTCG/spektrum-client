@@ -5,6 +5,48 @@ import { useMultiplayerStore } from '@/stores/useMultiplayerStore'
 import { useGameStore } from '@/features/game/store'
 import { toast } from 'sonner'
 import { useDeckStore } from '@/stores/useDeckStore'
+import { cardRegistry } from '@/domain/game/data/cardRegistry'
+
+// Was used to short-circuit multiplayer into the local AI engine; left in
+// place but disabled so the real server-driven path runs.
+const DEMO_AS_AI = false
+
+// Merge each deck card with its registry entry so the server receives full
+// card data (type, element, art, skills) — required for the server-side
+// engine to validate plays and for both clients to render artwork.
+function enrichDeckForSubmit(cards: any[] | null | undefined): any[] {
+  if (!Array.isArray(cards) || cards.length === 0) return []
+  const all = cardRegistry.getAllCards()
+  const byId = new Map<string, any>()
+  for (const c of all) {
+    byId.set(c.id, c)
+    const num = (c as any).cardNumber
+    if (num && !byId.has(num)) byId.set(num, c)
+    const stripped = c.id.replace(/^(fire|water|red|blue|neutral|earth|air|ground)-/, '')
+    if (stripped !== c.id && !byId.has(stripped)) byId.set(stripped, c)
+  }
+  const baseIdOf = (card: any): string => {
+    const raw = (card?.cardId || card?.id || '').toString()
+    return raw
+      .replace(/^(owned-|deck-[^-]+-)/, '')
+      .replace(/-copy-\d+(-\d+)?$/, '')
+      .replace(/-pack-\d+(-\w+)?$/, '')
+      .replace(/-\d+(-\d+)?$/, '')
+  }
+  return cards.map((c) => {
+    const reg = byId.get(c?.id) || byId.get(c?.cardId) || byId.get(baseIdOf(c))
+    if (!reg) return c
+    const defined = Object.fromEntries(Object.entries(c).filter(([, v]) => v !== undefined))
+    return {
+      ...reg,
+      ...defined,
+      cardId: c?.cardId || reg.id,
+      imagePath: c?.imagePath || (reg as any).imagePath || (reg as any).art,
+      art: c?.art || (reg as any).art || (reg as any).imagePath,
+      skills: (c as any)?.skills?.length ? (c as any).skills : (reg as any).skills,
+    }
+  })
+}
 
 interface GameAction {
   type:
@@ -31,12 +73,16 @@ export const useMultiplayerGameSync = () => {
   const [opponentDisconnectedTurn, setOpponentDisconnectedTurn] = useState(1)
   const [submitAttempt, setSubmitAttempt] = useState(0)
 
-  const isMultiplayer =
+  const isInMultiplayerLobby =
     isMultiplayerSession ||
     (!!currentRoom && (currentRoom.status === 'ready' || currentRoom.status === 'playing'))
 
+  // When the demo override is on, hide the multiplayer flag from the rest of
+  // the game UI so it falls through to the local AI dispatch path.
+  const isMultiplayer = DEMO_AS_AI ? false : isInMultiplayerLobby
+
   const opponentName =
-    isMultiplayer && currentRoom
+    isInMultiplayerLobby && currentRoom
       ? currentRoom.players.find((p) => p.id !== multiplayerPlayer?.id)?.name || 'Opponent'
       : null
 
@@ -56,7 +102,7 @@ export const useMultiplayerGameSync = () => {
   }, [socket, isMultiplayer])
 
   useEffect(() => {
-    if (!isMultiplayer) {
+    if (!isInMultiplayerLobby) {
       hasSentDeck.current = false
       gameStartReceived.current = false
       setWaitingForGameStart(true)
@@ -67,10 +113,35 @@ export const useMultiplayerGameSync = () => {
         deckSubmitTimeout.current = null
       }
     }
-  }, [isMultiplayer])
+  }, [isInMultiplayerLobby])
+
+  // Demo override: when the player enters a multiplayer match, start a local
+  // AI game using their selected deck. Skips the server submit/handshake so
+  // the gameplay behaves exactly like the AI mode.
+  useEffect(() => {
+    if (!DEMO_AS_AI || !isInMultiplayerLobby) return
+    if (useGameStore.getState().game) {
+      setWaitingForGameStart(false)
+      return
+    }
+    let deckCards: any[] | null = null
+    if (pendingDeck && pendingDeck.length > 0) deckCards = pendingDeck
+    else if (activeDeckId) deckCards = decks.find((d) => d.id === activeDeckId)?.cards || null
+    if (!deckCards || deckCards.length === 0) {
+      const fallback = decks.find((d) => d.cards && d.cards.length >= 5) || decks[0]
+      if (fallback) deckCards = fallback.cards
+    }
+    if (deckCards && deckCards.length > 0) {
+      useGameStore.getState().startGame(deckCards as any, 'regular')
+      if (pendingDeck) setPendingDeck(null)
+      setWaitingForGameStart(false)
+      gameStartReceived.current = true
+    }
+  }, [isInMultiplayerLobby, pendingDeck, activeDeckId, decks, setPendingDeck])
 
   useEffect(() => {
-    if (!isMultiplayer || !socket || hasSentDeck.current) return
+    if (DEMO_AS_AI) return
+    if (!isInMultiplayerLobby || !socket || hasSentDeck.current) return
 
     let deckIdToSubmit = activeDeckId
     if (!deckIdToSubmit && decks.length > 0) {
@@ -82,19 +153,24 @@ export const useMultiplayerGameSync = () => {
     }
 
     const activeDeck = deckIdToSubmit ? decks.find((d) => d.id === deckIdToSubmit) : null
-    const deckCards =
+    // Always send the full client deck (enriched from registry) so the server
+    // has type/art for every card, even when the master DB doesn't know the
+    // legacy IDs persisted in the deck. Threshold lowered from 40 to 1 so a
+    // half-built demo deck still flows through.
+    const rawCards =
       pendingDeck && pendingDeck.length > 0
         ? pendingDeck
-        : activeDeck && activeDeck.cards && activeDeck.cards.length >= 40
+        : activeDeck && activeDeck.cards && activeDeck.cards.length > 0
         ? activeDeck.cards
         : null
+    const deckCards = rawCards ? enrichDeckForSubmit(rawCards) : null
 
     if (deckIdToSubmit) {
       const payload: { deckId: string; deck?: any[] } = { deckId: deckIdToSubmit }
-      if (deckCards) payload.deck = deckCards
+      if (deckCards && deckCards.length > 0) payload.deck = deckCards
       socket.emit('submit_deck', payload)
       if (pendingDeck) setPendingDeck(null)
-    } else if (deckCards) {
+    } else if (deckCards && deckCards.length > 0) {
       socket.emit('submit_deck', { deck: deckCards })
       if (pendingDeck) setPendingDeck(null)
     } else {

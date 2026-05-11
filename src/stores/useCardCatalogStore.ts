@@ -21,12 +21,18 @@ export const useCardCatalogStore = create<CardCatalogStore>()((set) => ({
       const res = await fetch('/api/card-catalog', { credentials: 'include' })
       if (!res.ok) return
       const data = await res.json()
+      const entries: any[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.cards)
+          ? data.cards
+          : []
       const catalog = new Map<string, CardCatalogEntry>()
-      if (Array.isArray(data)) {
-        data.forEach((entry: CardCatalogEntry) => {
-          catalog.set(entry.id, entry)
-        })
-      }
+      entries.forEach((entry: any) => {
+        const id = entry?.cardId || entry?.id
+        if (!id) return
+        catalog.set(id, { ...entry, id })
+        if (entry?.cardNumber) catalog.set(entry.cardNumber, { ...entry, id })
+      })
       set({ catalog, isLoaded: true })
     } catch {
       set({ isLoaded: true })

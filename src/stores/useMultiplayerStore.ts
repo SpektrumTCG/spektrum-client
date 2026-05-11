@@ -78,9 +78,36 @@ interface MultiplayerState {
   setIsMultiplayerSession: (isSession: boolean) => void;
 }
 
-// Socket URL — points directly to the Express server (not Next.js dev port)
-const getSocketURL = () =>
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Socket URL — by default we connect to the Express server. The default
+// changes depending on where we're running:
+//   1. `NEXT_PUBLIC_API_URL` env override always wins.
+//   2. localhost or a bare LAN IP (e.g. `192.168.x.y`) → direct connect on
+//      port 3001. This is the dev path; the Express server listens there.
+//   3. Replit dev (`*.replit.dev`/`*.replit.app`) → port 3001 is exposed at
+//      a sibling subdomain like `3001-<host>`.
+//   4. Any other domain (Replit deploy / Cloud Run / reverse-proxied prod)
+//      → same-origin, relying on the `/socket.io/*` rewrite in
+//      `next.config.ts` to forward to Express.
+//   5. SSR fallback.
+const getSocketURL = () => {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL;
+  if (fromEnv) return fromEnv;
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const { protocol, hostname, origin } = window.location;
+    const isLocalDev =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
+    if (isLocalDev) return `${protocol}//${hostname}:3001`;
+    const isReplit = /\.replit\.(dev|app)$/i.test(hostname);
+    if (isReplit) {
+      const replitHost = hostname.replace(/^\d+-/, '');
+      return `${protocol}//3001-${replitHost}`;
+    }
+    return origin;
+  }
+  return 'http://localhost:3001';
+};
 
 export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   // Initial state

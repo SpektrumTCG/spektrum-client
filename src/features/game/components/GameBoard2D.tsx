@@ -308,8 +308,9 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       setSelectedCardId(null)
       return
     }
-    // During opponent turn, only quick spells
-    if (currentPlayer !== 'player' && card.type !== 'quickSpell') {
+    // Setup is special: both players place their active avatar independently
+    // (no turn order), so the "not your turn" guard is skipped during setup.
+    if (gamePhase !== 'setup' && currentPlayer !== 'player' && card.type !== 'quickSpell') {
       shake(`hand-${card.id}`, "It's not your turn!")
       return
     }

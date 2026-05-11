@@ -119,7 +119,7 @@ export function MultiplayerFeature() {
       if (setActiveDeck && deckIdToUse !== activeDeckId) setActiveDeck(deckIdToUse);
 
       const selectedDeck = decks.find(d => d.id === deckIdToUse);
-      if (selectedDeck && selectedDeck.cards && selectedDeck.cards.length >= 40) {
+      if (selectedDeck && selectedDeck.cards && selectedDeck.cards.length > 0) {
         setPendingDeck(selectedDeck.cards);
       }
 
