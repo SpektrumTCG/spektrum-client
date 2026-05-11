@@ -49,7 +49,8 @@ export function getOrCreateDappKeypair(): PhantomDeeplinkKeys {
 export function buildPhantomConnectUrl(cluster: 'devnet' | 'mainnet-beta' | 'testnet' = 'devnet'): string {
   const dappKeyPair = getOrCreateDappKeypair();
   const appUrl = window.location.origin;
-  const redirectLink = `${appUrl}?phantom_action=connect`;
+  const returnPath = window.location.pathname || "/";
+  const redirectLink = `${appUrl}${returnPath}?phantom_action=connect`;
   
   const params = new URLSearchParams({
     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),

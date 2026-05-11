@@ -36,7 +36,8 @@ function getOrCreateBackpackKeypair() {
 export function buildBackpackConnectUrl(cluster: 'devnet' | 'mainnet-beta' | 'testnet' = 'devnet'): string {
   const dappKeyPair = getOrCreateBackpackKeypair();
   const appUrl = window.location.origin;
-  const redirectLink = `${appUrl}?backpack_action=connect`;
+  const returnPath = window.location.pathname || "/";
+  const redirectLink = `${appUrl}${returnPath}?backpack_action=connect`;
 
   const params = new URLSearchParams({
     redirect_link: redirectLink,

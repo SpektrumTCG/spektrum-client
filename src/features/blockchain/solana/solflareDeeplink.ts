@@ -4,7 +4,8 @@ export interface SolflareConnectResponse {
 
 export function buildSolflareConnectUrl(cluster: 'devnet' | 'mainnet-beta' | 'testnet' = 'devnet'): string {
   const appUrl = window.location.origin;
-  const redirectLink = `${appUrl}?solflare_action=connect`;
+  const returnPath = window.location.pathname || "/";
+  const redirectLink = `${appUrl}${returnPath}?solflare_action=connect`;
   
   const params = new URLSearchParams({
     cluster,

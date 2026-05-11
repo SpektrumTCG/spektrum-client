@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { useAudio } from "@/stores/useAudioStore"
 import { useWalletStore } from "@/stores/useWalletStore"
 import { parsePhantomCallback } from "@/features/blockchain/solana/phantomDeeplink"
@@ -9,6 +10,7 @@ import { parseBackpackCallback } from "@/features/blockchain/solana/backpackDeep
 import { toast } from "sonner"
 
 export function AppBootstrap() {
+  const router = useRouter()
   const hasProcessedCallback = useRef(false)
   const hasAttemptedReconnect = useRef(false)
   const { initializeAudio, setAudioContext } = useAudio()
@@ -26,6 +28,7 @@ export function AppBootstrap() {
         if (success) toast.success("Phantom wallet connected!")
         else toast.error("Wallet connection failed")
         window.history.replaceState({}, document.title, window.location.pathname)
+        if (success) router.replace("/home")
         return
       }
 
@@ -36,6 +39,7 @@ export function AppBootstrap() {
         if (success) toast.success("Solflare wallet connected!")
         else toast.error("Wallet connection failed")
         window.history.replaceState({}, document.title, window.location.pathname)
+        if (success) router.replace("/home")
         return
       }
 
@@ -46,12 +50,13 @@ export function AppBootstrap() {
         if (success) toast.success("Backpack wallet connected!")
         else toast.error("Wallet connection failed")
         window.history.replaceState({}, document.title, window.location.pathname)
+        if (success) router.replace("/home")
         return
       }
     }
 
     handleWalletCallbacks()
-  }, [connectWallet])
+  }, [connectWallet, router])
 
   // Auto-reconnect wallet on app startup
   useEffect(() => {
