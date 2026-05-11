@@ -134,16 +134,8 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
 
     try {
       const socketUrl = getSocketURL();
-      // When we connect through the Next.js same-origin rewrite (deploys
-      // that only expose one public port, like Replit/Cloud Run), the
-      // rewrite proxies HTTP but NOT WebSocket upgrades — so we force
-      // polling-only on that path. Direct connections to Express on :3001
-      // (local dev, LAN, explicit env URL) get the full transport set.
-      const isSameOriginRewrite =
-        typeof window !== 'undefined' &&
-        socketUrl === window.location.origin;
       const socket = io(socketUrl, {
-        transports: isSameOriginRewrite ? ['polling'] : ['websocket', 'polling'],
+        transports: ['websocket', 'polling'],
         timeout: 10000,
         autoConnect: true,
       });

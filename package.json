@@ -8,6 +8,7 @@
     "app": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
     "start": "next start",
+    "start:unified": "node --import tsx/esm server/unified.ts",
     "server": "node --import tsx/esm server/index.ts",
     "lint": "eslint",
     "test": "vitest run",
