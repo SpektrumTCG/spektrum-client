@@ -1,9 +1,12 @@
 import { ViewTransition } from "react"
 import Image from "next/image"
 import { NavigationBar, HamburgerMenu } from "@/components/layout/NavigationBar"
+import { AppBootstrap } from "@/components/shared/AppBootstrap"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
+    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }} className="relative">
+    <AppBootstrap />
     <div className="min-h-dvh w-full relative bg-white overflow-hidden">
       {/* Header bar — anchored during transitions */}
       <div
@@ -50,6 +53,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </div>
       <HamburgerMenu />
       <NavigationBar />
+    </div>
     </div>
   )
 }
