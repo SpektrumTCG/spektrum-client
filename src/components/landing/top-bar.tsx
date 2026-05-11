@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 const SOCIALS = [
   {
@@ -68,14 +67,6 @@ export default function TopBar({ onMenuToggle, isMobile }: TopBarProps) {
             {s.icon}
           </a>
         ))}
-
-        <div className="w-px h-4 bg-white/15 mx-1" />
-
-        {/* Theme toggle */}
-        <AnimatedThemeToggler
-          variant="circle"
-          className="w-[30px] h-[30px] flex items-center justify-center text-white/60 hover:text-white transition-colors duration-300 [&_svg]:w-3.5 [&_svg]:h-3.5"
-        />
 
         <div className="w-px h-4 bg-white/15 mx-1" />
 

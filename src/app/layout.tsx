@@ -33,15 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${zenDots.variable} ${notoSans.variable} ${jetbrains.variable}`}
-      suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.classList.add("dark")}catch(e){}})()`,
-          }}
-        />
-      </head>
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
