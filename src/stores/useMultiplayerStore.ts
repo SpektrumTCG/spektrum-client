@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { io, type Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { createMultiplayerSocket } from '@/services/multiplayerSocketBridge';
 
 export interface Player {
   id: string;
@@ -31,7 +32,7 @@ export interface GameAction {
   timestamp: number;
 }
 
-interface MultiplayerState {
+export interface MultiplayerState {
   // Connection
   socket: Socket | null;
   isConnected: boolean;
@@ -78,37 +79,6 @@ interface MultiplayerState {
   setIsMultiplayerSession: (isSession: boolean) => void;
 }
 
-// Socket URL — by default we connect to the Express server. The default
-// changes depending on where we're running:
-//   1. `NEXT_PUBLIC_API_URL` env override always wins.
-//   2. localhost or a bare LAN IP (e.g. `192.168.x.y`) → direct connect on
-//      port 3001. This is the dev path; the Express server listens there.
-//   3. Replit dev (`*.replit.dev`/`*.replit.app`) → port 3001 is exposed at
-//      a sibling subdomain like `3001-<host>`.
-//   4. Any other domain (Replit deploy / Cloud Run / reverse-proxied prod)
-//      → same-origin, relying on the `/socket.io/*` rewrite in
-//      `next.config.ts` to forward to Express.
-//   5. SSR fallback.
-const getSocketURL = () => {
-  const fromEnv = process.env.NEXT_PUBLIC_API_URL;
-  if (fromEnv) return fromEnv;
-  if (typeof window !== 'undefined' && window.location?.hostname) {
-    const { protocol, hostname, origin } = window.location;
-    const isLocalDev =
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
-    if (isLocalDev) return `${protocol}//${hostname}:3001`;
-    const isReplit = /\.replit\.(dev|app)$/i.test(hostname);
-    if (isReplit) {
-      const replitHost = hostname.replace(/^\d+-/, '');
-      return `${protocol}//3001-${replitHost}`;
-    }
-    return origin;
-  }
-  return 'http://localhost:3001';
-};
-
 export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   // Initial state
   socket: null,
@@ -125,145 +95,11 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   pendingDeck: null,
 
   connect: async () => {
-    const state = get();
-    if (state.socket?.connected) {
-      return;
-    }
-
+    if (get().socket?.connected) return;
     set({ connectionStatus: 'connecting' });
 
     try {
-      const socketUrl = getSocketURL();
-      const socket = io(socketUrl, {
-        transports: ['websocket', 'polling'],
-        timeout: 10000,
-        autoConnect: true,
-      });
-
-      // Connection events
-      socket.on('connect', () => {
-        set({
-          socket,
-          isConnected: true,
-          connectionStatus: 'connected',
-        });
-      });
-
-      socket.on('disconnect', () => {
-        set({
-          isConnected: false,
-          connectionStatus: 'disconnected',
-          currentRoom: null,
-        });
-      });
-
-      socket.on('connect_error', () => {
-        set({ connectionStatus: 'error' });
-      });
-
-      // Room events
-      socket.on('room_joined', (room: GameRoom) => {
-        get().setCurrentRoom(room);
-      });
-
-      socket.on('room_left', () => {
-        get().setCurrentRoom(null);
-      });
-
-      socket.on('room_updated', (room: GameRoom) => {
-        get().setCurrentRoom(room);
-      });
-
-      socket.on('available_rooms', (rooms: GameRoom[]) => {
-        get().setAvailableRooms(rooms);
-      });
-
-      // Game events
-      socket.on('game_state_updated', (gameState: any) => {
-        get().updateGameState(gameState);
-      });
-
-      socket.on('game_action', (action: GameAction) => {
-        get().addGameAction(action);
-      });
-
-      socket.on('match_found', (room: GameRoom) => {
-        set({ isSearchingForMatch: false, searchStartTime: null });
-        get().setCurrentRoom(room);
-      });
-
-      socket.on('matchmaking_cancelled', () => {
-        set({ isSearchingForMatch: false, searchStartTime: null });
-      });
-
-      // Game starting event - emitted when both players are ready
-      socket.on('game_starting', (room: GameRoom) => {
-        // CRITICAL: Set persistent multiplayer session flag that won't be overwritten by room_updated
-        set({ isMultiplayerSession: true });
-        // Also update room status to 'ready' for consistency
-        const roomWithReadyStatus = { ...room, status: 'ready' as const };
-        get().setCurrentRoom(roomWithReadyStatus);
-      });
-
-      // Game started event - emitted when game has been initialized
-      socket.on('game_started', (data: { room: GameRoom; gameState: any }) => {
-        // CRITICAL: Also set multiplayer session flag here in case game_starting was missed
-        set({ isMultiplayerSession: true });
-        // Ensure room status is 'playing' for consistency
-        const roomWithPlayingStatus = { ...data.room, status: 'playing' as const };
-        get().setCurrentRoom(roomWithPlayingStatus);
-        get().updateGameState(data.gameState);
-      });
-
-      // Auto-register player with persistent ID
-      socket.on('connect', async () => {
-        // Generate or retrieve a persistent player ID from localStorage
-        let persistentId = localStorage.getItem('multiplayer_player_id');
-        if (!persistentId) {
-          persistentId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          localStorage.setItem('multiplayer_player_id', persistentId);
-        }
-
-        // Resolve display name: wallet profile > game-mode custom name > default
-        let walletAddress: string | null = null;
-        let savedProfileName: string | null = null;
-        let gameModeName: string | null = null;
-
-        try {
-          const { useWalletStore } = await import('@/stores/useWalletStore');
-          const walletState = useWalletStore.getState();
-          walletAddress = walletState.walletAddress;
-          savedProfileName = walletState.playerProfile?.displayName?.trim() || null;
-        } catch {
-          // Wallet store unavailable; proceed
-        }
-
-        try {
-          const { useGameMode } = await import('@/features/game/stores/useGameMode');
-          const name = useGameMode.getState().playerName?.trim();
-          if (name) gameModeName = name;
-        } catch {
-          // Game-mode store unavailable; proceed
-        }
-
-        const displayName =
-          savedProfileName ||
-          (gameModeName && gameModeName !== 'Player' ? gameModeName : null) ||
-          `Player_${persistentId.substr(0, 8)}`;
-
-        const playerData = {
-          playerId: persistentId,
-          name: displayName,
-          avatar: null,
-          walletAddress,
-        };
-
-        socket.emit('register_player', playerData);
-      });
-
-      socket.on('player_registered', (player: Player) => {
-        set({ currentPlayer: player });
-      });
+      createMultiplayerSocket({ setState: set, getState: get });
     } catch (error) {
       set({ connectionStatus: 'error' });
       throw error;
