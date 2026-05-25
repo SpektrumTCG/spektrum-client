@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { useBoosterVariantStore, variantTemplates } from "@/stores/useBoosterVariantStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
+import { useRequireAuth } from "@/components/shared/AuthGateModal"
 import type { BoosterVariant, BoosterPack } from "@/stores/useBoosterVariantStore"
 
 type Step = "tier-selection" | "pack-selection" | "confirm"
@@ -47,6 +48,7 @@ const UPCOMING_PACKS: Array<{ label: string; emoji: string; color: string }> = [
 export function BoosterFeature() {
   const router = useRouter()
   const { addBoosterPack } = useInventoryStore()
+  const requireAuth = useRequireAuth("buy-pack")
   const [step, setStep] = useState<Step>("tier-selection")
   const [selectedTier, setSelectedTier] = useState<(typeof variantTemplates)[0] | null>(null)
   const [selectedPackIndex, setSelectedPackIndex] = useState<number | null>(null)
@@ -76,37 +78,46 @@ export function BoosterFeature() {
 
   const handleConfirmPurchase = async () => {
     if (!selectedTier || selectedPackIndex === null || isProcessing) return
+    const tier = selectedTier
+    const packIndex = selectedPackIndex
+    requireAuth(() => { void runPurchase(tier, packIndex) })
+  }
+
+  const runPurchase = async (
+    tier: NonNullable<typeof selectedTier>,
+    packIndex: number
+  ) => {
     setIsProcessing(true)
 
     try {
       const variant: BoosterVariant = {
-        id: `variant-${selectedTier.rarity.toLowerCase()}-${Date.now()}`,
-        name: `${selectedTier.rarity} Pack`,
-        subtitle: selectedTier.subtitle,
-        artUrl: TIER_IMAGES[selectedTier.rarity] || "",
-        rarity: selectedTier.rarity,
-        description: selectedTier.description,
-        priceMultiplier: selectedTier.priceMultiplier,
-        guaranteedRarities: selectedTier.guaranteedRarities,
-        rarityWeights: selectedTier.rarityWeights,
-        guaranteedSlots: selectedTier.guaranteedSlots,
+        id: `variant-${tier.rarity.toLowerCase()}-${Date.now()}`,
+        name: `${tier.rarity} Pack`,
+        subtitle: tier.subtitle,
+        artUrl: TIER_IMAGES[tier.rarity] || "",
+        rarity: tier.rarity,
+        description: tier.description,
+        priceMultiplier: tier.priceMultiplier,
+        guaranteedRarities: tier.guaranteedRarities,
+        rarityWeights: tier.rarityWeights,
+        guaranteedSlots: tier.guaranteedSlots,
       }
 
       const pack: BoosterPack = {
-        id: `pack-${EXPANSION.id}-${selectedTier.rarity.toLowerCase()}-${selectedPackIndex}`,
-        name: `${EXPANSION.name} ${selectedTier.rarity} Pack`,
+        id: `pack-${EXPANSION.id}-${tier.rarity.toLowerCase()}-${packIndex}`,
+        name: `${EXPANSION.name} ${tier.rarity} Pack`,
         element: "mixed",
-        price: selectedTier.price,
-        description: selectedTier.description,
-        guaranteedRarity: selectedTier.rarity,
+        price: tier.price,
+        description: tier.description,
+        guaranteedRarity: tier.rarity,
         cardCount: 5,
-        emoji: TIER_EMOJIS[selectedTier.rarity] || "📦",
+        emoji: TIER_EMOJIS[tier.rarity] || "📦",
         color: "#FF6B35",
-        artUrl: TIER_IMAGES[selectedTier.rarity] || "",
+        artUrl: TIER_IMAGES[tier.rarity] || "",
       }
 
-      addBoosterPack(variant, pack, selectedTier.price)
-      toast.success(`Purchased ${selectedTier.rarity} Pack! Check your Inventory to open it.`)
+      addBoosterPack(variant, pack, tier.price)
+      toast.success(`Purchased ${tier.rarity} Pack! Check your Inventory to open it.`)
       router.push("/inventory")
     } catch {
       toast.error("Purchase failed. Please try again.")

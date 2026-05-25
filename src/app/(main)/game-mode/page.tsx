@@ -9,6 +9,7 @@ import { useGameMode } from '@/features/game/stores/useGameMode'
 import { useGameStore } from '@/features/game/stores/useGameStore'
 import { useDeckStore } from '@/stores/useDeckStore'
 import { useWalletStore } from '@/stores/useWalletStore'
+import { useRequireAuth } from '@/components/shared/AuthGateModal'
 import type { AIDifficulty } from '@/features/game/stores/useGameMode'
 
 export default function GameModePage() {
@@ -16,6 +17,8 @@ export default function GameModePage() {
   const gameMode = useGameMode()
   const { decks, activeDeckId, setActiveDeck } = useDeckStore()
   const { walletAddress, playerProfile } = useWalletStore()
+  const requireAuthForAI = useRequireAuth('play-ai')
+  const requireAuthForMultiplayer = useRequireAuth('play-casual')
 
   const [playerName, setPlayerName] = useState(
     playerProfile?.displayName || gameMode.playerName
@@ -84,27 +87,29 @@ export default function GameModePage() {
   }
 
   const handleStartAIGame = (difficulty?: AIDifficulty) => {
-    if (!difficulty) {
-      setShowAIDifficultySelector(true)
-      return
-    }
-    if (!updateActiveDeck()) return
+    requireAuthForAI(() => {
+      if (!difficulty) {
+        setShowAIDifficultySelector(true)
+        return
+      }
+      if (!updateActiveDeck()) return
 
-    const deck = decks.find(d => d.id === selectedDeckId)
-    if (!deck || deck.cards.length === 0) {
-      toast.error('Selected deck has no cards.')
-      return
-    }
+      const deck = decks.find(d => d.id === selectedDeckId)
+      if (!deck || deck.cards.length === 0) {
+        toast.error('Selected deck has no cards.')
+        return
+      }
 
-    gameMode.setPlayerName(playerName)
-    gameMode.setAIDifficulty(difficulty)
-    gameMode.startAIGame()
+      gameMode.setPlayerName(playerName)
+      gameMode.setAIDifficulty(difficulty)
+      gameMode.startAIGame()
 
-    useGameStore.getState().startGame(deck.cards, difficulty)
+      useGameStore.getState().startGame(deck.cards, difficulty)
 
-    toast.success(`Starting game against ${difficulty} AI...`)
-    setShowAIDifficultySelector(false)
-    router.push('/game')
+      toast.success(`Starting game against ${difficulty} AI...`)
+      setShowAIDifficultySelector(false)
+      router.push('/game')
+    })
   }
 
   return (
@@ -205,8 +210,10 @@ export default function GameModePage() {
 
           <button
             onClick={() => {
-              if (!updateActiveDeck()) return
-              router.push('/multiplayer')
+              requireAuthForMultiplayer(() => {
+                if (!updateActiveDeck()) return
+                router.push('/multiplayer')
+              })
             }}
             disabled={decks.length === 0 || !selectedDeckId}
             className="relative w-full h-[52px] flex items-center justify-center text-white font-bold text-lg tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"

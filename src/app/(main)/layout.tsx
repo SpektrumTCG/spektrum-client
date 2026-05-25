@@ -2,6 +2,7 @@ import { ViewTransition } from "react"
 import Image from "next/image"
 import { NavigationBar, HamburgerMenu } from "@/components/layout/NavigationBar"
 import { AppBootstrap } from "@/components/shared/AppBootstrap"
+import { AuthGateModal } from "@/components/shared/AuthGateModal"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -53,6 +54,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </div>
       <HamburgerMenu />
       <NavigationBar />
+      <AuthGateModal />
     </div>
     </div>
   )

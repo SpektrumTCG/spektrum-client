@@ -45,6 +45,8 @@ import { useGameMode } from '@/features/game/stores/useGameMode';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { SolanaWalletConnect } from '@/components/shared/SolanaWalletConnect';
 import { AnteModeManager } from '@/components/shared/ante/AnteModeManager';
+import { useRequireAuth } from '@/components/shared/AuthGateModal';
+import { useAuthGateStore } from '@/stores/useAuthGateStore';
 
 export function MultiplayerFeature() {
   const router = useRouter();
@@ -192,18 +194,29 @@ export function MultiplayerFeature() {
     });
   }, [socket, isConnected, gameModePlayerName, walletProfileName, currentPlayer]);
 
+  const requireAuthForCasual = useRequireAuth('play-casual');
+  const requireAuthForRanked = useRequireAuth('play-ranked');
+  const openAuthGate = useAuthGateStore((s) => s.open);
+
   const handleQuickMatch = async (mode: 'casual' | 'ranked') => {
     playButton();
-    if (!isConnected) {
-      toast.error('Not connected to multiplayer server');
-      return;
-    }
-    try {
-      await startMatchmaking(mode);
-      setSelectedMode(mode);
-      toast.info(`Searching for ${mode} match...`);
-    } catch {
-      toast.error('Failed to start matchmaking');
+    const runMatch = async () => {
+      if (!isConnected) {
+        toast.error('Not connected to multiplayer server');
+        return;
+      }
+      try {
+        await startMatchmaking(mode);
+        setSelectedMode(mode);
+        toast.info(`Searching for ${mode} match...`);
+      } catch {
+        toast.error('Failed to start matchmaking');
+      }
+    };
+    if (mode === 'casual') {
+      requireAuthForCasual(() => { runMatch(); });
+    } else {
+      requireAuthForRanked(() => { runMatch(); });
     }
   };
 
@@ -246,7 +259,17 @@ export function MultiplayerFeature() {
   const handleAnteMode = () => {
     playButton();
     if (!walletAddress) {
-      toast.error('Please connect your wallet first to play Ante Mode');
+      openAuthGate({
+        intent: 'play-ante',
+        onSuccess: () => {
+          if (!activeDeckId) {
+            toast.error('Please select a deck before starting Ante Mode');
+            router.push('/cards');
+            return;
+          }
+          setShowAnteMode(true);
+        },
+      });
       return;
     }
     if (!activeDeckId) {

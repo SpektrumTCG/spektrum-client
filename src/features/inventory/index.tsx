@@ -7,6 +7,7 @@ import type { InventoryBoosterPack } from '@/stores/useInventoryStore';
 import type { Card } from '@/domain/game/types';
 import { toast } from 'sonner';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
+import { useRequireAuth } from '@/components/shared/AuthGateModal';
 import { CardRewardPopup } from '@/components/shared/CardRewardPopup';
 import { AnimatedCardReveal } from '@/components/shared/AnimatedCardReveal';
 import { SpektrumPackOpener } from '@/components/shared/SpektrumPackOpener';
@@ -17,6 +18,7 @@ import { motion } from 'framer-motion';
 
 export function InventoryFeature() {
   const router = useRouter();
+  const requireAuth = useRequireAuth('open-pack');
   const {
     getUnopened,
     openBoosterPack,
@@ -62,7 +64,10 @@ export function InventoryFeature() {
   const handleConfirmOpenPack = async () => {
     const pack = pendingPackOpen;
     if (!pack || isProcessing || isOpening) return;
+    requireAuth(() => { void runOpenPack(pack); });
+  };
 
+  const runOpenPack = async (pack: InventoryBoosterPack) => {
     setIsProcessing(true);
     setIsOpening(true);
     setShowConfirmModal(false);

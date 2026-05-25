@@ -1,4 +1,5 @@
 import { AppBootstrap } from "@/components/shared/AppBootstrap"
+import { AuthGateModal } from "@/components/shared/AuthGateModal"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {children}
         </div>
       </div>
+      <AuthGateModal />
     </div>
   )
 }

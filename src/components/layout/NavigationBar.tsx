@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { SignInButton, useUser } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 import { NAV_HEIGHT } from "@/lib/constants"
 
@@ -74,6 +75,7 @@ export function HamburgerMenu() {
   const router = useRouter()
   const pathname = usePathname()
   const [showMore, setShowMore] = useState(false)
+  const { isLoaded, isSignedIn } = useUser()
 
   const navigate = (path: string) => {
     setShowMore(false)
@@ -84,8 +86,20 @@ export function HamburgerMenu() {
 
   return (
     <>
-      {/* Hamburger button — top right, constrained to 480px frame */}
+      {/* Top-right cluster: optional guest sign-in pill + hamburger */}
       <div className="fixed top-10 left-1/2 -translate-x-1/2 z-50 w-full pointer-events-none" style={{ maxWidth: 480 }}>
+        {isLoaded && !isSignedIn && (
+          <SignInButton mode="modal">
+            <button
+              type="button"
+              className="absolute top-1.5 right-16 h-9 px-3 inline-flex items-center gap-1.5 rounded-full bg-gray-900/85 backdrop-blur text-orange-300 hover:text-white active:scale-95 border border-orange-500/40 hover:border-orange-400 text-[11px] font-semibold tracking-[0.14em] uppercase pointer-events-auto transition-all"
+              style={{ boxShadow: "0 0 14px rgba(249, 115, 22, 0.18)" }}
+              aria-label="Sign in to save progress"
+            >
+              Sign in
+            </button>
+          </SignInButton>
+        )}
         <motion.button
           onClick={() => setShowMore(v => !v)}
           className="absolute top-0 right-3 w-12 h-12 flex items-center justify-center rounded-lg text-black hover:text-orange-500 transition-colors pointer-events-auto"
