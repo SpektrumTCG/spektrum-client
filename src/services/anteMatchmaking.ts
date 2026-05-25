@@ -43,13 +43,14 @@ class AnteMatchmakingService {
     onOpponentDisconnected?: (data: { battleId: string; reason: string }) => void;
   } = {};
 
-  connect() {
+  connect(token: string) {
     if (this.socket?.connected) return;
 
     const socketUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
     this.socket = io(socketUrl, {
       path: '/ante-socket',
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      auth: { token },
     });
 
     this.socket.on('match_found', (data: MatchFoundData) => {
@@ -96,9 +97,9 @@ class AnteMatchmakingService {
     }
   }
 
-  joinQueue(playerId: string, walletAddress: string, wageredCard: WageredCard) {
+  joinQueue(playerId: string, wageredCard: WageredCard) {
     if (!this.socket?.connected) throw new Error('Not connected to matchmaking server');
-    this.socket.emit('join_queue', { playerId, walletAddress, wageredCard });
+    this.socket.emit('join_queue', { playerId, wageredCard });
   }
 
   cancelQueue(playerId: string) {

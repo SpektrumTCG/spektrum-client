@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Zen_Dots, Noto_Sans, JetBrains_Mono } from "next/font/google"
+import { ClerkProvider } from "@clerk/nextjs"
 import "./globals.css"
 import { Providers } from "./providers"
 
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${zenDots.variable} ${notoSans.variable} ${jetbrains.variable}`}
     >
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <ClerkProvider>
+          <Providers>{children}</Providers>
+        </ClerkProvider>
       </body>
     </html>
   )

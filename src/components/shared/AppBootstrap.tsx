@@ -1,88 +1,40 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 import { useAudio } from "@/stores/useAudioStore"
 import { useWalletStore } from "@/stores/useWalletStore"
-import { parsePhantomCallback } from "@/features/blockchain/solana/phantomDeeplink"
-import { parseSolflareCallback } from "@/features/blockchain/solana/solflareDeeplink"
-import { parseBackpackCallback } from "@/features/blockchain/solana/backpackDeeplink"
-import { toast } from "sonner"
 
 export function AppBootstrap() {
-  const router = useRouter()
-  const hasProcessedCallback = useRef(false)
-  const hasAttemptedReconnect = useRef(false)
   const { initializeAudio, setAudioContext } = useAudio()
-  const { connectWallet, attemptAutoReconnect, isConnected, walletAddress, isReconnecting } = useWalletStore()
+  const { isLoaded, isSignedIn, user } = useUser()
+  const hydratedAddressRef = useRef<string | null>(null)
 
-  // Handle wallet deeplink callbacks (Phantom, Solflare, Backpack)
+  const walletAddress = isSignedIn ? user?.web3Wallets?.[0]?.web3Wallet ?? null : null
+
   useEffect(() => {
-    if (hasProcessedCallback.current) return
+    if (!isLoaded) return
 
-    const handleWalletCallbacks = async () => {
-      const phantomCb = parsePhantomCallback()
-      if (phantomCb) {
-        hasProcessedCallback.current = true
-        const success = await connectWallet("phantom")
-        if (success) toast.success("Phantom wallet connected!")
-        else toast.error("Wallet connection failed")
-        window.history.replaceState({}, document.title, window.location.pathname)
-        if (success) router.replace("/home")
-        return
+    if (!isSignedIn) {
+      if (hydratedAddressRef.current) {
+        hydratedAddressRef.current = null
+        useWalletStore.getState().clearOnSignOut()
+      } else {
+        useWalletStore.setState({ isReconnecting: false })
       }
-
-      const solflareCb = parseSolflareCallback()
-      if (solflareCb) {
-        hasProcessedCallback.current = true
-        const success = await connectWallet("solflare")
-        if (success) toast.success("Solflare wallet connected!")
-        else toast.error("Wallet connection failed")
-        window.history.replaceState({}, document.title, window.location.pathname)
-        if (success) router.replace("/home")
-        return
-      }
-
-      const backpackCb = parseBackpackCallback()
-      if (backpackCb) {
-        hasProcessedCallback.current = true
-        const success = await connectWallet("backpack")
-        if (success) toast.success("Backpack wallet connected!")
-        else toast.error("Wallet connection failed")
-        window.history.replaceState({}, document.title, window.location.pathname)
-        if (success) router.replace("/home")
-        return
-      }
+      return
     }
 
-    handleWalletCallbacks()
-  }, [connectWallet, router])
-
-  // Auto-reconnect wallet on app startup
-  useEffect(() => {
-    if (hasAttemptedReconnect.current) return
-    hasAttemptedReconnect.current = true
-
-    const attemptReconnect = async () => {
-      if (useWalletStore.getState().isConnected) return
-
-      const url = new URL(window.location.href)
-      const hasCallback =
-        url.searchParams.get("phantom_action") ||
-        url.searchParams.get("solflare_action") ||
-        url.searchParams.get("backpack_action")
-      if (hasCallback) return
-
-      await new Promise(r => setTimeout(r, 1500))
-      await attemptAutoReconnect()
+    if (walletAddress && hydratedAddressRef.current !== walletAddress) {
+      hydratedAddressRef.current = walletAddress
+      useWalletStore.getState().hydrateFromClerk({ walletAddress, walletType: 'clerk' })
+    } else if (!walletAddress) {
+      useWalletStore.setState({ isReconnecting: false })
     }
+  }, [isLoaded, isSignedIn, walletAddress])
 
-    attemptReconnect()
-  }, [attemptAutoReconnect])
-
-  // Session tracking
   useEffect(() => {
-    if (!isConnected || !walletAddress || isReconnecting) return
+    if (!isSignedIn || !walletAddress) return
 
     let sessionActive = true
 
@@ -91,7 +43,7 @@ export function AppBootstrap() {
         await fetch("/api/player/session/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress }),
+          credentials: "include",
         })
       } catch {}
     }
@@ -103,7 +55,7 @@ export function AppBootstrap() {
         await fetch("/api/player/session/end", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress }),
+          credentials: "include",
         })
       } catch {}
     }
@@ -123,9 +75,8 @@ export function AppBootstrap() {
       document.removeEventListener("visibilitychange", handleVisibility)
       window.removeEventListener("beforeunload", endSession)
     }
-  }, [isConnected, walletAddress, isReconnecting])
+  }, [isSignedIn, walletAddress])
 
-  // Initialize audio on first user interaction
   useEffect(() => {
     const handleInteraction = () => {
       try {

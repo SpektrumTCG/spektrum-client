@@ -60,7 +60,7 @@ export interface MultiplayerState {
   pendingDeck: any[] | null;
 
   // Actions
-  connect: () => Promise<void>;
+  connect: (token: string) => Promise<void>;
   disconnect: () => void;
   joinRoom: (roomId: string) => Promise<void>;
   createRoom: (roomName: string, settings: Partial<GameRoom['settings']>) => Promise<void>;
@@ -94,12 +94,12 @@ export const useMultiplayerStore = create<MultiplayerState>()((set, get) => ({
   isMultiplayerSession: false,
   pendingDeck: null,
 
-  connect: async () => {
+  connect: async (token: string) => {
     if (get().socket?.connected) return;
     set({ connectionStatus: 'connecting' });
 
     try {
-      createMultiplayerSocket({ setState: set, getState: get });
+      createMultiplayerSocket({ setState: set, getState: get }, { token });
     } catch (error) {
       set({ connectionStatus: 'error' });
       throw error;

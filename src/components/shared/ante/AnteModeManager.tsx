@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { anteMatchmaking, cardToWageredCard, type WageredCard, type MatchFoundData, type BattleCompletedData } from '@/services/anteMatchmaking';
 import type { Card } from '@/domain/game/types';
 import { useDeckStore } from '@/stores/useDeckStore';
@@ -24,6 +25,7 @@ type AnteState = 'selecting' | 'matchmaking' | 'match_found' | 'confirmed' | 'in
 
 export function AnteModeManager({ userCards, playerId, walletAddress, onClose }: AnteModeManagerProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const { addCard, removeCard, ownedCards, decks, activeDeckId, syncCardsFromDatabase } = useDeckStore();
 
   // Pull fresh card ownership from the server when the modal opens. On alt
@@ -73,7 +75,14 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
     // to userCards/ownedCards would cancel the queue mid-search and bounce
     // the socket, which the server interprets as a forfeit (the battle would
     // be deleted and the opponent would see "battle not found").
-    anteMatchmaking.connect();
+    (async () => {
+      const token = await getToken();
+      if (!token) {
+        toast.error('Sign in required for ante matches');
+        return;
+      }
+      anteMatchmaking.connect(token);
+    })();
 
     anteMatchmaking.setCallbacks({
       onMatchFound: (data) => {
@@ -161,7 +170,7 @@ export function AnteModeManager({ userCards, playerId, walletAddress, onClose }:
     setState('matchmaking');
 
     try {
-      anteMatchmaking.joinQueue(playerId, walletAddress, wager);
+      anteMatchmaking.joinQueue(playerId, wager);
       toast.info('Joining matchmaking queue...');
     } catch (error: any) {
       toast.error(error.message);

@@ -63,6 +63,8 @@ export interface CreateMultiplayerSocketOptions {
   url?: string;
   /** Inject a custom socket factory for tests. */
   socketFactory?: (url: string) => Socket;
+  /** Clerk session token (JWT) for socket auth. */
+  token?: string;
 }
 
 /**
@@ -74,6 +76,7 @@ export function createMultiplayerSocket(
   opts: CreateMultiplayerSocketOptions = {},
 ): Socket {
   const url = opts.url ?? getMultiplayerSocketURL();
+  const token = opts.token;
   const factory =
     opts.socketFactory ??
     ((u: string) =>
@@ -81,6 +84,7 @@ export function createMultiplayerSocket(
         transports: ['websocket', 'polling'],
         timeout: 10000,
         autoConnect: true,
+        auth: token ? { token } : undefined,
       }));
   const socket = factory(url);
   attachBridge(socket, store);

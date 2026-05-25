@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { SignInButton, SignOutButton } from '@clerk/nextjs';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,8 +15,6 @@ export function TradingFeature() {
     isConnected,
     walletAddress,
     balance,
-    connectWallet,
-    disconnectWallet,
     connectionStatus,
     nftCards,
     syncNftCards,
@@ -56,29 +55,11 @@ export function TradingFeature() {
     setCardMintMap(newMintMap);
   };
 
-  const handleConnectWallet = async () => {
-    try {
-      const success = await connectWallet();
-      if (success) {
-        toast.success('Wallet connected successfully!');
-        await loadMarketplaceData();
-      }
-    } catch (error) {
-      toast.error('Failed to connect wallet: ' + (error as Error).message);
-    }
-  };
-
-  const handleDisconnectWallet = async () => {
-    try {
-      await disconnectWallet();
-      setMarketplaceListings([]);
-      setSelectedCard(null);
-      setSelectedMint(null);
-      setCardMintMap(new Map());
-      toast.success('Wallet disconnected');
-    } catch {
-      toast.error('Failed to disconnect wallet');
-    }
+  const resetTradingState = () => {
+    setMarketplaceListings([]);
+    setSelectedCard(null);
+    setSelectedMint(null);
+    setCardMintMap(new Map());
   };
 
   const handleSellCard = async () => {
@@ -182,18 +163,21 @@ export function TradingFeature() {
                   <div className="text-xs text-gray-500 mt-1">
                     {nftCards.length} NFT{nftCards.length !== 1 ? 's' : ''}
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleDisconnectWallet} className="mt-2">
-                    Disconnect
-                  </Button>
+                  <SignOutButton>
+                    <Button variant="outline" size="sm" onClick={resetTradingState} className="mt-2">
+                      Disconnect
+                    </Button>
+                  </SignOutButton>
                 </div>
               ) : (
-                <Button
-                  onClick={handleConnectWallet}
-                  disabled={connectionStatus === 'connecting'}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Phantom Wallet'}
-                </Button>
+                <SignInButton mode="modal">
+                  <Button
+                    disabled={connectionStatus === 'connecting'}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Wallet'}
+                  </Button>
+                </SignInButton>
               )}
             </div>
           </div>

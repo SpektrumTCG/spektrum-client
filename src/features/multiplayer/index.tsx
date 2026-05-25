@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -47,6 +48,7 @@ import { AnteModeManager } from '@/components/shared/ante/AnteModeManager';
 
 export function MultiplayerFeature() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [selectedMode, setSelectedMode] = useState<'casual' | 'ranked' | null>(null);
   const [roomName, setRoomName] = useState('');
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -84,9 +86,18 @@ export function MultiplayerFeature() {
 
   useEffect(() => {
     if (!isConnected && connectionStatus === 'disconnected') {
-      connect().catch(() => {
-        toast.error('Failed to connect to multiplayer server');
-      });
+      (async () => {
+        try {
+          const token = await getToken();
+          if (!token) {
+            toast.error('Sign in required for multiplayer');
+            return;
+          }
+          await connect(token);
+        } catch {
+          toast.error('Failed to connect to multiplayer server');
+        }
+      })();
     }
 
     return () => {
@@ -178,7 +189,6 @@ export function MultiplayerFeature() {
       playerId: persistentId,
       name: resolved,
       avatar: null,
-      walletAddress: useWalletStore.getState().walletAddress,
     });
   }, [socket, isConnected, gameModePlayerName, walletProfileName, currentPlayer]);
 
