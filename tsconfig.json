@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@spektrum/shared": ["./packages/shared/src/index.ts"],
+      "@spektrum/shared/*": ["./packages/shared/src/*"]
     },
     "types": ["vitest/globals"]
   },
@@ -29,7 +31,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "packages/shared/src/**/*.ts"
   ],
   "exclude": ["node_modules", "old-app", "src/features/blockchain", "scripts", "spektrum-v1"]
 }
