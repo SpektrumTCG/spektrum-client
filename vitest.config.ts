@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@spektrum/shared': path.resolve(__dirname, './packages/shared/src'),
+      '@spektrum/shared': path.resolve(__dirname, '../spektrum-shared/src'),
     },
   },
 })
