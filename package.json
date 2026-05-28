@@ -12,7 +12,7 @@
     "app": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
     "start": "next start",
-    "start:unified": "node --env-file-if-exists=.env --import tsx/esm server/unified.ts",
+    "start:unified": "UNIFIED=1 node --env-file-if-exists=.env --import tsx/esm server/unified.ts",
     "server": "node --env-file-if-exists=.env --import tsx/esm server/index.ts",
     "lint": "eslint",
     "test": "vitest run",
