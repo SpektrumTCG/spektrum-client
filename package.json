@@ -2,6 +2,9 @@
   "name": "spektrum-v2",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "type": "module",
   "scripts": {
     "dev": "next dev",
