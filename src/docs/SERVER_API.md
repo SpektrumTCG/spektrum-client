@@ -1,5 +1,10 @@
 # Spektrum Server API Documentation
 
+> **Contract status:** This document is the source of truth for the HTTP/socket
+> contract between `spektrum-client` and `spektrum-server` after the split
+> (see `docs/REPO_SPLIT_PLAN.md`). Any breaking change to a route shape
+> requires a coordinated PR across both future repos.
+
 > **Stack:** Express.js + TypeScript · Neon (PostgreSQL via Drizzle ORM) · Cookie-based sessions · Wallet auth  
 > **Base URL:** `http://localhost:5000` (dev) / production host  
 > **Auth:** Session cookie (`sessionId`) issued automatically. Wallet association required for protected routes.
@@ -39,41 +44,21 @@ Returns server health status including rate limit and session statistics.
 
 ### Session
 
-#### `POST /api/session/wallet`
-Associates a wallet address with the current session.
+#### `POST /api/session/wallet` **STALE — removed**
+Previously associated a wallet address with the current session. Wallet linkage is now handled by Clerk Solana sign-in; no equivalent server route exists.
 
-**Auth:** Session cookie  
-**Body:** `{ walletAddress: string }`  
-**Response:** `{ success: true, message: "Wallet associated with session" }`
-
-#### `DELETE /api/session`
-Destroys the current session and clears the session cookie.
-
-**Auth:** None required  
-**Response:** `{ success: true, message: "Session destroyed" }`
+#### `DELETE /api/session` **STALE — removed**
+Previously destroyed the session cookie. Session lifecycle is now owned by Clerk on the client.
 
 ---
 
-### Email Auth *(optional module — removable)*
+### Email Auth **STALE — removed**
 
-#### `POST /api/auth/email/register`
-Creates a new email-based account. Generates a synthetic wallet address (`email_<uuid>`), hashes the password with bcrypt (10 rounds), and records geo-location.
+#### `POST /api/auth/email/register` **STALE — removed**
+Email/password registration is no longer exposed by the server. Identity is owned by Clerk.
 
-**Auth:** None  
-**Rate limit:** `authRateLimit` (10/min)  
-**Body:** `{ email: string, password: string, displayName?: string }`  
-**Validation:** Email regex · password ≥ 8 chars  
-**Response:** `{ success: true, isNewPlayer: true, player: { id, walletAddress, displayName, gamesPlayed, gamesWon, gamesLost, country, region } }`  
-**Errors:** `400` invalid email/password · `409` email already exists
-
-#### `POST /api/auth/email/login`
-Authenticates with email + password. Associates the wallet with the current session on success.
-
-**Auth:** None  
-**Rate limit:** `authRateLimit` (10/min)  
-**Body:** `{ email: string, password: string }`  
-**Response:** `{ success: true, isNewPlayer: false, player: { ... } }`  
-**Errors:** `400` missing fields · `401` invalid credentials
+#### `POST /api/auth/email/login` **STALE — removed**
+Email/password login is no longer exposed by the server. Identity is owned by Clerk.
 
 ---
 
@@ -473,12 +458,8 @@ Returns detailed player analytics including game stats, location, session data, 
 
 ### Seeker Genesis Token
 
-#### `POST /api/seeker/nonce`
-Generates a SIWS (Sign-In With Solana) message and nonce for wallet ownership verification. Nonce expires in 5 minutes.
-
-**Auth:** None  
-**Body:** `{ walletAddress: string }`  
-**Response:** `{ message: string, nonce: string }`
+#### `POST /api/seeker/nonce` **STALE — removed**
+Previously generated a SIWS nonce for wallet ownership verification. Not registered in the current server; `POST /api/seeker/verify` is now invoked under Clerk-authenticated context without a separate nonce step.
 
 #### `POST /api/seeker/verify`
 Verifies the SIWS signature, checks Seeker Genesis Token (SGT) ownership on-chain, and updates player record if verified.
@@ -493,12 +474,8 @@ Returns a player's Seeker verification status and reward claim state.
 **Auth:** None  
 **Response:** `{ isSeekerVerified: bool, seekerVerifiedAt, seekerTokenMint, seekerRewardClaimed: bool }`
 
-#### `POST /api/seeker/claim-nonce`
-Generates a claim message and nonce for reward claiming (separate from verification nonce).
-
-**Auth:** None  
-**Body:** `{ walletAddress: string }`  
-**Response:** `{ message: string, nonce: string }`
+#### `POST /api/seeker/claim-nonce` **STALE — removed**
+Previously generated a claim message and nonce. Not registered in the current server; `POST /api/seeker/claim-reward` is now invoked under Clerk-authenticated context without a separate nonce step.
 
 #### `POST /api/seeker/claim-reward`
 Verifies claim signature and grants a `Seeker Genesis Reward Pack` booster pack. One-time claim, idempotent check.
