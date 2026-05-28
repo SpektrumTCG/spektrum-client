@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const API_URL = process.env.API_URL ?? "http://localhost:3001";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@spektrum/shared"],
   experimental: {
     viewTransition: true,
   },
