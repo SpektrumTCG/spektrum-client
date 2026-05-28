@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Card } from '@/domain/game/types'
+import type { Card } from '@spektrum/shared'
 
 interface CardPlacementAnimation {
   id: string

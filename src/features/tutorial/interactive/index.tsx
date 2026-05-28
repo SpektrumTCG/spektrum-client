@@ -4,8 +4,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card2D } from '@/features/game/components/Card2D'
-import { newFireAvatarCards, newFireSpellCards } from '@/domain/game/data/cards/fire'
-import type { AvatarCard, ActionCard } from '@/domain/game/types/card'
+import { newFireAvatarCards, newFireSpellCards } from '@spektrum/shared/data'
+import type { AvatarCard, ActionCard } from '@spektrum/shared'
 
 // ─── Card refs ────────────────────────────────────────────────────────────────
 const KOBAR_TRAINEE   = newFireAvatarCards.find(c => c.id === 'fire-kobar-trainee-a')! as AvatarCard

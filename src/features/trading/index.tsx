@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cardNftService, type CardNftMetadata } from '@/features/blockchain/solana/cardNftService';
 import { marketplaceService, type MarketplaceListing } from '@/features/blockchain/solana/marketplaceService';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 
 export function TradingFeature() {

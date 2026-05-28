@@ -5,7 +5,7 @@ import { useMultiplayerStore } from '@/stores/useMultiplayerStore'
 import { useGameStore } from '@/features/game/store'
 import { toast } from 'sonner'
 import { useDeckStore } from '@/stores/useDeckStore'
-import { cardRegistry } from '@/domain/game/data/cardRegistry'
+import { cardRegistry } from '@spektrum/shared/data'
 
 // Was used to short-circuit multiplayer into the local AI engine; left in
 // place but disabled so the real server-driven path runs.

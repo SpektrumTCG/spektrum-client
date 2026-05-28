@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from 'react';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 import { canWagerCard } from '@/services/anteMatchmaking';
 import { AlertTriangle, Check, Coins, Search, X } from 'lucide-react';
 

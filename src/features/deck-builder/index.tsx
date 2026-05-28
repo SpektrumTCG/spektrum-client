@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useDeckStore } from '@/stores/useDeckStore';
 import type { Deck } from '@/stores/useDeckStore';
-import type { Card, ElementType, AvatarCard, RarityType } from '@/domain/game/types';
+import type { Card, ElementType, AvatarCard, RarityType } from '@spektrum/shared';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, Eye } from 'lucide-react';

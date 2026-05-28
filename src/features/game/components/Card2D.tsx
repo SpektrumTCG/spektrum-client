@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import type { AvatarCard, ActionCard } from '@/domain/game/types'
+import type { AvatarCard, ActionCard } from '@spektrum/shared'
 import { useAudio } from '@/stores/useAudioStore'
 import { toast } from 'sonner'
 import { PreviewButton } from './PreviewButton'

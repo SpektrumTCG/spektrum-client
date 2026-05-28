@@ -8,7 +8,7 @@ import { useDeckStore } from "@/stores/useDeckStore"
 import { useCustomCardStore } from "@/stores/useCustomCardStore"
 import { useAudio } from "@/stores/useAudioStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
-import type { Card } from "@/domain/game/types"
+import type { Card } from "@spektrum/shared"
 
 type Tab = "database" | "audio" | "dev-utils" | "modifications"
 

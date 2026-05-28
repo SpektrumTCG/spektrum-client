@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import type { Card, AvatarCard } from '@/domain/game/types';
+import type { Card, AvatarCard } from '@spektrum/shared';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';

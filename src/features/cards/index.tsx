@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDeckStore } from "@/stores/useDeckStore"
-import type { Card, ElementType, AvatarCard } from "@/domain/game/types"
+import type { Card, ElementType, AvatarCard } from "@spektrum/shared"
 import { SafeCardImage } from "@/components/shared/SafeCardImage"
 import { countOwnedCopies } from "@/lib/rarityUtils"
 import { toast } from "sonner"

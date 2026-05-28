@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Card, ElementType, RarityType } from '@/domain/game/types';
+import type { Card, ElementType, RarityType } from '@spektrum/shared';
 import { useDeckStore } from './useDeckStore';
 
 export interface BoosterVariant {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import { fetchPremadeDecks, type PremadeDeckCardList } from "@/domain/game/data/cards/premade"
+import { fetchPremadeDecks, type PremadeDeckCardList } from "@spektrum/shared/data"
 import { useDeckStore } from "@/stores/useDeckStore"
 import { useWalletStore } from "@/stores/useWalletStore"
 

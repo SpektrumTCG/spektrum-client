@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ElementType } from '@/domain/game/types'
+import type { ElementType } from '@spektrum/shared'
 
 export type EffectType = 'damage' | 'heal' | 'buff' | 'debuff' | 'draw' | 'discard' | 'shield' | 'stun'
 

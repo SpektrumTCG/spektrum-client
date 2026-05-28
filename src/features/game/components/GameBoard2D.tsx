@@ -21,8 +21,8 @@ import { CardPlacementEffect } from './CardPlacementEffect'
 import { CardActivationPause } from './CardActivationPause'
 import { AnimatePresence } from 'framer-motion'
 import { getFixedCardImagePath } from '@/lib/cardImageFixer'
-import { getValidEvolutionTargets } from '@/domain/game/engine/getValidEvolutionTargets'
-import type { AvatarCard, Card } from '@/domain/game/types'
+import { getValidEvolutionTargets } from '@spektrum/shared'
+import type { AvatarCard, Card } from '@spektrum/shared'
 
 // ─── HP bar ───────────────────────────────────────────────────────────────────
 const HpBar: React.FC<{ current: number; max: number }> = ({ current, max }) => {

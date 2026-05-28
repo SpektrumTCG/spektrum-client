@@ -14,12 +14,12 @@ import {
   checkWinner,
   checkDefeatedAvatars,
   hasEnoughSpektra,
-} from '@/domain/game/engine/gameEngine'
-import { AIFactory } from '@/domain/game/ai'
-import { cardRegistry } from '@/domain/game/data/cardRegistry'
-import type { GameState } from '@/domain/game/types/game'
-import type { Card, AvatarCard, ElementType } from '@/domain/game/types/card'
-import type { AIDifficulty, AIDecision } from '@/domain/game/types/ai'
+} from '@spektrum/shared'
+import { AIFactory } from '@spektrum/shared'
+import { cardRegistry } from '@spektrum/shared/data'
+import type { GameState } from '@spektrum/shared'
+import type { Card, AvatarCard, ElementType } from '@spektrum/shared'
+import type { AIDifficulty, AIDecision } from '@spektrum/shared'
 
 const AI_ACTION_DELAY = 800
 const AI_MAX_ACTIONS_PER_PHASE = 10

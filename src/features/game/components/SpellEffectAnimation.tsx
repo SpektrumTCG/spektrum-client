@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ElementType } from '@/domain/game/types'
+import type { ElementType } from '@spektrum/shared'
 import { useAudio } from '@/stores/useAudioStore'
 import type { EffectType } from '@/features/game/stores/useSpellEffectsStore'
 

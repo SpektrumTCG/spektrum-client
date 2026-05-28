@@ -1,4 +1,4 @@
-import type { Card, RarityType } from '@/domain/game/types';
+import type { Card, RarityType } from '@spektrum/shared';
 
 export const RARITY_COLORS: Record<RarityType, string> = {
   'Common': 'border-gray-400 bg-gray-500',

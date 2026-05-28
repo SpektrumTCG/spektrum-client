@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 import type { BoosterVariant, BoosterPack } from '@/stores/useBoosterVariantStore';
 import { useBoosterVariantStore, fetchCardCatalog, variantTemplates } from '@/stores/useBoosterVariantStore';
 import { useDeckStore } from '@/stores/useDeckStore';

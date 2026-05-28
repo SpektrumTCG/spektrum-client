@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 
 export type CardRarity = 'rare' | 'super_rare' | 'mythic';
 

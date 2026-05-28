@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Card, AvatarCard, ActionCard } from '@/domain/game/types';
-import { cardRegistry } from '@/domain/game/data/cardRegistry';
+import type { Card, AvatarCard, ActionCard } from '@spektrum/shared';
+import { cardRegistry } from '@spektrum/shared/data';
 import { cardNftService } from '@/features/blockchain/solana/cardNftService';
 import { toast } from 'sonner';
 import { getBaseCardId } from '@/lib/rarityUtils';

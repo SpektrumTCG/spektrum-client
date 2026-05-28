@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInventoryStore } from '@/stores/useInventoryStore';
 import type { InventoryBoosterPack } from '@/stores/useInventoryStore';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 import { toast } from 'sonner';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { useRequireAuth } from '@/components/shared/AuthGateModal';

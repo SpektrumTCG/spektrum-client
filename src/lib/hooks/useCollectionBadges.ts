@@ -1,6 +1,6 @@
 import { useDeckStore } from '@/stores/useDeckStore';
 import { useAchievementsStore } from '@/stores/useAchievementsStore';
-import type { Card, ElementType, AvatarCard } from '@/domain/game/types';
+import type { Card, ElementType, AvatarCard } from '@spektrum/shared';
 
 export interface CollectionBadge {
   id: string;

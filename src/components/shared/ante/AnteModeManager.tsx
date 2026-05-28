@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { anteMatchmaking, cardToWageredCard, type WageredCard, type MatchFoundData, type BattleCompletedData } from '@/services/anteMatchmaking';
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 import { useDeckStore } from '@/stores/useDeckStore';
 import { useAnteBattleStore } from '@/stores/useAnteBattleStore';
 import { useGameStore } from '@/features/game/store';

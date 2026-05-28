@@ -1,4 +1,4 @@
-import type { AvatarCard, ActionCard } from '@/domain/game/types'
+import type { AvatarCard, ActionCard } from '@spektrum/shared'
 
 type CardLike = { art?: string; imagePath?: string; type?: string } | AvatarCard | ActionCard | any
 

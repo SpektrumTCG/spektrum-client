@@ -1,7 +1,7 @@
 // Card NFT service — mock implementation. Wallet identity is owned by Clerk; this service
 // only handles NFT metadata operations and marketplace stubs. Real DAS integration lives elsewhere.
 
-import type { Card } from '@/domain/game/types';
+import type { Card } from '@spektrum/shared';
 
 export interface CardNftMetadata {
   name: string;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Card, AvatarCard } from '@/domain/game/types';
+import type { Card, AvatarCard } from '@spektrum/shared';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 
 interface BackgroundParticle {

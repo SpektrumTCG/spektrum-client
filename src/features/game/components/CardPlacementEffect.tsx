@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import type { ElementType } from '@/domain/game/types'
+import type { ElementType } from '@spektrum/shared'
 
 interface CardPlacementEffectProps {
   cardName: string

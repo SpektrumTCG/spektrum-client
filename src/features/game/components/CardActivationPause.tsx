@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ElementType } from '@/domain/game/types'
+import type { ElementType } from '@spektrum/shared'
 import { SafeCardImage } from '@/components/shared/SafeCardImage'
 import { getFixedCardImagePath } from '@/lib/cardImageFixer'
 
