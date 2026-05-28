@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import type { Socket } from 'socket.io-client';
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '@spektrum/shared';
 import { createMultiplayerSocket } from '@/services/multiplayerSocketBridge';
+
+type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export interface Player {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: string | null;
   isReady: boolean;
   isHost: boolean;
   deck?: any[];
@@ -16,7 +22,7 @@ export interface GameRoom {
   name: string;
   players: Player[];
   maxPlayers: number;
-  gameMode: 'casual' | 'ranked' | 'tournament';
+  gameMode: 'casual' | 'ranked' | 'custom' | 'tournament';
   status: 'waiting' | 'ready' | 'playing' | 'finished';
   settings: {
     timeLimit: number;
@@ -34,7 +40,7 @@ export interface GameAction {
 
 export interface MultiplayerState {
   // Connection
-  socket: Socket | null;
+  socket: AppSocket | null;
   isConnected: boolean;
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
 

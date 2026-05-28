@@ -1,5 +1,11 @@
-import { io, Socket } from 'socket.io-client';
-import type { Card } from '@spektrum/shared';
+import { io, type Socket } from 'socket.io-client';
+import type {
+  Card,
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '@spektrum/shared';
+
+type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export type CardRarity = 'rare' | 'super_rare' | 'mythic';
 
@@ -30,7 +36,7 @@ export interface BattleCompletedData {
 }
 
 class AnteMatchmakingService {
-  private socket: Socket | null = null;
+  private socket: AppSocket | null = null;
   private callbacks: {
     onMatchFound?: (data: MatchFoundData) => void;
     onBattleStart?: (battleId: string, gameState?: any) => void;
@@ -53,8 +59,11 @@ class AnteMatchmakingService {
       auth: { token },
     });
 
-    this.socket.on('match_found', (data: MatchFoundData) => {
-      this.callbacks.onMatchFound?.(data);
+    this.socket.on('match_found', (data) => {
+      // Ante namespace only emits the ante-shaped payload; the union with
+      // PvP's GameRoom shape comes from the shared contract covering both
+      // namespaces.
+      this.callbacks.onMatchFound?.(data as MatchFoundData);
     });
 
     this.socket.on('battle_start', (data: { battleId: string; gameState?: any }) => {

@@ -207,7 +207,7 @@ export const useMultiplayerGameSync = () => {
       }
     }
 
-    const handleActionRejected = (data: { action: string; error: string }) => {
+    const handleActionRejected = (data: { action?: string; error?: string }) => {
       toast.error(`Action failed: ${data.error}`)
       requestGameState()
     }
@@ -230,13 +230,13 @@ export const useMultiplayerGameSync = () => {
       }
     }
 
-    const handleDeckRejected = (data: { error: string }) => {
+    const handleDeckRejected = (data: { error?: string }) => {
       hasSentDeck.current = false
       toast.error(`Deck rejected: ${data.error}`)
       setSubmitAttempt((prev) => prev + 1)
     }
 
-    const handleOpponentDisconnected = (data: { turn: number }) => {
+    const handleOpponentDisconnected = (data: { turn?: number }) => {
       setOpponentDisconnected(true)
       setOpponentDisconnectedTurn(data.turn || 1)
     }

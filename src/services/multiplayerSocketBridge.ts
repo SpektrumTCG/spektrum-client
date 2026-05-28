@@ -16,7 +16,13 @@
 // surface aligned without creating a load cycle.
 
 import { io, type Socket } from 'socket.io-client';
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '@spektrum/shared';
 import type { GameAction, GameRoom, MultiplayerState, Player } from '@/stores/useMultiplayerStore';
+
+export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 /**
  * Minimal slice of zustand's StoreApi the bridge needs. Lets the store pass
@@ -62,7 +68,7 @@ export interface CreateMultiplayerSocketOptions {
   /** Override the resolved URL — useful for tests / staging. */
   url?: string;
   /** Inject a custom socket factory for tests. */
-  socketFactory?: (url: string) => Socket;
+  socketFactory?: (url: string) => AppSocket;
   /** Clerk session token (JWT) for socket auth. */
   token?: string;
 }
@@ -74,7 +80,7 @@ export interface CreateMultiplayerSocketOptions {
 export function createMultiplayerSocket(
   store: MultiplayerStoreLike,
   opts: CreateMultiplayerSocketOptions = {},
-): Socket {
+): AppSocket {
   const url = opts.url ?? getMultiplayerSocketURL();
   const token = opts.token;
   const factory =
@@ -85,13 +91,13 @@ export function createMultiplayerSocket(
         timeout: 10000,
         autoConnect: true,
         auth: token ? { token } : undefined,
-      }));
+      }) as AppSocket);
   const socket = factory(url);
   attachBridge(socket, store);
   return socket;
 }
 
-function attachBridge(socket: Socket, store: MultiplayerStoreLike) {
+function attachBridge(socket: AppSocket, store: MultiplayerStoreLike) {
   socket.on('connect', () => {
     store.setState({
       socket,
@@ -112,8 +118,11 @@ function attachBridge(socket: Socket, store: MultiplayerStoreLike) {
     store.setState({ connectionStatus: 'error' });
   });
 
-  socket.on('room_joined', (room: GameRoom) => {
-    store.getState().setCurrentRoom(room);
+  socket.on('room_joined', (room) => {
+    // Server emits the result of getRoom() which may be undefined; ignore
+    // the empty payload to avoid clobbering the current room state.
+    if (!room) return;
+    store.getState().setCurrentRoom(room as GameRoom);
   });
 
   socket.on('room_left', () => {
@@ -136,9 +145,11 @@ function attachBridge(socket: Socket, store: MultiplayerStoreLike) {
     store.getState().addGameAction(action);
   });
 
-  socket.on('match_found', (room: GameRoom) => {
+  socket.on('match_found', (payload) => {
+    // The PvP namespace only emits a GameRoom; the shared contract widens
+    // this with the ante namespace's match_found payload.
     store.setState({ isSearchingForMatch: false, searchStartTime: null });
-    store.getState().setCurrentRoom(room);
+    store.getState().setCurrentRoom(payload as GameRoom);
   });
 
   socket.on('matchmaking_cancelled', () => {
@@ -173,7 +184,7 @@ function attachBridge(socket: Socket, store: MultiplayerStoreLike) {
   });
 }
 
-async function registerPersistentPlayer(socket: Socket): Promise<void> {
+async function registerPersistentPlayer(socket: AppSocket): Promise<void> {
   if (typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') return;
 
   let persistentId = localStorage.getItem('multiplayer_player_id');
