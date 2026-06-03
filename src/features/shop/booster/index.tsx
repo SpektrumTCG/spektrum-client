@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { ChevronLeft } from "lucide-react"
 import { toast } from "sonner"
 import { useBoosterVariantStore, variantTemplates } from "@/stores/useBoosterVariantStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
 import { useRequireAuth } from "@/components/shared/AuthGateModal"
 import type { BoosterVariant, BoosterPack } from "@/stores/useBoosterVariantStore"
 
-type Step = "tier-selection" | "pack-selection" | "confirm"
+type Step = "tier-selection" | "confirm"
 
 const EXPANSION = {
   id: "genesis-series",
@@ -45,22 +46,62 @@ const UPCOMING_PACKS: Array<{ label: string; emoji: string; color: string }> = [
   { label: "Air", emoji: "🌪️", color: "from-sky-500 to-indigo-700" },
 ]
 
+const STEP_NUM: Record<Step, number> = {
+  "tier-selection": 1,
+  confirm: 2,
+}
+const STEP_TOTAL = Object.keys(STEP_NUM).length
+
+function StepHeader({
+  step,
+  onBack,
+  title,
+  children,
+}: {
+  step: Step
+  onBack: () => void
+  title: string
+  children?: ReactNode
+}) {
+  const current = STEP_NUM[step]
+  return (
+    <div className="relative mb-6 mt-7">
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Go back"
+        className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-600 transition-colors hover:text-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+      >
+        <ChevronLeft size={28} />
+      </button>
+      <h1 className="text-center text-3xl font-bold uppercase tracking-wider text-gray-800">{title}</h1>
+      <div className="mt-3 flex justify-center gap-1.5" role="status" aria-label={`Step ${current} of ${STEP_TOTAL}`}>
+        {Array.from({ length: STEP_TOTAL }, (_, i) => i + 1).map((n) => (
+          <span
+            key={n}
+            className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
+              n === current ? "w-5 bg-orange-500" : n < current ? "w-1.5 bg-orange-300" : "w-1.5 bg-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+      {children && <div className="mt-3 flex justify-center">{children}</div>}
+    </div>
+  )
+}
+
 export function BoosterFeature() {
   const router = useRouter()
   const { addBoosterPack } = useInventoryStore()
   const requireAuth = useRequireAuth("buy-pack")
   const [step, setStep] = useState<Step>("tier-selection")
   const [selectedTier, setSelectedTier] = useState<(typeof variantTemplates)[0] | null>(null)
-  const [selectedPackIndex, setSelectedPackIndex] = useState<number | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
   const handleBack = () => {
-    if (step === "pack-selection") {
+    if (step === "confirm") {
       setStep("tier-selection")
       setSelectedTier(null)
-    } else if (step === "confirm") {
-      setStep("pack-selection")
-      setSelectedPackIndex(null)
     } else {
       router.push("/shop")
     }
@@ -68,25 +109,16 @@ export function BoosterFeature() {
 
   const handleTierSelect = (tier: (typeof variantTemplates)[0]) => {
     setSelectedTier(tier)
-    setStep("pack-selection")
-  }
-
-  const handlePackSelect = (index: number) => {
-    setSelectedPackIndex(index)
     setStep("confirm")
   }
 
   const handleConfirmPurchase = async () => {
-    if (!selectedTier || selectedPackIndex === null || isProcessing) return
+    if (!selectedTier || isProcessing) return
     const tier = selectedTier
-    const packIndex = selectedPackIndex
-    requireAuth(() => { void runPurchase(tier, packIndex) })
+    requireAuth(() => { void runPurchase(tier) })
   }
 
-  const runPurchase = async (
-    tier: NonNullable<typeof selectedTier>,
-    packIndex: number
-  ) => {
+  const runPurchase = async (tier: NonNullable<typeof selectedTier>) => {
     setIsProcessing(true)
 
     try {
@@ -104,7 +136,7 @@ export function BoosterFeature() {
       }
 
       const pack: BoosterPack = {
-        id: `pack-${EXPANSION.id}-${tier.rarity.toLowerCase()}-${packIndex}`,
+        id: `pack-${EXPANSION.id}-${tier.rarity.toLowerCase()}`,
         name: `${EXPANSION.name} ${tier.rarity} Pack`,
         element: "mixed",
         price: tier.price,
@@ -131,10 +163,8 @@ export function BoosterFeature() {
       <div className="max-w-md mx-auto p-4 w-full pt-6">
 
         {step === "tier-selection" && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-orange-400 mb-1">Genesis Series</h1>
-            </div>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <StepHeader step="tier-selection" onBack={handleBack} title="Genesis Series" />
             <div className="grid grid-cols-2 gap-3">
               {variantTemplates
                 .filter((tier) => (ACTIVE_TIERS as readonly string[]).includes(tier.rarity))
@@ -143,113 +173,76 @@ export function BoosterFeature() {
                   return (
                     <button
                       key={tier.rarity}
+                      type="button"
                       onClick={() => handleTierSelect(tier)}
-                      className="flex flex-col overflow-hidden rounded-2xl bg-gray-800 hover:scale-105 transition-transform duration-200 cursor-pointer border-2 border-transparent hover:border-orange-500 text-left"
+                      className="flex flex-col overflow-hidden rounded-2xl border-2 border-transparent bg-gray-800 text-left transition-transform duration-200 hover:scale-105 hover:border-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                     >
-                      <div className="w-full aspect-[3/4] flex items-center justify-center">
+                      <div className="flex aspect-[3/4] w-full items-center justify-center bg-[radial-gradient(circle_at_50%_38%,rgba(249,115,22,0.12),transparent_68%)]">
                         {TIER_IMAGES[tier.rarity] ? (
                           <img
                             src={TIER_IMAGES[tier.rarity]}
                             alt={label}
-                            className="w-full h-full object-contain"
+                            className="h-full w-full object-contain p-1"
                             onError={(e) => {
                               const t = e.target as HTMLImageElement
                               t.style.display = "none"
                             }}
                           />
                         ) : (
-                          <div className={`w-full h-full bg-gradient-to-b ${TIER_COLORS[tier.rarity]} flex items-center justify-center`}>
+                          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-b ${TIER_COLORS[tier.rarity]}`}>
                             <span className="text-4xl">{TIER_EMOJIS[tier.rarity]}</span>
                           </div>
                         )}
                       </div>
-                      <div className="p-2 text-center">
-                        <h3 className="text-sm font-bold text-white mb-1">{label}</h3>
-                        <p className="text-[10px] text-gray-400 mb-2 line-clamp-2">{tier.description}</p>
-                        <div className="bg-gray-900 rounded p-1.5 mb-2 space-y-0.5 text-[10px]">
-                          <div className="flex justify-between text-gray-300">
-                            <span>Price</span><span className="font-bold text-orange-400">${tier.price}</span>
-                          </div>
-                          <div className="flex justify-between text-gray-300">
-                            <span>Cards</span><span className="font-bold">5</span>
-                          </div>
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="text-sm font-bold text-white">{label}</h3>
+                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-300">
+                            {tier.rarity}
+                          </span>
                         </div>
-                        <div className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white text-xs font-semibold py-1 rounded">
+                        <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-400">{tier.description}</p>
+                        <div className="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2 text-[11px]">
+                          <span className="text-gray-400">5 cards</span>
+                          <span className="font-bold text-orange-400">${tier.price} USDC</span>
+                        </div>
+                        <div className="mt-2.5 rounded-md bg-gradient-to-r from-orange-600 to-orange-500 py-1.5 text-center text-xs font-semibold text-white">
                           Select
                         </div>
                       </div>
                     </button>
                   )
                 })}
-              {UPCOMING_PACKS.map((pack) => (
-                <div
-                  key={pack.label}
-                  className="flex flex-col overflow-hidden rounded-2xl bg-gray-800 border-2 border-transparent opacity-60 cursor-not-allowed text-left relative"
-                >
-                  <div className="w-full aspect-[3/4] relative">
-                    <div className={`w-full h-full bg-gradient-to-b ${pack.color} flex items-center justify-center`}>
-                      <span className="text-5xl grayscale">{pack.emoji}</span>
-                    </div>
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-3xl">🔒</span>
-                    </div>
-                  </div>
-                  <div className="p-2 text-center">
-                    <h3 className="text-sm font-bold text-white mb-1">{pack.label}</h3>
-                    <p className="text-[10px] text-gray-400 mb-2 line-clamp-2">Coming soon — stay tuned for the next expansion.</p>
-                    <div className="bg-gray-900 rounded p-1.5 mb-2 space-y-0.5 text-[10px]">
-                      <div className="flex justify-between text-gray-300">
-                        <span>Status</span><span className="font-bold text-gray-500">Locked</span>
-                      </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Cards</span><span className="font-bold">—</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-700 text-gray-400 text-xs font-semibold py-1 rounded">
-                      Upcoming
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
-          </motion.div>
-        )}
 
-        {step === "pack-selection" && selectedTier && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-orange-400 mb-1">Choose Your Pack</h1>
-              <p className="text-gray-400 text-sm">{EXPANSION.name} — {TIER_LABELS[selectedTier.rarity] || selectedTier.rarity}</p>
-              <div className="flex justify-center gap-2 mt-2">
-                <span className="bg-gray-800 text-orange-400 px-3 py-1 rounded text-sm font-bold">5 cards</span>
-                <span className="bg-gray-800 text-orange-400 px-3 py-1 rounded text-sm font-bold">${selectedTier.price}</span>
+            <div className="mt-7">
+              <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">Coming Soon</h2>
+              <div className="grid grid-cols-2 gap-2.5">
+                {UPCOMING_PACKS.map((pack) => (
+                  <div
+                    key={pack.label}
+                    aria-disabled
+                    className="flex items-center gap-2.5 rounded-xl bg-gray-800/70 p-2.5 opacity-80"
+                  >
+                    <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-gradient-to-b ${pack.color}`}>
+                      <span className="text-xl grayscale">{pack.emoji}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-bold text-white">{pack.label}</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Locked</p>
+                    </div>
+                    <span className="shrink-0 text-sm text-gray-500" aria-hidden>🔒</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 9 }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => handlePackSelect(i)}
-                  className="aspect-[3/4] rounded-lg overflow-hidden hover:scale-105 transition-transform duration-200 cursor-pointer border-2 border-transparent hover:border-orange-500"
-                >
-                  <img
-                    src={TIER_IMAGES[selectedTier.rarity]}
-                    alt={`Pack ${i + 1}`}
-                    className="w-full h-full object-contain bg-gray-800"
-                  />
-                </button>
-              ))}
-            </div>
-            <p className="text-center text-gray-400 text-sm">Each pack contains unique card combinations. Choose wisely!</p>
           </motion.div>
         )}
 
-        {step === "confirm" && selectedTier && selectedPackIndex !== null && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-orange-400 mb-1">Confirm Purchase</h1>
-            </div>
-            <div className="bg-gray-900 border-2 border-orange-500 rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 30px rgba(249,115,22,0.2)" }}>
+        {step === "confirm" && selectedTier && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <StepHeader step="confirm" onBack={handleBack} title="Confirm Purchase" />
+            <div className="rounded-xl border-2 border-orange-500 bg-gray-900 p-6" style={{ boxShadow: "0 0 30px rgba(249,115,22,0.2)" }}>
               <div className="flex justify-center">
                 <img
                   src={TIER_IMAGES[selectedTier.rarity]}
@@ -257,43 +250,45 @@ export function BoosterFeature() {
                   className="w-36 object-contain"
                 />
               </div>
-              <div className="text-center">
+              <div className="mt-4 text-center">
                 <h2 className="text-xl font-bold text-white">{TIER_LABELS[selectedTier.rarity] || selectedTier.rarity} Pack</h2>
-                <p className="text-gray-400 text-sm">{EXPANSION.name}</p>
+                <p className="text-sm text-gray-400">{EXPANSION.name} · {selectedTier.rarity}</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-3 space-y-2 text-sm">
-                <div className="flex justify-between text-gray-300">
-                  <span>Contents</span><span className="text-white">5 cards</span>
+              <div className="mt-5 divide-y divide-white/10 text-sm">
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-400">Contents</span><span className="text-white">5 cards</span>
                 </div>
-                <div className="flex justify-between text-gray-300">
-                  <span>Guaranteed</span><span className="text-white">{selectedTier.guaranteedSlots.join(", ")}</span>
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-400">Guaranteed</span><span className="text-white">{selectedTier.guaranteedSlots.join(", ")}</span>
                 </div>
-                <div className="flex justify-between font-bold">
-                  <span className="text-gray-300">Price</span>
-                  <span className="text-orange-400 text-lg">${selectedTier.price} USDC</span>
+                <div className="flex items-baseline justify-between py-2">
+                  <span className="text-gray-400">Price</span>
+                  <span className="text-lg font-bold text-orange-400">${selectedTier.price} USDC</span>
                 </div>
               </div>
-              <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 text-center">
-                <p className="text-blue-300 text-xs">Mock purchase — no real payment will be processed.</p>
-              </div>
+              <p className="mt-4 rounded-lg border border-blue-700/50 bg-blue-900/20 p-3 text-center text-xs text-blue-300">
+                Mock purchase. No real payment will be processed.
+              </p>
             </div>
-            <div className="flex gap-3">
+            <div className="mt-4 flex gap-3">
               <button
+                type="button"
                 onClick={handleBack}
                 disabled={isProcessing}
-                className="flex-1 py-3 rounded-lg border-2 border-orange-500/40 text-gray-300 font-semibold hover:bg-gray-800 transition-all"
+                className="flex-1 rounded-lg border-2 border-orange-500/40 py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirmPurchase}
                 disabled={isProcessing}
-                className="flex-1 py-3 rounded-lg bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white font-semibold transition-all flex items-center justify-center gap-2 border border-orange-400"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-orange-400 bg-gradient-to-r from-orange-600 to-orange-700 py-3 font-semibold text-white transition-colors hover:from-orange-500 hover:to-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 disabled:opacity-70"
                 style={{ boxShadow: "0 0 20px rgba(249,115,22,0.4)" }}
               >
                 {isProcessing ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Processing...
                   </>
                 ) : "Confirm Purchase"}
