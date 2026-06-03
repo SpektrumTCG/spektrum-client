@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { ChevronLeft } from "lucide-react"
 import { toast } from "sonner"
 import { useBoosterVariantStore, variantTemplates } from "@/stores/useBoosterVariantStore"
@@ -97,6 +97,7 @@ export function BoosterFeature() {
   const [step, setStep] = useState<Step>("tier-selection")
   const [selectedTier, setSelectedTier] = useState<(typeof variantTemplates)[0] | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
 
   const handleBack = () => {
     if (step === "confirm") {
@@ -159,11 +160,11 @@ export function BoosterFeature() {
   }
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center">
+    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-start">
       <div className="max-w-md mx-auto p-4 w-full pt-6">
 
         {step === "tier-selection" && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <StepHeader step="tier-selection" onBack={handleBack} title="Genesis Series" />
             <div className="grid grid-cols-2 gap-3">
               {variantTemplates
@@ -240,7 +241,7 @@ export function BoosterFeature() {
         )}
 
         {step === "confirm" && selectedTier && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <StepHeader step="confirm" onBack={handleBack} title="Confirm Purchase" />
             <div className="rounded-xl border-2 border-orange-500 bg-gray-900 p-6" style={{ boxShadow: "0 0 30px rgba(249,115,22,0.2)" }}>
               <div className="flex justify-center">
@@ -266,7 +267,7 @@ export function BoosterFeature() {
                   <span className="text-lg font-bold text-orange-400">${selectedTier.price} USDC</span>
                 </div>
               </div>
-              <p className="mt-4 rounded-lg border border-blue-700/50 bg-blue-900/20 p-3 text-center text-xs text-blue-300">
+              <p className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 text-center text-xs text-gray-400">
                 Mock purchase. No real payment will be processed.
               </p>
             </div>
