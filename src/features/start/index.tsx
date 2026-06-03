@@ -25,7 +25,7 @@ export function StartFeature() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 pb-24 overflow-y-auto">
+    <div className="min-h-full flex flex-col items-center justify-center p-4 pb-24">
       <div className="max-w-md w-full mx-auto text-center flex flex-col items-center">
         <div className="mb-10">
           <img
@@ -36,7 +36,7 @@ export function StartFeature() {
           />
         </div>
 
-        <p className="text-gray-300 text-sm leading-relaxed mb-8 max-w-xs">
+        <p className="text-gray-600 text-sm leading-relaxed mb-8 max-w-xs">
           Browse decks, packs, and the codex freely. Sign in when you’re ready to play or collect.
         </p>
 
@@ -50,10 +50,10 @@ export function StartFeature() {
 
         {!isSignedIn && (
           <>
-            <div className="flex items-center gap-3 w-full my-5 text-[10px] text-gray-500 tracking-[0.2em] uppercase">
-              <div className="flex-1 h-px bg-gray-700/60" />
+            <div className="flex items-center gap-3 w-full my-5 text-[10px] text-gray-400 tracking-[0.2em] uppercase">
+              <div className="flex-1 h-px bg-gray-200" />
               <span>or</span>
-              <div className="flex-1 h-px bg-gray-700/60" />
+              <div className="flex-1 h-px bg-gray-200" />
             </div>
 
             <div className="w-full">

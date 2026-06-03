@@ -1,18 +1,24 @@
 import { ViewTransition } from "react"
 import Image from "next/image"
 import { NavigationBar, HamburgerMenu } from "@/components/layout/NavigationBar"
+import { GutterBackdrop } from "@/components/layout/GutterBackdrop"
 import { AppBootstrap } from "@/components/shared/AppBootstrap"
 import { AuthGateModal } from "@/components/shared/AuthGateModal"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }} className="relative">
+    <>
+    <GutterBackdrop />
+    <div
+      style={{ maxWidth: 480 }}
+      className="relative z-10 mx-auto h-[100dvh] overflow-hidden transform-gpu min-[481px]:my-4 min-[481px]:h-[calc(100dvh-2rem)] min-[481px]:rounded-[28px] min-[481px]:shadow-2xl min-[481px]:ring-1 min-[481px]:ring-white/10"
+    >
     <AppBootstrap />
-    <div className="min-h-dvh w-full relative bg-white overflow-hidden">
+    <div className="h-full w-full relative bg-white overflow-hidden flex flex-col">
       {/* Header bar — anchored during transitions */}
       <div
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-full z-20 pointer-events-none"
-        style={{ maxWidth: 480, viewTransitionName: "site-header" }}
+        className="absolute top-0 left-0 w-full z-20 pointer-events-none overflow-hidden min-[481px]:rounded-t-[28px]"
+        style={{ viewTransitionName: "site-header" }}
       >
         <Image
           src="/ui/v2-ui/bg-header.png"
@@ -45,7 +51,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         />
       </div>
 
-      <div className="relative w-full z-10">
+      <div className="relative w-full z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <main>
           <ViewTransition name="page-content" enter="page-enter" exit="page-exit" default="page-crossfade">
             {children}
@@ -57,5 +63,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <AuthGateModal />
     </div>
     </div>
+    </>
   )
 }

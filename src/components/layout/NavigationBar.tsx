@@ -184,8 +184,8 @@ export function NavigationBar() {
     <AnimatePresence>
       {!isHidden && (
         <motion.div
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50"
-          style={{ maxWidth: 480, height: NAV_HEIGHT, viewTransitionName: "site-nav" }}
+          className="absolute bottom-0 left-0 w-full z-50 overflow-hidden min-[481px]:rounded-b-[28px]"
+          style={{ height: NAV_HEIGHT, viewTransitionName: "site-nav" }}
           initial={{ y: NAV_HEIGHT }}
           animate={{ y: 0 }}
           exit={{ y: NAV_HEIGHT }}
