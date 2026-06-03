@@ -1,5 +1,5 @@
-import { StartFeature } from "@/features/start"
+import { OnboardingFeature } from "@/features/onboarding"
 
 export default function StartPage() {
-  return <StartFeature />
+  return <OnboardingFeature />
 }
