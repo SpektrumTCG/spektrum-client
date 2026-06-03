@@ -11,13 +11,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <GutterBackdrop />
     <div
       style={{ maxWidth: 420 }}
-      className="relative z-10 mx-auto h-[100dvh] overflow-hidden transform-gpu min-[421px]:my-4 min-[421px]:h-[calc(100dvh-2rem)] min-[421px]:rounded-[28px] min-[421px]:shadow-2xl min-[421px]:ring-1 min-[421px]:ring-white/10"
+      className="relative z-10 mx-auto h-[100dvh] overflow-hidden transform-gpu min-[421px]:my-4 min-[421px]:h-[calc(100dvh-2rem)] min-[421px]:rounded-[20px] min-[421px]:shadow-2xl min-[421px]:ring-1 min-[421px]:ring-white/10"
     >
     <AppBootstrap />
     <div className="h-full w-full relative bg-white overflow-hidden flex flex-col">
       {/* Header bar — anchored during transitions */}
       <div
-        className="absolute top-0 left-0 w-full z-20 pointer-events-none overflow-hidden min-[421px]:rounded-t-[28px]"
+        className="absolute top-0 left-0 w-full z-20 pointer-events-none overflow-hidden min-[421px]:rounded-t-[20px]"
         style={{ viewTransitionName: "site-header" }}
       >
         <Image
