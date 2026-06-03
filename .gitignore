@@ -11,3 +11,6 @@ dist/
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# next.js generated
+next-env.d.ts
