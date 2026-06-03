@@ -384,9 +384,8 @@
     font-family: Inter, sans-serif;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    min-height: 100dvh;
+    overflow: hidden;
+    height: 100dvh;
     padding-top: var(--sat);
     padding-bottom: calc(var(--sab) + var(--keyboard-height));
     padding-left: var(--sal);
