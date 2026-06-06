@@ -1,6 +1,7 @@
 "use client"
 
 import { PrivyProvider } from "@privy-io/react-auth"
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { queryClient } from "@/lib/queryClient"
 import { Toaster } from "@/components/ui/sonner"
@@ -15,6 +16,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         embeddedWallets: {
           solana: {
             createOnLogin: "users-without-wallets",
+          },
+        },
+        // Dashboard has external Solana wallet login (Phantom etc.) enabled;
+        // the SDK doesn't bundle connectors, they must be passed explicitly.
+        externalWallets: {
+          solana: {
+            connectors: toSolanaWalletConnectors(),
           },
         },
         appearance: {
