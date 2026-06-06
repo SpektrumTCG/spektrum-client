@@ -20,9 +20,10 @@ const LOAD_TIMEOUT_MS = 3000;
  * intent (e.g. tapping "Open"). Importing this module also pulls the
  * three.js chunk, so a dynamic `import()` of this file is the whole warm-up.
  */
-export function preloadPackOpenerAssets() {
+export function preloadPackOpenerAssets(packImageUrl?: string) {
   useGLTF.preload(PACK_MODEL_URL);
   useTexture.preload('/cards/card_back.png');
+  if (packImageUrl) useTexture.preload(packImageUrl);
 }
 
 interface PackOpener3DProps {
@@ -139,7 +140,7 @@ export function PackOpener3D({
           >
             <PackErrorBoundary onError={handleFail}>
               <PackScene>
-                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} />
+                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packImageUrl={packImageUrl} />
                 <CardEjection
                   count={cards.length}
                   active={stage === 'ejecting'}

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useTexture } from '@react-three/drei';
 import type { MotionValue } from 'framer-motion';
 
 export const PACK_MODEL_URL = '/models/booster-pack.glb';
@@ -13,9 +13,51 @@ const TEAR_LINE = 0.88;                             // crimp starts at 88% of he
 const TEAR_Y = PACK_HEIGHT * (TEAR_LINE - 0.5);     // world y of tear line (model centered)
 const TEAR_TRAVEL_X = 2.2;                          // strip slide distance at progress 1
 
+interface PackArtDecalProps {
+  packImageUrl: string;
+  keepTop: boolean;
+  packSize: THREE.Vector3;
+}
+
+/**
+ * Tier artwork projected onto the pack front as a thin decal plane. Rendered
+ * once per clipped half with the matching world-space clipping plane, so the
+ * crimp-strip slice of the artwork slides and flies off with the strip.
+ */
+function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
+  const texture = useTexture(packImageUrl, (tex) => {
+    const t = Array.isArray(tex) ? tex[0] : tex;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.needsUpdate = true;
+  });
+
+  const material = useMemo(() => {
+    const plane = keepTop
+      ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -TEAR_Y)
+      : new THREE.Plane(new THREE.Vector3(0, -1, 0), TEAR_Y);
+    return new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      clippingPlanes: [plane],
+      metalness: 0.4,
+      roughness: 0.35,
+      envMapIntensity: 1.0,
+    });
+  }, [texture, keepTop]);
+
+  useEffect(() => () => material.dispose(), [material]);
+
+  return (
+    <mesh material={material} position={[0, 0, packSize.z / 2 + 0.012]}>
+      <planeGeometry args={[packSize.x * 0.94, PACK_HEIGHT * 0.97]} />
+    </mesh>
+  );
+}
+
 interface BoosterPackModelProps {
   tearProgress: MotionValue<number>; // 0..1, gesture-driven
   topFly: MotionValue<number>;       // 0..1, torn-stage fly-off
+  packImageUrl: string;
 }
 
 /**
@@ -47,6 +89,12 @@ function useClippedPack(keepTop: boolean): THREE.Group {
             const clone = m.clone();
             clone.clippingPlanes = [plane];
             clone.side = THREE.DoubleSide; // show interior at the cut
+            if (clone instanceof THREE.MeshStandardMaterial) {
+              // foil finish — reflects the PMREM room environment (PackScene)
+              clone.metalness = 0.6;
+              clone.roughness = 0.25;
+              clone.envMapIntensity = 1.2;
+            }
             return clone;
           }
         );
@@ -57,11 +105,17 @@ function useClippedPack(keepTop: boolean): THREE.Group {
   }, [scene, keepTop]);
 }
 
-export function BoosterPackModel({ tearProgress, topFly }: BoosterPackModelProps) {
+export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: BoosterPackModelProps) {
   const wobbleRef = useRef<THREE.Group>(null);
   const topRef = useRef<THREE.Group>(null);
   const body = useClippedPack(false);
   const top = useClippedPack(true);
+
+  // full pack bounds (clipping is shader-level, Box3 sees the whole mesh)
+  const packSize = useMemo(
+    () => new THREE.Box3().setFromObject(body).getSize(new THREE.Vector3()),
+    [body]
+  );
 
   // cloned materials hold GPU resources — release on unmount
   useEffect(() => {
@@ -99,8 +153,10 @@ export function BoosterPackModel({ tearProgress, topFly }: BoosterPackModelProps
   return (
     <group ref={wobbleRef}>
       <primitive object={body} />
+      <PackArtDecal packImageUrl={packImageUrl} keepTop={false} packSize={packSize} />
       <group ref={topRef}>
         <primitive object={top} />
+        <PackArtDecal packImageUrl={packImageUrl} keepTop={true} packSize={packSize} />
       </group>
     </group>
   );

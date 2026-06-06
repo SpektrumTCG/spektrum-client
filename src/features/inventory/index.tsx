@@ -75,7 +75,7 @@ export function InventoryFeature() {
     setShowConfirmModal(true);
     // warm the 3D chunk + GLB + card-back texture while the user reads the modal
     void import('@/components/pack-opener-3d/PackOpener3D')
-      .then((m) => m.preloadPackOpenerAssets())
+      .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
       .catch(() => { /* preload is best-effort; opener falls back if needed */ });
   };
 
