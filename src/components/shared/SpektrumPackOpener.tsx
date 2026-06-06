@@ -1,20 +1,19 @@
 "use client"
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { RARITY_BORDER, RARITY_GLOW, type PackCard } from './rarityStyles';
+import { motion } from 'framer-motion';
+import { CardRevealStack } from './CardRevealStack';
+import { type PackCard } from './rarityStyles';
 
 export type { PackCard };
 
-export type Stage = 'opening' | 'tearing' | 'revealing' | 'flipping' | 'complete';
+export type Stage = 'opening' | 'tearing' | 'reveal';
 
 interface SpektrumPackOpenerProps {
   packImageUrl: string;
   packName: string;
   cards: PackCard[];
   onAnimationComplete: () => void;
-  /** Start mid-sequence (e.g. 'flipping' when a 3D opener already played the tear). */
-  initialStage?: Stage;
 }
 
 export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
@@ -22,10 +21,8 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
   packName,
   cards,
   onAnimationComplete,
-  initialStage = 'opening',
 }) => {
-  const [stage, setStage] = useState<Stage>(initialStage);
-  const [flippedCards, setFlippedCards] = useState<boolean[]>(new Array(cards.length).fill(false));
+  const [stage, setStage] = useState<Stage>('opening');
 
   const particles = useMemo(
     () =>
@@ -44,57 +41,25 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
 
   useEffect(() => {
     if (stage !== 'opening') return;
-    const t1 = setTimeout(() => setStage('tearing'), 600);
-    return () => clearTimeout(t1);
+    const t = setTimeout(() => setStage('tearing'), 600);
+    return () => clearTimeout(t);
   }, [stage]);
 
   useEffect(() => {
     if (stage !== 'tearing') return;
-    const t2 = setTimeout(() => setStage('revealing'), 700);
-    return () => clearTimeout(t2);
-  }, [stage]);
-
-  useEffect(() => {
-    if (stage !== 'revealing') return;
-    const t3 = setTimeout(() => setStage('flipping'), 900);
-    return () => clearTimeout(t3);
-  }, [stage]);
-
-  useEffect(() => {
-    if (stage !== 'flipping') return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    cards.forEach((_, index) => {
-      const t = setTimeout(() => {
-        setFlippedCards(prev => {
-          const next = [...prev];
-          next[index] = true;
-          return next;
-        });
-        if (index === cards.length - 1) {
-          const tComplete = setTimeout(() => setStage('complete'), 600);
-          timers.push(tComplete);
-        }
-      }, index * 150);
-      timers.push(t);
-    });
-    return () => timers.forEach(clearTimeout);
-  }, [stage, cards.length]);
-
-  useEffect(() => {
-    if (stage !== 'complete') return;
-    const t = setTimeout(onAnimationComplete, 600);
+    const t = setTimeout(() => setStage('reveal'), 700);
     return () => clearTimeout(t);
-  }, [stage, onAnimationComplete]);
+  }, [stage]);
 
   const packW = 'w-36 sm:w-44';
   const packH = 'h-48 sm:h-56';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
-      <div className="relative flex flex-col items-center w-full max-w-3xl">
+      <div className="relative flex flex-col items-center w-full max-w-3xl h-full">
 
         {stage === 'opening' && (
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex flex-1 items-center justify-center">
             <motion.div
               className="absolute rounded-full"
               style={{ width: 220, height: 280, background: 'radial-gradient(circle, rgba(251,146,60,0.35) 0%, transparent 70%)' }}
@@ -112,142 +77,54 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
         )}
 
         {stage === 'tearing' && (
-          <div className={`relative ${packW} ${packH}`}>
-            <div className="absolute inset-0 flex items-end justify-center pb-2" style={{ zIndex: 2 }}>
-              <div className="flex justify-center gap-1">
-                {cards.map((_, i) => (
-                  <div key={i} className="w-10 h-14 rounded shadow-lg overflow-hidden">
-                    <img src="/cards/card_back.png" alt="Card" className="w-full h-full object-cover" />
-                  </div>
+          <div className="flex flex-1 items-center justify-center">
+            <div className={`relative ${packW} ${packH}`}>
+              <div className="absolute inset-0 flex items-end justify-center pb-2" style={{ zIndex: 2 }}>
+                <div className="flex justify-center gap-1">
+                  {cards.map((_, i) => (
+                    <div key={i} className="w-10 h-14 rounded shadow-lg overflow-hidden">
+                      <img src="/cards/card_back.png" alt="Card" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <motion.div
+                className={`absolute inset-0 ${packW} ${packH} overflow-hidden`}
+                style={{ clipPath: 'polygon(0 25%, 100% 15%, 100% 100%, 0 100%)', zIndex: 8 }}
+                animate={{ y: 90, opacity: 0 }}
+                transition={{ duration: 0.65, ease: 'easeIn' }}
+              >
+                <img src={packImageUrl} alt={packName} className="w-full h-full object-contain" />
+              </motion.div>
+
+              <motion.div
+                className={`absolute inset-0 ${packW} ${packH} overflow-hidden`}
+                style={{ clipPath: 'polygon(0 0, 100% 0, 100% 15%, 0 25%)', zIndex: 9 }}
+                animate={{ y: -280, x: 160, rotate: 28, opacity: 0 }}
+                transition={{ duration: 0.55, ease: 'easeIn' }}
+              >
+                <img src={packImageUrl} alt={packName} className="w-full h-full object-contain" />
+              </motion.div>
+
+              <div className="absolute inset-0" style={{ zIndex: 20 }}>
+                {particles.map((p, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full bg-yellow-400"
+                    style={{ left: p.left, top: '22%', marginLeft: -4, marginTop: -4 }}
+                    initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+                    animate={{ x: p.dx, y: p.dy, opacity: 0, scale: 0 }}
+                    transition={{ duration: 0.5, delay: p.delay, ease: 'easeOut' }}
+                  />
                 ))}
               </div>
-            </div>
-
-            <motion.div
-              className={`absolute inset-0 ${packW} ${packH} overflow-hidden`}
-              style={{ clipPath: 'polygon(0 25%, 100% 15%, 100% 100%, 0 100%)', zIndex: 8 }}
-              animate={{ y: 90, opacity: 0 }}
-              transition={{ duration: 0.65, ease: 'easeIn' }}
-            >
-              <img src={packImageUrl} alt={packName} className="w-full h-full object-contain" />
-            </motion.div>
-
-            <motion.div
-              className={`absolute inset-0 ${packW} ${packH} overflow-hidden`}
-              style={{ clipPath: 'polygon(0 0, 100% 0, 100% 15%, 0 25%)', zIndex: 9 }}
-              animate={{ y: -280, x: 160, rotate: 28, opacity: 0 }}
-              transition={{ duration: 0.55, ease: 'easeIn' }}
-            >
-              <img src={packImageUrl} alt={packName} className="w-full h-full object-contain" />
-            </motion.div>
-
-            <div className="absolute inset-0" style={{ zIndex: 20 }}>
-              {particles.map((p, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full bg-yellow-400"
-                  style={{ left: p.left, top: '22%', marginLeft: -4, marginTop: -4 }}
-                  initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-                  animate={{ x: p.dx, y: p.dy, opacity: 0, scale: 0 }}
-                  transition={{ duration: 0.5, delay: p.delay, ease: 'easeOut' }}
-                />
-              ))}
             </div>
           </div>
         )}
 
-        {(stage === 'revealing' || stage === 'flipping' || stage === 'complete') && (
-          <div className="flex flex-col items-center gap-6 w-full">
-            <motion.h2
-              className="text-2xl sm:text-3xl font-bold text-white tracking-wide"
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              Your Cards!
-            </motion.h2>
-
-            <div className="flex justify-center flex-wrap gap-2 sm:gap-3">
-              {cards.map((card, i) => (
-                <div
-                  key={i}
-                  className="relative w-20 h-28 sm:w-24 sm:h-32"
-                  style={{ perspective: 1000 }}
-                >
-                  {flippedCards[i] && (
-                    <motion.div
-                      className="absolute inset-0 rounded-lg pointer-events-none"
-                      style={{ zIndex: 2 }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div
-                        className="absolute inset-0 rounded-lg border-2"
-                        style={{
-                          borderColor: RARITY_BORDER[card.rarity ?? 'Common'] ?? RARITY_BORDER.Common,
-                          boxShadow: RARITY_GLOW[card.rarity ?? 'Common'] ?? 'none',
-                        }}
-                      />
-                    </motion.div>
-                  )}
-
-                  <motion.div
-                    className="w-full h-full"
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: i * 0.12, duration: 0.5, ease: 'easeOut' }}
-                    style={{ position: 'relative', transformStyle: 'preserve-3d' }}
-                  >
-                    <motion.div
-                      className="w-full h-full"
-                      style={{ transformStyle: 'preserve-3d', position: 'relative' }}
-                      animate={{ rotateY: flippedCards[i] ? 180 : 0 }}
-                      transition={{ duration: 0.6, ease: 'easeInOut' }}
-                    >
-                      <div
-                        className="absolute inset-0 rounded-lg overflow-hidden shadow-xl"
-                        style={{ backfaceVisibility: 'hidden' }}
-                      >
-                        <img src="/cards/card_back.png" alt="Card Back" className="w-full h-full object-cover" />
-                      </div>
-
-                      <div
-                        className="absolute inset-0 rounded-lg overflow-hidden shadow-xl bg-gray-800 border border-gray-600 flex items-center justify-center"
-                        style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                      >
-                        {card.art || card.imagePath ? (
-                          <img
-                            src={card.art || card.imagePath}
-                            alt={card.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-center px-1">
-                            <div className="text-[10px] text-gray-300 leading-tight">{card.name}</div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </div>
-              ))}
-            </div>
-
-            <AnimatePresence>
-              {stage === 'complete' && (
-                <motion.p
-                  className="text-xl sm:text-2xl font-bold text-orange-400 text-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  Cards Revealed!
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
+        {stage === 'reveal' && (
+          <CardRevealStack cards={cards} onComplete={onAnimationComplete} />
         )}
       </div>
     </div>

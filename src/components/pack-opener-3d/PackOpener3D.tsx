@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { animate, useMotionValue } from 'framer-motion';
+import { animate, motion, useMotionValue } from 'framer-motion';
 import { useGLTF, useTexture } from '@react-three/drei';
-import { SpektrumPackOpener, type PackCard } from '@/components/shared/SpektrumPackOpener';
+import { SpektrumPackOpener } from '@/components/shared/SpektrumPackOpener';
+import { type PackCard } from '@/components/shared/rarityStyles';
+import { CardRevealStack } from '@/components/shared/CardRevealStack';
 import { canTransition, type OpenerStage } from './openerStages';
 import { useWebGLSupport } from './useWebGLSupport';
 import { PackScene } from './PackScene';
@@ -72,6 +74,7 @@ export function PackOpener3D({
   const [failed, setFailed] = useState(false);
   const [modelReady, setModelReady] = useState(false);
   const [stage, setStageRaw] = useState<OpenerStage>('idle');
+  const [canvasGone, setCanvasGone] = useState(false);
   const tearProgress = useMotionValue(0);
   const topFly = useMotionValue(0);
   const tearHandledRef = useRef(false);
@@ -111,35 +114,41 @@ export function PackOpener3D({
     );
   }
 
-  // Handoff: cards flew to camera → existing flip-reveal takes over
-  if (stage === 'reveal') {
-    return (
-      <SpektrumPackOpener
-        packImageUrl={packImageUrl}
-        packName={packName}
-        cards={cards}
-        onAnimationComplete={onAnimationComplete}
-        initialStage="flipping"
-      />
-    );
-  }
-
   const interactive = stage === 'idle' || stage === 'tearing';
+  const revealing = stage === 'reveal';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative w-full max-w-sm h-[70vh]">
-        <PackErrorBoundary onError={handleFail}>
-          <PackScene>
-            <BoosterPackModel tearProgress={tearProgress} topFly={topFly} />
-            <CardEjection
-              count={cards.length}
-              active={stage === 'ejecting'}
-              onComplete={handleEjectComplete}
-            />
-            <ModelReady onReady={handleModelReady} />
-          </PackScene>
-        </PackErrorBoundary>
+        {revealing && (
+          <CardRevealStack cards={cards} onComplete={onAnimationComplete} />
+        )}
+
+        {/* Canvas stays mounted through the crossfade so the eject end frame
+            fades over the matching 2D stack (match-cut), then unmounts. */}
+        {!canvasGone && (
+          <motion.div
+            className="absolute inset-0"
+            animate={{ opacity: revealing ? 0 : 1 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            onAnimationComplete={() => {
+              if (revealing) setCanvasGone(true);
+            }}
+            style={{ pointerEvents: revealing ? 'none' : 'auto' }}
+          >
+            <PackErrorBoundary onError={handleFail}>
+              <PackScene>
+                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} />
+                <CardEjection
+                  count={cards.length}
+                  active={stage === 'ejecting'}
+                  onComplete={handleEjectComplete}
+                />
+                <ModelReady onReady={handleModelReady} />
+              </PackScene>
+            </PackErrorBoundary>
+          </motion.div>
+        )}
 
         {!modelReady && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -147,13 +156,15 @@ export function PackOpener3D({
           </div>
         )}
 
-        <TearGestureOverlay
-          tearProgress={tearProgress}
-          enabled={interactive && modelReady}
-          onTearStart={() => setStage('tearing')}
-          onTearComplete={handleTearComplete}
-          onTearReset={() => setStage('idle')}
-        />
+        {!revealing && (
+          <TearGestureOverlay
+            tearProgress={tearProgress}
+            enabled={interactive && modelReady}
+            onTearStart={() => setStage('tearing')}
+            onTearComplete={handleTearComplete}
+            onTearReset={() => setStage('idle')}
+          />
+        )}
 
         {interactive && modelReady && (
           <p className="absolute top-4 inset-x-0 text-center text-orange-300 text-sm animate-pulse pointer-events-none">
