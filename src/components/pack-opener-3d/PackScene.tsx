@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef } from 'react';
+import React, { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 
@@ -26,7 +26,11 @@ export function PackScene({ children }: { children: React.ReactNode }) {
       <directionalLight position={[3, 5, 4]} intensity={1.4} />
       <directionalLight position={[-4, 2, 2]} intensity={0.5} color="#fb923c" />
       <SweepLight />
-      {children}
+      {/* Suspense INSIDE the Canvas: asset loading must never suspend the Canvas
+          itself. If it bubbles up, React hides + re-shows the subtree, R3F tears
+          down the renderer (forceContextLoss) and recreates it on the same canvas
+          element whose context is now permanently lost → blank screen. */}
+      <Suspense fallback={null}>{children}</Suspense>
     </Canvas>
   );
 }

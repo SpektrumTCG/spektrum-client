@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { animate, useMotionValue } from 'framer-motion';
 import { SpektrumPackOpener, type PackCard } from '@/components/shared/SpektrumPackOpener';
 import { canTransition, type OpenerStage } from './openerStages';
@@ -39,7 +39,11 @@ class PackErrorBoundary extends React.Component<BoundaryProps, { hasError: boole
   }
 }
 
-/** Mounts only once Suspense resolves — signals the GLB finished loading. */
+/**
+ * Rendered INSIDE the Canvas, after the asset-loading siblings, within
+ * PackScene's internal Suspense — mounts only once all 3D assets resolved.
+ * (useEffect works in R3F's reconciler.)
+ */
 function ModelReady({ onReady }: { onReady: () => void }) {
   useEffect(() => {
     onReady();
@@ -115,17 +119,15 @@ export function PackOpener3D({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative w-full max-w-sm h-[70vh]">
         <PackErrorBoundary onError={handleFail}>
-          <Suspense fallback={null}>
-            <PackScene>
-              <BoosterPackModel tearProgress={tearProgress} topFly={topFly} />
-              <CardEjection
-                count={cards.length}
-                active={stage === 'ejecting'}
-                onComplete={handleEjectComplete}
-              />
-            </PackScene>
+          <PackScene>
+            <BoosterPackModel tearProgress={tearProgress} topFly={topFly} />
+            <CardEjection
+              count={cards.length}
+              active={stage === 'ejecting'}
+              onComplete={handleEjectComplete}
+            />
             <ModelReady onReady={handleModelReady} />
-          </Suspense>
+          </PackScene>
         </PackErrorBoundary>
 
         {!modelReady && (
