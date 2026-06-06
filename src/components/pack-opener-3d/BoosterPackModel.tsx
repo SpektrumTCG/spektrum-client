@@ -106,4 +106,6 @@ export function BoosterPackModel({ tearProgress, topFly }: BoosterPackModelProps
   );
 }
 
-useGLTF.preload(PACK_MODEL_URL);
+// Note: no module-level useGLTF.preload — assets are warmed on user intent via
+// preloadPackOpenerAssets() (PackOpener3D.tsx) so inventory visitors who never
+// open a pack don't download the GLB.

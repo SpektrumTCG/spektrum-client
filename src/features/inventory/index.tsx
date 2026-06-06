@@ -10,7 +10,21 @@ import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { useRequireAuth } from '@/components/shared/AuthGateModal';
 import { CardRewardPopup } from '@/components/shared/CardRewardPopup';
 import { AnimatedCardReveal } from '@/components/shared/AnimatedCardReveal';
-import { PackOpener3D } from '@/components/pack-opener-3d/PackOpener3D';
+import dynamic from 'next/dynamic';
+
+// three.js + GLB only load when a pack is actually opened — keeps the
+// inventory bundle light for users who just browse.
+const PackOpener3D = dynamic(
+  () => import('@/components/pack-opener-3d/PackOpener3D').then((m) => m.PackOpener3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-orange-400 border-t-transparent" />
+      </div>
+    ),
+  }
+);
 import { CollectionBadges } from '@/components/shared/CollectionBadges';
 import { Button } from '@/components/ui/button';
 import { Package, ExternalLink, ShoppingCart } from 'lucide-react';
@@ -59,6 +73,10 @@ export function InventoryFeature() {
     if (isOpening || isProcessing) return;
     setPendingPackOpen(pack);
     setShowConfirmModal(true);
+    // warm the 3D chunk + GLB + card-back texture while the user reads the modal
+    void import('@/components/pack-opener-3d/PackOpener3D')
+      .then((m) => m.preloadPackOpenerAssets())
+      .catch(() => { /* preload is best-effort; opener falls back if needed */ });
   };
 
   const handleConfirmOpenPack = async () => {

@@ -2,15 +2,26 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { animate, useMotionValue } from 'framer-motion';
+import { useGLTF, useTexture } from '@react-three/drei';
 import { SpektrumPackOpener, type PackCard } from '@/components/shared/SpektrumPackOpener';
 import { canTransition, type OpenerStage } from './openerStages';
 import { useWebGLSupport } from './useWebGLSupport';
 import { PackScene } from './PackScene';
-import { BoosterPackModel } from './BoosterPackModel';
+import { BoosterPackModel, PACK_MODEL_URL } from './BoosterPackModel';
 import { CardEjection } from './CardEjection';
 import { TearGestureOverlay } from './TearGestureOverlay';
 
 const LOAD_TIMEOUT_MS = 3000;
+
+/**
+ * Warm the 3D assets while the user reads the confirm modal — call on user
+ * intent (e.g. tapping "Open"). Importing this module also pulls the
+ * three.js chunk, so a dynamic `import()` of this file is the whole warm-up.
+ */
+export function preloadPackOpenerAssets() {
+  useGLTF.preload(PACK_MODEL_URL);
+  useTexture.preload('/cards/card_back.png');
+}
 
 interface PackOpener3DProps {
   packImageUrl: string;
