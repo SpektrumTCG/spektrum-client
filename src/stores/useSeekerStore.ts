@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { apiFetch } from "@/lib/api"
 
 interface SeekerState {
   isSeekerVerified: boolean
@@ -24,7 +25,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
 
   fetchSeekerStatus: async (walletAddress: string) => {
     try {
-      const response = await fetch(`/api/seeker/status/${walletAddress}`, { credentials: 'include' })
+      const response = await apiFetch(`/api/seeker/status/${walletAddress}`, { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         set({
@@ -42,7 +43,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
   startVerification: async () => {
     set({ isVerifying: true, verificationError: null })
     try {
-      const response = await fetch('/api/seeker/verify', {
+      const response = await apiFetch('/api/seeker/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -72,7 +73,7 @@ export const useSeekerStore = create<SeekerState>()((set) => ({
 
   claimReward: async () => {
     try {
-      const response = await fetch('/api/seeker/claim-reward', {
+      const response = await apiFetch('/api/seeker/claim-reward', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

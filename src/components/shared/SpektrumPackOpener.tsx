@@ -5,21 +5,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type RarityType = 'Common' | 'Uncommon' | 'Rare' | 'Super Rare' | 'Mythic';
 
-interface PackCard {
+export interface PackCard {
   name: string;
   art?: string;
   imagePath?: string;
   rarity?: RarityType;
 }
 
+export type Stage = 'opening' | 'tearing' | 'revealing' | 'flipping' | 'complete';
+
 interface SpektrumPackOpenerProps {
   packImageUrl: string;
   packName: string;
   cards: PackCard[];
   onAnimationComplete: () => void;
+  /** Start mid-sequence (e.g. 'flipping' when a 3D opener already played the tear). */
+  initialStage?: Stage;
 }
-
-type Stage = 'opening' | 'tearing' | 'revealing' | 'flipping' | 'complete';
 
 const RARITY_GLOW: Record<string, string> = {
   Mythic:       '0 0 28px 6px rgba(255,215,0,0.85)',
@@ -42,8 +44,9 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
   packName,
   cards,
   onAnimationComplete,
+  initialStage = 'opening',
 }) => {
-  const [stage, setStage] = useState<Stage>('opening');
+  const [stage, setStage] = useState<Stage>(initialStage);
   const [flippedCards, setFlippedCards] = useState<boolean[]>(new Array(cards.length).fill(false));
 
   const particles = useMemo(
@@ -62,9 +65,10 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
   );
 
   useEffect(() => {
+    if (stage !== 'opening') return;
     const t1 = setTimeout(() => setStage('tearing'), 600);
     return () => clearTimeout(t1);
-  }, []);
+  }, [stage]);
 
   useEffect(() => {
     if (stage !== 'tearing') return;
@@ -108,7 +112,7 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
   const packH = 'h-48 sm:h-56';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative flex flex-col items-center w-full max-w-3xl">
 
         {stage === 'opening' && (

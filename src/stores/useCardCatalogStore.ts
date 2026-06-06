@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { apiFetch } from "@/lib/api"
 
 interface CardCatalogEntry {
   id: string
@@ -18,7 +19,7 @@ export const useCardCatalogStore = create<CardCatalogStore>()((set) => ({
   isLoaded: false,
   loadCatalog: async () => {
     try {
-      const res = await fetch('/api/card-catalog', { credentials: 'include' })
+      const res = await apiFetch('/api/card-catalog', { credentials: 'include' })
       if (!res.ok) return
       const data = await res.json()
       const entries: any[] = Array.isArray(data)

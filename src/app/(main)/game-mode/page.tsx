@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { apiFetch } from "@/lib/api"
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -60,7 +61,7 @@ export default function GameModePage() {
     }
     setIsSavingName(true)
     try {
-      const response = await fetch('/api/player/profile', {
+      const response = await apiFetch('/api/player/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress, displayName: playerName }),

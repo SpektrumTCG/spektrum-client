@@ -28,7 +28,7 @@ Layout expected:
    npm install
    ```
 2. Copy `.env.example` → `.env.local` and fill in:
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `NEXT_PUBLIC_PRIVY_APP_ID` (from dashboard.privy.io — enable Google + email login and Solana embedded wallets)
    - `NEXT_PUBLIC_API_URL=http://localhost:3001`
    - `API_URL=http://localhost:3001`
 3. Boot `spektrum-server` in a separate terminal.

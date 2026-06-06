@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiFetch } from '@/lib/api';
 import { ACHIEVEMENTS, type Achievement, type AchievementCategory } from '@/lib/achievements';
 import { toast } from 'sonner';
 
@@ -240,7 +241,7 @@ export const useAchievementsStore = create<AchievementsStore>()((set, get) => ({
 
   syncWithServer: async (walletAddress: string) => {
     try {
-      const response = await fetch(`/api/achievements/${walletAddress}`, { credentials: 'include' });
+      const response = await apiFetch(`/api/achievements/${walletAddress}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
 
@@ -278,7 +279,7 @@ export const useAchievementsStore = create<AchievementsStore>()((set, get) => ({
     if (!walletAddress) return;
 
     try {
-      const response = await fetch(`/api/achievements/${walletAddress}/${achievementId}/progress`, {
+      const response = await apiFetch(`/api/achievements/${walletAddress}/${achievementId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

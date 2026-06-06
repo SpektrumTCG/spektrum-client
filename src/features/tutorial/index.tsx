@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useDeckStore } from '@/stores/useDeckStore';
 import { useAchievementsStore } from '@/stores/useAchievementsStore';
@@ -34,8 +35,8 @@ export function TutorialFeature() {
       setRitualCompleted(false);
 
       Promise.all([
-        fetch(`/api/player/ritual-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-        fetch(`/api/player/tutorial-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+        apiFetch(`/api/player/ritual-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+        apiFetch(`/api/player/tutorial-status/${walletAddress}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
       ]).then(([ritualData, tutorialData]) => {
         if (ritualData) {
           setRitualCompleted(ritualData.hasCompletedRitual === true);
@@ -66,7 +67,7 @@ export function TutorialFeature() {
       completedSteps: Array.from(completed)
     }));
     if (walletAddress) {
-      fetch('/api/player/tutorial-progress', {
+      apiFetch('/api/player/tutorial-progress', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -109,7 +110,7 @@ export function TutorialFeature() {
   const markTutorialCompleted = () => {
     localStorage.setItem('tutorial_completed', 'true');
     if (walletAddress) {
-      fetch('/api/player/tutorial-progress', {
+      apiFetch('/api/player/tutorial-progress', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -135,7 +136,7 @@ export function TutorialFeature() {
   const handleRitualComplete = async (faction: string, element: string, deckId: string) => {
     if (walletAddress) {
       try {
-        await fetch('/api/player/complete-ritual', {
+        await apiFetch('/api/player/complete-ritual', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

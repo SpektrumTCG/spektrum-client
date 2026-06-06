@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 import { motion } from 'framer-motion';
 import { useDeckStore } from '@/stores/useDeckStore';
 import type { Deck } from '@/stores/useDeckStore';
@@ -182,7 +183,7 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
       if (!walletAddress) return;
 
       try {
-        await fetch(`/api/decks/${deckId}`, { method: 'DELETE', credentials: 'include' });
+        await apiFetch(`/api/decks/${deckId}`, { method: 'DELETE', credentials: 'include' });
       } catch {
         // database delete is supplementary
       }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { apiFetch } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
@@ -39,7 +40,7 @@ export function PremadeDecksFeature() {
 
   useEffect(() => {
     if (!walletAddress || !isConnected) return
-    fetch(`/api/purchases/premade-decks/${walletAddress}`, { credentials: "include" })
+    apiFetch(`/api/purchases/premade-decks/${walletAddress}`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : { premadeDecks: [] })
       .then((data) => {
         const ids = new Set<string>(data.premadeDecks?.map((d: { deckId: string }) => d.deckId) ?? [])
@@ -68,7 +69,7 @@ export function PremadeDecksFeature() {
 
     try {
       if (walletAddress && isConnected) {
-        await fetch("/api/player/connect", {
+        await apiFetch("/api/player/connect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -76,7 +77,7 @@ export function PremadeDecksFeature() {
         })
       }
 
-      const response = await fetch("/api/purchases/claim-premade-deck", {
+      const response = await apiFetch("/api/purchases/claim-premade-deck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

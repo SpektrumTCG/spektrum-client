@@ -10,7 +10,7 @@ import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { useRequireAuth } from '@/components/shared/AuthGateModal';
 import { CardRewardPopup } from '@/components/shared/CardRewardPopup';
 import { AnimatedCardReveal } from '@/components/shared/AnimatedCardReveal';
-import { SpektrumPackOpener } from '@/components/shared/SpektrumPackOpener';
+import { PackOpener3D } from '@/components/pack-opener-3d/PackOpener3D';
 import { CollectionBadges } from '@/components/shared/CollectionBadges';
 import { Button } from '@/components/ui/button';
 import { Package, ExternalLink, ShoppingCart } from 'lucide-react';
@@ -264,9 +264,9 @@ export function InventoryFeature() {
         />
       )}
 
-      {/* Spektrum Pack Opener */}
+      {/* 3D Pack Opener (falls back to CSS opener without WebGL) */}
       {showOpeningAnimation && openingPack && (
-        <SpektrumPackOpener
+        <PackOpener3D
           packImageUrl={getPackImageUrl(openingPack)}
           packName={openingPack.name}
           cards={animationCards}
