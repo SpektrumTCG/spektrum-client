@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { animate, useMotionValue } from 'framer-motion';
 import { SpektrumPackOpener, type PackCard } from '@/components/shared/SpektrumPackOpener';
 import { canTransition, type OpenerStage } from './openerStages';
@@ -59,6 +59,7 @@ export function PackOpener3D({
   const [stage, setStageRaw] = useState<OpenerStage>('idle');
   const tearProgress = useMotionValue(0);
   const topFly = useMotionValue(0);
+  const tearHandledRef = useRef(false);
 
   const setStage = useCallback((to: OpenerStage) => {
     setStageRaw((from) => (canTransition(from, to) ? to : from));
@@ -72,6 +73,8 @@ export function PackOpener3D({
   }, [modelReady, failed]);
 
   const handleTearComplete = useCallback(() => {
+    if (tearHandledRef.current) return; // double pointer-up → single tear
+    tearHandledRef.current = true;
     setStage('torn');
     if (typeof navigator !== 'undefined') navigator.vibrate?.(40);
     animate(topFly, 1, { duration: 0.5, ease: 'easeIn' }).then(() => setStage('ejecting'));
@@ -109,7 +112,7 @@ export function PackOpener3D({
   const interactive = stage === 'idle' || stage === 'tearing';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative w-full max-w-sm h-[70vh]">
         <PackErrorBoundary onError={handleFail}>
           <Suspense fallback={null}>

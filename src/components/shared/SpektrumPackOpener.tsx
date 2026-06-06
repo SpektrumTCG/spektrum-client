@@ -112,7 +112,7 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
   const packH = 'h-48 sm:h-56';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative flex flex-col items-center w-full max-w-3xl">
 
         {stage === 'opening' && (
