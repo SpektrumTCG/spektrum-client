@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useTexture } from '@react-three/drei';
 import type { MotionValue } from 'framer-motion';
+import { applyTearEdge, JAG_AMP, type TearEdgeUniforms } from './tearEdgeShader';
 
 export const PACK_MODEL_URL = '/models/booster-pack.glb';
 
@@ -21,21 +22,23 @@ interface PackArtDecalProps {
 
 /**
  * Tier artwork projected onto the pack front as a thin decal plane. Rendered
- * once per clipped half with the matching world-space clipping plane, so the
- * crimp-strip slice of the artwork slides and flies off with the strip.
+ * once per clipped half with the matching (jag-widened) clipping plane and the
+ * same jagged-discard shader, so the crimp-strip slice of the artwork tears
+ * and flies off with the strip.
  */
 function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
   const texture = useTexture(packImageUrl, (tex) => {
     const t = Array.isArray(tex) ? tex[0] : tex;
     t.colorSpace = THREE.SRGBColorSpace;
     t.needsUpdate = true;
   });
 
-  const material = useMemo(() => {
+  const { material, uniforms } = useMemo(() => {
     const plane = keepTop
-      ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -TEAR_Y)
-      : new THREE.Plane(new THREE.Vector3(0, -1, 0), TEAR_Y);
-    return new THREE.MeshStandardMaterial({
+      ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -(TEAR_Y - JAG_AMP))
+      : new THREE.Plane(new THREE.Vector3(0, -1, 0), TEAR_Y + JAG_AMP);
+    const m = new THREE.MeshStandardMaterial({
       map: texture,
       transparent: true,
       clippingPlanes: [plane],
@@ -43,12 +46,31 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
       roughness: 0.35,
       envMapIntensity: 1.0,
     });
+    const u = applyTearEdge(m, keepTop, TEAR_Y);
+    return { material: m, uniforms: u };
   }, [texture, keepTop]);
 
   useEffect(() => () => material.dispose(), [material]);
 
+  // hold the shader uniforms in a ref so the useFrame closure mutates a
+  // mutable container (matches the ref-mutation idiom used for transforms)
+  const uniformsRef = useRef(uniforms);
+  useEffect(() => {
+    uniformsRef.current = uniforms;
+  }, [uniforms]);
+
+  useFrame(() => {
+    if (!keepTop || !meshRef.current) return;
+    // top decal sits inside topRef's group — track that group's transform
+    const parent = meshRef.current.parent;
+    if (parent) {
+      uniformsRef.current.uTearY.value = TEAR_Y + parent.position.y;
+      uniformsRef.current.uOffsetX.value = parent.position.x;
+    }
+  });
+
   return (
-    <mesh material={material} position={[0, 0, packSize.z / 2 + 0.012]}>
+    <mesh ref={meshRef} material={material} position={[0, 0, packSize.z / 2 + 0.012]}>
       <planeGeometry args={[packSize.x * 0.94, PACK_HEIGHT * 0.97]} />
     </mesh>
   );
@@ -65,7 +87,7 @@ interface BoosterPackModelProps {
  * it into crimp strip (top ~12%) and body. Planes stay fixed in world space, so
  * the strip's tear edge holds while it slides sideways/up and away.
  */
-function useClippedPack(keepTop: boolean): THREE.Group {
+function useClippedPack(keepTop: boolean): { root: THREE.Group; tearUniforms: TearEdgeUniforms[] } {
   const { scene } = useGLTF(PACK_MODEL_URL);
   return useMemo(() => {
     const root = scene.clone(true);
@@ -78,9 +100,13 @@ function useClippedPack(keepTop: boolean): THREE.Group {
     const scaledBox = new THREE.Box3().setFromObject(root);
     root.position.sub(scaledBox.getCenter(new THREE.Vector3()));
 
+    // Planes widened by JAG_AMP: the jagged shader discard owns the visible
+    // edge; the plane is just a safety clip beyond the jag band.
     const plane = keepTop
-      ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -TEAR_Y)  // keep y > TEAR_Y
-      : new THREE.Plane(new THREE.Vector3(0, -1, 0), TEAR_Y); // keep y < TEAR_Y
+      ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -(TEAR_Y - JAG_AMP))
+      : new THREE.Plane(new THREE.Vector3(0, -1, 0), TEAR_Y + JAG_AMP);
+
+    const tearUniforms: TearEdgeUniforms[] = [];
 
     root.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
@@ -95,21 +121,28 @@ function useClippedPack(keepTop: boolean): THREE.Group {
               clone.roughness = 0.25;
               clone.envMapIntensity = 1.2;
             }
+            tearUniforms.push(applyTearEdge(clone, keepTop, TEAR_Y));
             return clone;
           }
         );
         obj.material = Array.isArray(obj.material) ? mats : mats[0];
       }
     });
-    return root;
+    return { root, tearUniforms };
   }, [scene, keepTop]);
 }
 
 export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: BoosterPackModelProps) {
   const wobbleRef = useRef<THREE.Group>(null);
   const topRef = useRef<THREE.Group>(null);
-  const body = useClippedPack(false);
-  const top = useClippedPack(true);
+  const { root: body } = useClippedPack(false);
+  const { root: top, tearUniforms: topUniforms } = useClippedPack(true);
+  // hold the strip's shader uniforms in a ref so useFrame mutates a mutable
+  // container (matches the ref-mutation idiom used for transforms below)
+  const topUniformsRef = useRef(topUniforms);
+  useEffect(() => {
+    topUniformsRef.current = topUniforms;
+  }, [topUniforms]);
 
   // full pack bounds (clipping is shader-level, Box3 sees the whole mesh)
   const packSize = useMemo(
@@ -147,6 +180,14 @@ export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: Booster
       topRef.current.position.y = f * 3;
       topRef.current.rotation.z = -p * 0.12 - f * 1.2;
       topRef.current.visible = f < 1;
+      // keep the jag band glued to the strip as it slides (x) and flies (y)
+      const uy = TEAR_Y + topRef.current.position.y;
+      const ux = topRef.current.position.x;
+      const us = topUniformsRef.current;
+      for (let i = 0; i < us.length; i++) {
+        us[i].uTearY.value = uy;
+        us[i].uOffsetX.value = ux;
+      }
     }
   });
 
