@@ -129,6 +129,7 @@ export function PackOpener3D({
         {!canvasGone && (
           <motion.div
             className="absolute inset-0"
+            initial={{ opacity: 1 }}
             animate={{ opacity: revealing ? 0 : 1 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
             onAnimationComplete={() => {
