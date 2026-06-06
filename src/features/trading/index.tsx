@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { SignInButton, SignOutButton } from '@clerk/nextjs';
+import { useAuthSession } from '@/lib/auth';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import type { Card } from '@spektrum/shared';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 
 export function TradingFeature() {
+  const { login, logout } = useAuthSession();
   const {
     isConnected,
     walletAddress,
@@ -163,21 +164,23 @@ export function TradingFeature() {
                   <div className="text-xs text-gray-500 mt-1">
                     {nftCards.length} NFT{nftCards.length !== 1 ? 's' : ''}
                   </div>
-                  <SignOutButton>
-                    <Button variant="outline" size="sm" onClick={resetTradingState} className="mt-2">
-                      Disconnect
-                    </Button>
-                  </SignOutButton>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { resetTradingState(); logout(); }}
+                    className="mt-2"
+                  >
+                    Disconnect
+                  </Button>
                 </div>
               ) : (
-                <SignInButton mode="modal">
-                  <Button
-                    disabled={connectionStatus === 'connecting'}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Wallet'}
-                  </Button>
-                </SignInButton>
+                <Button
+                  onClick={() => login()}
+                  disabled={connectionStatus === 'connecting'}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
               )}
             </div>
           </div>

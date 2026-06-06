@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiFetch } from '@/lib/api';
 import { persist } from 'zustand/middleware';
 import type { Card, ElementType, RarityType } from '@spektrum/shared';
 import { useDeckStore } from './useDeckStore';
@@ -117,7 +118,7 @@ export async function fetchCardCatalog(): Promise<Card[]> {
   if (cachedCatalogCards) return cachedCatalogCards;
   if (catalogFetchPromise) return catalogFetchPromise;
 
-  catalogFetchPromise = fetch('/api/cards/catalog', { credentials: 'include' })
+  catalogFetchPromise = apiFetch('/api/cards/catalog', { credentials: 'include' })
     .then(res => res.ok ? res.json() : { cards: [] })
     .then((data: any) => {
       const dbCards: any[] = data.cards || data || [];

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiFetch } from '@/lib/api';
 import { persist } from 'zustand/middleware';
 import type { Card, AvatarCard, ActionCard } from '@spektrum/shared';
 import { cardRegistry } from '@spektrum/shared/data';
@@ -158,7 +159,7 @@ export const useDeckStore = create<DeckStore>()(
 
             const ownedCards = cards.filter(c => !((c as any).cardId || c.id).includes('-demo-'));
             const cardIds = ownedCards.map(c => (c as any).cardId || c.id);
-            const response = await fetch('/api/decks/save', {
+            const response = await apiFetch('/api/decks/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -214,7 +215,7 @@ export const useDeckStore = create<DeckStore>()(
                 .filter(c => !((c as any).cardId || c.id).includes('-demo-'))
                 .map(c => (c as any).cardId || c.id);
               const coverCardId = updatedDeck.coverCardId || null;
-              const response = await fetch('/api/decks/save', {
+              const response = await apiFetch('/api/decks/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -270,7 +271,7 @@ export const useDeckStore = create<DeckStore>()(
               return;
             }
 
-            await fetch('/api/decks/set-active', {
+            await apiFetch('/api/decks/set-active', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -402,7 +403,7 @@ export const useDeckStore = create<DeckStore>()(
             return;
           }
 
-          const response = await fetch(`/api/cards/${walletAddress}`, { credentials: 'include' });
+          const response = await apiFetch(`/api/cards/${walletAddress}`, { credentials: 'include' });
           const data = await response.json();
           const dbCards = data.cards || [];
 
@@ -525,7 +526,7 @@ export const useDeckStore = create<DeckStore>()(
             return;
           }
 
-          const response = await fetch(`/api/decks/${walletAddress}`, { credentials: 'include' });
+          const response = await apiFetch(`/api/decks/${walletAddress}`, { credentials: 'include' });
           if (!response.ok) {
             return;
           }

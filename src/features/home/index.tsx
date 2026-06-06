@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { apiFetch } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
 import { Loader2, Sparkles } from "lucide-react"
@@ -69,7 +70,7 @@ export function HomeFeature() {
     const check = async () => {
       if (!isConnected || !walletAddress || welcomeCheckDone) return
       try {
-        const res = await fetch(`/api/player/welcome-status/${walletAddress}`, { credentials: "include" })
+        const res = await apiFetch(`/api/player/welcome-status/${walletAddress}`, { credentials: "include" })
         if (res.ok) {
           const data = await res.json()
           if (!data.hasSeenWelcome) setShowWelcomePopup(true)
@@ -85,7 +86,7 @@ export function HomeFeature() {
   const handleWelcomeDismiss = async () => {
     if (!walletAddress) return
     try {
-      await fetch("/api/player/welcome-seen", {
+      await apiFetch("/api/player/welcome-seen", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

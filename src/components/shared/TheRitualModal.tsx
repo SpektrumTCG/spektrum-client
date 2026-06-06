@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useCallback } from 'react';
+import { apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Shield, Skull, Flame, Droplets, Sparkles, Check, X } from 'lucide-react';
 import { useWalletStore } from '@/stores/useWalletStore';
@@ -119,7 +120,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
         return;
       }
 
-      const connectResponse = await fetch('/api/player/connect', {
+      const connectResponse = await apiFetch('/api/player/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -128,7 +129,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
 
       if (!connectResponse.ok) {
         await new Promise(r => setTimeout(r, 500));
-        await fetch('/api/player/connect', {
+        await apiFetch('/api/player/connect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -138,7 +139,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
 
       await new Promise(r => setTimeout(r, 300));
 
-      let response = await fetch('/api/purchases/claim-starter-deck', {
+      let response = await apiFetch('/api/purchases/claim-starter-deck', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -156,7 +157,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
         }
 
         await new Promise(r => setTimeout(r, 1000));
-        response = await fetch('/api/purchases/claim-starter-deck', {
+        response = await apiFetch('/api/purchases/claim-starter-deck', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

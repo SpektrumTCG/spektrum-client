@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SignInButton, useUser } from "@clerk/nextjs"
+import { useAuthSession } from "@/lib/auth"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 interface Slide {
@@ -40,7 +40,7 @@ const SLIDES: Slide[] = [
 
 export function OnboardingFeature() {
   const router = useRouter()
-  const { isLoaded, isSignedIn } = useUser()
+  const { isLoaded, isSignedIn, login } = useAuthSession()
   const reduceMotion = useReducedMotion()
   const [index, setIndex] = useState(0)
   const touchStart = useRef(0)
@@ -163,11 +163,9 @@ export function OnboardingFeature() {
       {/* CTA — NEXT advances slides; GET STARTED opens Clerk connect-wallet */}
       <div className="px-6">
         {isLast ? (
-          <SignInButton mode="modal">
-            <button className={ctaClass} style={ctaStyle}>
-              GET STARTED
-            </button>
-          </SignInButton>
+          <button onClick={() => login()} className={ctaClass} style={ctaStyle}>
+            GET STARTED
+          </button>
         ) : (
           <button onClick={next} className={ctaClass} style={ctaStyle}>
             NEXT

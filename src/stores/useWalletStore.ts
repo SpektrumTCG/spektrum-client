@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiFetch } from '@/lib/api';
 import { cardNftService, type WalletStatus } from '@/features/blockchain/solana/cardNftService';
 import type { Card } from '@spektrum/shared';
 
@@ -23,7 +24,7 @@ interface WalletStore {
   playerProfile: PlayerProfile | null;
   isNewPlayer: boolean;
 
-  hydrateFromClerk: (input: { walletAddress: string | null; walletType?: string | null }) => Promise<void>;
+  hydrateFromAuth: (input: { walletAddress: string | null; walletType?: string | null }) => Promise<void>;
   clearOnSignOut: () => Promise<void>;
   refreshWalletData: () => Promise<void>;
   syncNftCards: () => Promise<void>;
@@ -49,7 +50,7 @@ export const useWalletStore = create<WalletStore>()((set, get) => ({
   lastConnectionError: null,
   playerProfile: null,
 
-  hydrateFromClerk: async ({ walletAddress, walletType }) => {
+  hydrateFromAuth: async ({ walletAddress, walletType }) => {
     if (!walletAddress) {
       cardNftService.setWallet(null);
       set({
@@ -93,15 +94,14 @@ export const useWalletStore = create<WalletStore>()((set, get) => ({
       connectionStatus: 'connecting',
       isReconnecting: true,
       walletAddress,
-      walletType: walletType ?? 'clerk',
+      walletType: walletType ?? 'privy',
       lastConnectionError: null,
     });
 
     try {
-      const response = await fetch('/api/player/connect', {
+      const response = await apiFetch('/api/player/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
       });
 
       if (response.ok) {

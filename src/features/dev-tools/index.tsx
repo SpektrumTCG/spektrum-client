@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { apiFetch } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { BackButton } from "@/components/shared/BackButton"
@@ -59,7 +60,7 @@ function DatabaseTab() {
     setIsSaving(true)
     try {
       const mods = getAllModifications()
-      const res = await fetch("/api/save-modifications", {
+      const res = await apiFetch("/api/save-modifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ modifications: mods }),
@@ -382,7 +383,7 @@ function DevUtilsTab() {
 
     // Establish a session so /api/cards/add accepts the request.
     try {
-      await fetch("/api/player/connect", {
+      await apiFetch("/api/player/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -408,7 +409,7 @@ function DevUtilsTab() {
       source: "dev_tools",
     }))
 
-    const response = await fetch("/api/cards/add", {
+    const response = await apiFetch("/api/cards/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -619,7 +620,7 @@ function ModificationsTab() {
   const handleSaveToServer = async () => {
     setIsSaving(true)
     try {
-      const res = await fetch("/api/save-modifications", {
+      const res = await apiFetch("/api/save-modifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ modifications }),

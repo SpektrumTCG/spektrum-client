@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { getAccessToken } from '@privy-io/react-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -50,7 +50,6 @@ import { useAuthGateStore } from '@/stores/useAuthGateStore';
 
 export function MultiplayerFeature() {
   const router = useRouter();
-  const { getToken } = useAuth();
   const [selectedMode, setSelectedMode] = useState<'casual' | 'ranked' | null>(null);
   const [roomName, setRoomName] = useState('');
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -90,7 +89,7 @@ export function MultiplayerFeature() {
     if (!isConnected && connectionStatus === 'disconnected') {
       (async () => {
         try {
-          const token = await getToken();
+          const token = await getAccessToken();
           if (!token) {
             toast.error('Sign in required for multiplayer');
             return;

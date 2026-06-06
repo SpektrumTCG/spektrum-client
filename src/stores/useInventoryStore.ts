@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiFetch } from '@/lib/api';
 import { persist } from 'zustand/middleware';
 import type { Card } from '@spektrum/shared';
 import type { BoosterVariant, BoosterPack } from '@/stores/useBoosterVariantStore';
@@ -70,7 +71,7 @@ export const useInventoryStore = create<InventoryStore>()(
         } else {
           (async () => {
             try {
-              await fetch('/api/player/connect', {
+              await apiFetch('/api/player/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -78,7 +79,7 @@ export const useInventoryStore = create<InventoryStore>()(
               });
 
               await Promise.all([
-                fetch('/api/purchases/booster-pack', {
+                apiFetch('/api/purchases/booster-pack', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',
@@ -89,7 +90,7 @@ export const useInventoryStore = create<InventoryStore>()(
                     metadata: { variantName: variant.name, artUrl: variant.artUrl, packType: pack.name }
                   })
                 }),
-                fetch('/api/booster-packs/save', {
+                apiFetch('/api/booster-packs/save', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',
@@ -134,7 +135,7 @@ export const useInventoryStore = create<InventoryStore>()(
 
         if (walletAddress && isConnected) {
           try {
-            const response = await fetch('/api/booster-packs/generate-cards', {
+            const response = await apiFetch('/api/booster-packs/generate-cards', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -182,7 +183,7 @@ export const useInventoryStore = create<InventoryStore>()(
 
           if (walletAddress && isConnected) {
             try {
-              const connectResponse = await fetch('/api/player/connect', {
+              const connectResponse = await apiFetch('/api/player/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -200,7 +201,7 @@ export const useInventoryStore = create<InventoryStore>()(
                 metadata: { packName: pack.name, packType: pack.pack }
               }));
 
-              const saveResponse = await fetch('/api/cards/add', {
+              const saveResponse = await apiFetch('/api/cards/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -227,7 +228,7 @@ export const useInventoryStore = create<InventoryStore>()(
           }));
 
           if (walletAddress && isConnected) {
-            fetch('/api/booster-packs/open', {
+            apiFetch('/api/booster-packs/open', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -275,7 +276,7 @@ export const useInventoryStore = create<InventoryStore>()(
         if (!walletAddress || !isConnected) return;
 
         try {
-          const response = await fetch(`/api/booster-packs/${walletAddress}`, {
+          const response = await apiFetch(`/api/booster-packs/${walletAddress}`, {
             credentials: 'include'
           });
           if (!response.ok) return;

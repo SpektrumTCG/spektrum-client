@@ -1,16 +1,15 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useAuthSession } from "@/lib/auth"
+import { apiFetch } from "@/lib/api"
 import { useAudio } from "@/stores/useAudioStore"
 import { useWalletStore } from "@/stores/useWalletStore"
 
 export function AppBootstrap() {
   const { initializeAudio, setAudioContext } = useAudio()
-  const { isLoaded, isSignedIn, user } = useUser()
+  const { isLoaded, isSignedIn, walletAddress } = useAuthSession()
   const hydratedAddressRef = useRef<string | null>(null)
-
-  const walletAddress = isSignedIn ? user?.web3Wallets?.[0]?.web3Wallet ?? null : null
 
   useEffect(() => {
     if (!isLoaded) return
@@ -27,7 +26,7 @@ export function AppBootstrap() {
 
     if (walletAddress && hydratedAddressRef.current !== walletAddress) {
       hydratedAddressRef.current = walletAddress
-      useWalletStore.getState().hydrateFromClerk({ walletAddress, walletType: 'clerk' })
+      useWalletStore.getState().hydrateFromAuth({ walletAddress, walletType: 'privy' })
     } else if (!walletAddress) {
       useWalletStore.setState({ isReconnecting: false })
     }
@@ -40,10 +39,9 @@ export function AppBootstrap() {
 
     const startSession = async () => {
       try {
-        await fetch("/api/player/session/start", {
+        await apiFetch("/api/player/session/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
         })
       } catch {}
     }
@@ -52,10 +50,9 @@ export function AppBootstrap() {
       if (!sessionActive) return
       sessionActive = false
       try {
-        await fetch("/api/player/session/end", {
+        await apiFetch("/api/player/session/end", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
         })
       } catch {}
     }

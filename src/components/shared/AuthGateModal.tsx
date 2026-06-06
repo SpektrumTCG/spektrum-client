@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { SignInButton, useUser } from "@clerk/nextjs"
+import { useAuthSession } from "@/lib/auth"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sword, Trophy, Coins, Gift, PackageOpen, Sparkles } from "lucide-react"
 import { useAuthGateStore, type AuthGateIntent } from "@/stores/useAuthGateStore"
@@ -60,7 +60,7 @@ const INTENT_COPY: Record<AuthGateIntent, IntentCopy> = {
 
 export function AuthGateModal() {
   const { isOpen, intent, close, consumePendingAction } = useAuthGateStore()
-  const { isSignedIn } = useUser()
+  const { isSignedIn, login } = useAuthSession()
 
   useEffect(() => {
     if (!isOpen || !isSignedIn) return
@@ -116,15 +116,14 @@ export function AuthGateModal() {
             <p className="text-sm text-gray-400 leading-relaxed mb-6">{copy.body}</p>
 
             <div className="flex flex-col gap-2">
-              <SignInButton mode="modal">
-                <button
-                  type="button"
-                  className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white font-semibold py-3 px-5 rounded-xl border border-orange-400/60 transition-all"
-                  style={{ boxShadow: "0 0 24px rgba(249, 115, 22, 0.35)" }}
-                >
-                  Connect wallet or email
-                </button>
-              </SignInButton>
+              <button
+                type="button"
+                onClick={() => login()}
+                className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white font-semibold py-3 px-5 rounded-xl border border-orange-400/60 transition-all"
+                style={{ boxShadow: "0 0 24px rgba(249, 115, 22, 0.35)" }}
+              >
+                Connect wallet or email
+              </button>
               <button
                 type="button"
                 onClick={close}
@@ -150,7 +149,7 @@ interface RequireAuthFn {
 
 export function useRequireAuth(intent: AuthGateIntent): RequireAuthFn {
   const open = useAuthGateStore((s) => s.open)
-  const { isSignedIn } = useUser()
+  const { isSignedIn } = useAuthSession()
   return (action: () => void) => {
     if (isSignedIn) {
       action()
