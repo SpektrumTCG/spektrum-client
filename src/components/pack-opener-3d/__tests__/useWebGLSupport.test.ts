@@ -23,4 +23,9 @@ describe('isWebGLAvailable', () => {
   it('false when canvas creation throws', () => {
     expect(isWebGLAvailable(() => { throw new Error('no DOM'); })).toBe(false);
   });
+
+  it('false with default factory when no DOM exists (SSR/node)', () => {
+    // node test env has no document — default createCanvas throws → false
+    expect(isWebGLAvailable()).toBe(false);
+  });
 });

@@ -9,5 +9,5 @@ const TRANSITIONS: Record<OpenerStage, OpenerStage[]> = {
 };
 
 export function canTransition(from: OpenerStage, to: OpenerStage): boolean {
-  return TRANSITIONS[from].includes(to);
+  return (TRANSITIONS[from] ?? []).includes(to);
 }
