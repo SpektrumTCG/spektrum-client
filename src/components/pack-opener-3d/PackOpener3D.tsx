@@ -12,6 +12,8 @@ import { PackScene } from './PackScene';
 import { BoosterPackModel, PACK_MODEL_URL } from './BoosterPackModel';
 import { CardEjection } from './CardEjection';
 import { TearGestureOverlay } from './TearGestureOverlay';
+import { GlowPulse } from './GlowPulse';
+import { FingerHint } from './FingerHint';
 
 const LOAD_TIMEOUT_MS = 3000;
 
@@ -76,6 +78,7 @@ export function PackOpener3D({
   const [modelReady, setModelReady] = useState(false);
   const [stage, setStageRaw] = useState<OpenerStage>('idle');
   const [canvasGone, setCanvasGone] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const tearProgress = useMotionValue(0);
   const topFly = useMotionValue(0);
   const tearHandledRef = useRef(false);
@@ -147,6 +150,7 @@ export function PackOpener3D({
                   onComplete={handleEjectComplete}
                 />
                 <ModelReady onReady={handleModelReady} />
+                <GlowPulse active={stage === 'idle'} />
               </PackScene>
             </PackErrorBoundary>
           </motion.div>
@@ -162,7 +166,10 @@ export function PackOpener3D({
           <TearGestureOverlay
             tearProgress={tearProgress}
             enabled={interactive && modelReady}
-            onTearStart={() => setStage('tearing')}
+            onTearStart={() => {
+              setHasInteracted(true);
+              setStage('tearing');
+            }}
             onTearComplete={handleTearComplete}
             onTearReset={() => setStage('idle')}
           />
@@ -173,6 +180,8 @@ export function PackOpener3D({
             Slide the top strip to tear open →
           </p>
         )}
+
+        <FingerHint visible={stage === 'idle' && modelReady && !hasInteracted} />
       </div>
     </div>
   );
