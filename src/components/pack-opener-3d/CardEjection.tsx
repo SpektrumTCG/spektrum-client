@@ -4,13 +4,7 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-
-const EJECT_DURATION = 0.7; // seconds per card
-const STAGGER = 0.12;       // seconds between cards
-
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
+import { cardProgress, ejectPose } from './ejectionPath';
 
 interface CardEjectionProps {
   count: number;
@@ -18,7 +12,7 @@ interface CardEjectionProps {
   onComplete: () => void;
 }
 
-/** Card-back planes rise from the pack mouth and fly toward the camera. */
+/** Card-back planes rise from the pack mouth and converge into a centered stack. */
 export function CardEjection({ count, active, onComplete }: CardEjectionProps) {
   const groupRefs = useRef<(THREE.Group | null)[]>([]);
   const startRef = useRef<number | null>(null);
@@ -34,14 +28,12 @@ export function CardEjection({ count, active, onComplete }: CardEjectionProps) {
     for (let i = 0; i < count; i++) {
       const g = groupRefs.current[i];
       if (!g) continue;
-      const t = Math.min(1, Math.max(0, (elapsed - i * STAGGER) / EJECT_DURATION));
+      const t = cardProgress(elapsed, i);
       if (t < 1) allDone = false;
-      const e = easeOutCubic(t);
-      g.visible = t > 0;
-      g.position.y = -0.4 + e * 2.6;
-      g.position.z = 0.1 + e * 4.5; // toward camera at z=6
-      g.position.x = (i - (count - 1) / 2) * 0.18 * e;
-      g.rotation.z = (i - (count - 1) / 2) * 0.08 * e;
+      const pose = ejectPose(t, i, count);
+      g.visible = pose.visible;
+      g.position.set(pose.x, pose.y, pose.z);
+      g.rotation.z = pose.rotZ;
     }
     if (allDone && elapsed > 0) {
       doneRef.current = true;
