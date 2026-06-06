@@ -25,12 +25,14 @@ export function GlowPulse({ active }: { active: boolean }) {
 
   useEffect(() => () => texture.dispose(), [texture]);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     if (!ref.current) return;
     const mat = ref.current.material as THREE.MeshBasicMaterial;
     const t = clock.getElapsedTime();
     const target = active ? 0.35 + Math.sin(t * 2.2) * 0.18 : 0;
-    mat.opacity += (target - mat.opacity) * 0.1; // ease toward target
+    // frame-rate-independent exponential ease (≈0.1/frame at 60fps)
+    mat.opacity += (target - mat.opacity) * Math.min(1, delta * 6);
+    ref.current.visible = mat.opacity > 0.01; // skip draw call once faded out
     ref.current.scale.setScalar(4 + Math.sin(t * 2.2) * 0.3);
   });
 
