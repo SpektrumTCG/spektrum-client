@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -31,7 +31,8 @@ function useClippedPack(keepTop: boolean): THREE.Group {
     // Normalize: scale to PACK_HEIGHT, center at origin.
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
-    root.scale.setScalar(PACK_HEIGHT / size.y);
+    // multiply into any baked root scale — setScalar would mis-size GLBs exported at scale ≠ 1
+    root.scale.multiplyScalar(PACK_HEIGHT / size.y);
     const scaledBox = new THREE.Box3().setFromObject(root);
     root.position.sub(scaledBox.getCenter(new THREE.Vector3()));
 
@@ -61,6 +62,20 @@ export function BoosterPackModel({ tearProgress, topFly }: BoosterPackModelProps
   const topRef = useRef<THREE.Group>(null);
   const body = useClippedPack(false);
   const top = useClippedPack(true);
+
+  // cloned materials hold GPU resources — release on unmount
+  useEffect(() => {
+    return () => {
+      for (const root of [body, top]) {
+        root.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach((m: THREE.Material) => m.dispose());
+          }
+        });
+      }
+    };
+  }, [body, top]);
 
   useFrame(({ clock }) => {
     const p = tearProgress.get();
