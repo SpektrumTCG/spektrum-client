@@ -29,6 +29,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           theme: "dark",
           accentColor: "#f97316",
           walletChainType: "solana-only",
+          // MetaMask registers itself as a Solana wallet-standard connector,
+          // so solana-only no longer hides it. Pin the list explicitly.
+          walletList: ["phantom", "solflare", "backpack"],
         },
       }}
     >
