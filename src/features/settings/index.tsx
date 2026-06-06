@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useAudio } from '@/stores/useAudioStore';
 import { useUIScale } from '@/stores/useUIStore';
-import { useWalletStore } from '@/stores/useWalletStore';
+import { useAuthSession } from '@/lib/auth';
 
 export function SettingsFeature() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function SettingsFeature() {
   } = useAudio();
 
   const { scale, setScale } = useUIScale();
-  const { walletAddress, isConnected } = useWalletStore();
+  const { isSignedIn, email, walletAddress, login, logout } = useAuthSession();
 
   const [gameSettings, setGameSettings] = useState({
     visualQuality: 'high',
@@ -33,15 +33,10 @@ export function SettingsFeature() {
     soundEffectsEnabled: sfxEnabled
   });
 
-  const [walletSettings, setWalletSettings] = useState({
-    autoConfirmTransactions: false,
-    walletType: 'phantom'
-  });
-
   const [isUIScaleExpanded, setIsUIScaleExpanded] = useState(true);
   const [isGameSettingsExpanded, setIsGameSettingsExpanded] = useState(true);
   const [isOtherExpanded, setIsOtherExpanded] = useState(true);
-  const [isWalletSettingsExpanded, setIsWalletSettingsExpanded] = useState(true);
+  const [isAccountExpanded, setIsAccountExpanded] = useState(true);
 
   const handleGameSettingChange = (key: string, value: unknown) => {
     setGameSettings(prev => ({ ...prev, [key]: value }));
@@ -55,14 +50,9 @@ export function SettingsFeature() {
     toast.success('Setting updated');
   };
 
-  const handleWalletSettingChange = (key: string, value: unknown) => {
-    setWalletSettings(prev => ({ ...prev, [key]: value }));
-    toast.success('Wallet setting updated');
-  };
-
-  const disconnectWallet = () => {
-    toast.success('Wallet disconnected');
-    router.push('/');
+  const handleSignOut = async () => {
+    await logout();
+    toast.success('Signed out');
   };
 
   const refreshImageAssets = async () => {
@@ -340,59 +330,54 @@ export function SettingsFeature() {
             )}
           </div>
 
-          {/* Wallet Settings */}
+          {/* Account */}
           <div className="bg-gray-900 border border-orange-500 border-opacity-50 rounded-lg p-3 sm:p-4 shadow-lg" style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.1)' }}>
-            <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={() => setIsWalletSettingsExpanded(!isWalletSettingsExpanded)}>
-              <h2 className="text-base sm:text-lg font-bold text-white">Wallet Settings</h2>
+            <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={() => setIsAccountExpanded(!isAccountExpanded)}>
+              <h2 className="text-base sm:text-lg font-bold text-white">Account</h2>
               <button className="text-white hover:text-orange-400 transition-colors">
-                {isWalletSettingsExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                {isAccountExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
               </button>
             </div>
 
-            {isWalletSettingsExpanded && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-white">Preferred Wallet</label>
-                  <select
-                    value={walletSettings.walletType}
-                    onChange={(e) => handleWalletSettingChange('walletType', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
-                  >
-                    <option value="phantom">Phantom</option>
-                    <option value="sollet">Sollet</option>
-                    <option value="solflare">Solflare</option>
-                    <option value="backpack">Backpack</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white block">Auto-confirm Transactions</span>
-                    <p className="text-xs opacity-70 text-gray-300">Automatically confirm NFT trades</p>
+            {isAccountExpanded && (
+              isSignedIn ? (
+                <div className="space-y-3">
+                  {email && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-white">Email</span>
+                      <span className="text-sm text-gray-300 truncate">{email}</span>
+                    </div>
+                  )}
+                  {walletAddress && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-white">Wallet</span>
+                      <span className="text-sm text-gray-300 font-mono">
+                        {walletAddress.slice(0, 4)}…{walletAddress.slice(-4)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gray-700">
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-3 sm:px-4 rounded transition-colors font-medium text-sm border border-red-500"
+                    >
+                      Sign Out
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleWalletSettingChange('autoConfirmTransactions', !walletSettings.autoConfirmTransactions)}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${walletSettings.autoConfirmTransactions ? 'bg-spektrum-orange' : 'bg-gray-600'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${walletSettings.autoConfirmTransactions ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
                 </div>
-
-                <div className="space-y-2 pt-3 flex flex-col gap-2 border-t border-gray-700">
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-300 opacity-70">
+                    Sign in to sync your decks, collection, and on-chain cards.
+                  </p>
                   <button
-                    onClick={() => router.push('/')}
+                    onClick={() => login()}
                     className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white py-2 px-3 sm:px-4 rounded transition-colors font-medium text-sm border border-orange-400"
                   >
-                    Connect Different Wallet
-                  </button>
-                  <button
-                    onClick={disconnectWallet}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-3 sm:px-4 rounded transition-colors font-medium text-sm border border-red-500"
-                  >
-                    Disconnect Current Wallet
+                    Sign In
                   </button>
                 </div>
-              </div>
+              )
             )}
           </div>
         </div>
