@@ -28,7 +28,7 @@ export const SpektrumPackOpener: React.FC<SpektrumPackOpenerProps> = ({
     () =>
       Array.from({ length: 12 }, (_, i) => {
         const angle = -90 + (i - 5.5) * 18;
-        const dist = 70 + Math.floor(Math.random() * 80);
+        const dist = 70 + ((i * 37) % 80); // deterministic scatter, lint-clean (no render-phase Math.random)
         return {
           left: `${(i / 11) * 100}%`,
           dx: Math.cos((angle * Math.PI) / 180) * dist,
