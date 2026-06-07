@@ -1,0 +1,3 @@
+[submodule "spektrum-shared"]
+	path = spektrum-shared
+	url = https://github.com/SpektrumTCG/spektrum-shared.git

@@ -23,7 +23,7 @@
     "@solana-program/token": "^0.13.0",
     "@solana/kit": "^6.9.0",
     "@solana/web3.js": "^1.98.4",
-    "@spektrum/shared": "file:../spektrum-shared",
+    "@spektrum/shared": "file:./spektrum-shared",
     "@tanstack/react-query": "^5.99.0",
     "bs58": "^6.0.0",
     "class-variance-authority": "^0.7.1",
