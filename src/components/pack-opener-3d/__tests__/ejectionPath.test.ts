@@ -52,8 +52,8 @@ describe('ejectPose', () => {
   it('rises before it converges', () => {
     // At t=0.25: easeOutCubic(0.25) = 1 − 0.75^3 ≈ 0.578 → rise=1 (capped),
     //   converge = (0.578 − 0.5)/0.5 ≈ 0.156
-    //   y = 1.3 + 1*0.9 − 0.156*0.95 ≈ 2.05  (well above EJECT_START_Y + 0.5 = 1.8)
-    //   z = 0.15 + 0.156*(1.4−0.15) + gap_term ≈ 0.35  (well below EJECT_START_Z + 0.5 = 0.65)
+    //   y = 1.3 + 1*0.9 − 0.156*0.8 ≈ 2.075  (well above EJECT_START_Y + 0.5 = 1.8)
+    //   z = 0.15 + 0.156*(1.7−0.15) + gap_term ≈ 0.39  (well below EJECT_START_Z + 0.5 = 0.65)
     const mid = ejectPose(0.25, 0, 5);
     expect(mid.y).toBeGreaterThan(EJECT_START_Y + 0.5); // up out of the pack mouth
     expect(mid.z).toBeLessThan(EJECT_START_Z + 0.5);    // not yet at stack depth

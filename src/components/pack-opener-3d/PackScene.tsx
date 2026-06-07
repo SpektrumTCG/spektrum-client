@@ -36,7 +36,7 @@ function SceneEnvironment() {
 export function PackScene({ children }: { children: React.ReactNode }) {
   return (
     <Canvas
-      camera={{ position: [0, 0, 6], fov: 40 }}
+      camera={{ position: [0, 0, 9], fov: 40 }}
       gl={{ localClippingEnabled: true, antialias: true, alpha: true }}
       dpr={[1, 2]}
     >

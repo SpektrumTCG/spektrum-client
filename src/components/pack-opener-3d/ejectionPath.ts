@@ -4,17 +4,18 @@ export const STAGGER = 0.12;       // seconds between cards
 export const STACK_TILT = 0.035;   // rad ≈ 2°, matches the 2D `rotate: depth * 2`
 export const STACK_Z_GAP = 0.012;  // per-card depth so card 0 lands on top
 
-/** Pack mouth (pack is static; the CAMERA moved to [0, 1.25, 4]). */
+/** Pack mouth (pack is static; the CAMERA moved to [0, 1.4, 4.3]). */
 export const EJECT_START_Y = 1.3;
 export const EJECT_START_Z = 0.15;
 
 /**
  * End-frame stack centered in the approached camera's view: y at camera
- * height (CAM_APPROACH_DY), z at distance 2.6 from the camera so a 1-unit
- * plane spans ~75% of the canvas width (matches the 288px 2D card).
+ * height (CAM_APPROACH_DY = 1.4), z at distance 2.6 from the camera
+ * (camera at z=4.3, stack at z=1.7) so a 1-unit plane spans ~75% of the
+ * canvas width (matches the 288px 2D card).
  */
-export const STACK_Y = 1.25;
-export const STACK_Z = 1.4;
+export const STACK_Y = 1.4;
+export const STACK_Z = 1.7;
 
 export interface EjectPose {
   x: number;
@@ -39,7 +40,7 @@ export function cardProgress(elapsed: number, index: number): number {
  * reads as a match-cut.
  *
  * Sanity check (t=1):
- *   y = EJECT_START_Y + 0.9 - 0.95 = 1.3 + 0.9 - 0.95 = 1.25 = STACK_Y  ✓ centered
+ *   y = EJECT_START_Y + 0.9 - 0.8 = 1.3 + 0.9 - 0.8 = 1.4 = STACK_Y   ✓ centered
  *   z = EJECT_START_Z + (STACK_Z - EJECT_START_Z) + gap·(count-1-index)
  *     = STACK_Z + gap·(count-1-index)                                   ✓ stack depth
  * Rise peak (converge=0, rise=1):
@@ -53,7 +54,7 @@ export function ejectPose(t: number, index: number, count: number): EjectPose {
   const tilt = (index - (count - 1) / 2) * STACK_TILT;
   return {
     x: 0,
-    y: EJECT_START_Y + rise * 0.9 - converge * 0.95,
+    y: EJECT_START_Y + rise * 0.9 - converge * 0.8,
     z: EJECT_START_Z + converge * (STACK_Z - EJECT_START_Z) + (count - 1 - index) * STACK_Z_GAP * converge,
     rotZ: tilt * converge,
     visible: t > 0,
