@@ -11,11 +11,11 @@ export const EJECT_START_Z = 0.15;
 /**
  * End-frame stack centered in the approached camera's view: y at camera
  * height (CAM_APPROACH_DY = 1.4), z at distance 2.6 from the camera
- * (camera at z=4.3, stack at z=1.7) so a 1-unit plane spans ~75% of the
+ * (camera at z=5.2, stack at z=2.6) so a 1-unit plane spans ~75% of the
  * canvas width (matches the 288px 2D card).
  */
 export const STACK_Y = 1.4;
-export const STACK_Z = 1.7;
+export const STACK_Z = 2.6;
 
 export interface EjectPose {
   x: number;
