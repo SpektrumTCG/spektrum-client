@@ -10,6 +10,7 @@ import { canTransition, type OpenerStage } from './openerStages';
 import { useWebGLSupport } from './useWebGLSupport';
 import { PackScene } from './PackScene';
 import { BoosterPackModel, PACK_MODEL_URL } from './BoosterPackModel';
+import { CameraRig } from './CameraRig';
 import { CardEjection } from './CardEjection';
 import { TearGestureOverlay } from './TearGestureOverlay';
 import { GlowPulse } from './GlowPulse';
@@ -149,7 +150,8 @@ export function PackOpener3D({
           >
             <PackErrorBoundary onError={handleFail}>
               <PackScene>
-                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} approach={approach} packImageUrl={packImageUrl} />
+                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packImageUrl={packImageUrl} />
+                <CameraRig approach={approach} />
                 <CardEjection
                   count={cards.length}
                   active={stage === 'ejecting'}

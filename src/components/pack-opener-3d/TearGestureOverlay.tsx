@@ -12,7 +12,7 @@ interface TearGestureOverlayProps {
   onTearReset: () => void;
 }
 
-/** Invisible drag zone over the crimp strip (top third of the canvas). */
+/** Invisible drag zone over the crimp strip of the approached pack, ~mid-screen band. */
 export function TearGestureOverlay({
   tearProgress,
   enabled,
@@ -40,7 +40,7 @@ export function TearGestureOverlay({
   return (
     <div
       ref={zoneRef}
-      className="absolute inset-x-0 top-0 h-1/3 z-10 touch-none cursor-grab active:cursor-grabbing"
+      className="absolute inset-x-0 top-[30%] h-[35%] z-10 touch-none cursor-grab active:cursor-grabbing"
       onPointerDown={(e) => {
         startX.current = e.clientX;
         e.currentTarget.setPointerCapture(e.pointerId);
