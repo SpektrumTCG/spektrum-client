@@ -7,8 +7,7 @@ describe('canTransition', () => {
     expect(canTransition('approaching', 'ready')).toBe(true);
     expect(canTransition('ready', 'tearing')).toBe(true);
     expect(canTransition('tearing', 'torn')).toBe(true);
-    expect(canTransition('torn', 'ejecting')).toBe(true);
-    expect(canTransition('ejecting', 'reveal')).toBe(true);
+    expect(canTransition('torn', 'reveal')).toBe(true);
   });
 
   it('allows spring-back from tearing to ready', () => {
@@ -40,7 +39,6 @@ describe('canTransition', () => {
       'ready',
       'tearing',
       'torn',
-      'ejecting',
       'reveal',
     ];
     for (const to of all) expect(canTransition('reveal', to)).toBe(false);

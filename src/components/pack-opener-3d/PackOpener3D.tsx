@@ -11,7 +11,6 @@ import { useWebGLSupport } from './useWebGLSupport';
 import { PackScene } from './PackScene';
 import { BoosterPackModel, PACK_MODEL_URL } from './BoosterPackModel';
 import { CameraRig } from './CameraRig';
-import { CardEjection } from './CardEjection';
 import { TearGestureOverlay } from './TearGestureOverlay';
 import { GlowPulse } from './GlowPulse';
 import { FingerHint } from './FingerHint';
@@ -25,7 +24,6 @@ const LOAD_TIMEOUT_MS = 3000;
  */
 export function preloadPackOpenerAssets(packImageUrl?: string) {
   useGLTF.preload(PACK_MODEL_URL);
-  useTexture.preload('/cards/card_back.png');
   if (packImageUrl) useTexture.preload(packImageUrl);
 }
 
@@ -107,15 +105,15 @@ export function PackOpener3D({
     tearHandledRef.current = true;
     setStage('torn');
     if (typeof navigator !== 'undefined') navigator.vibrate?.(40);
-    animate(topFly, 1, { duration: 0.5, ease: 'easeIn' }).then(() => {
-      setStage('ejecting');
-      animate(packDrop, 1, { duration: 0.6, ease: 'easeIn' });
-    });
+    animate(topFly, 1, { duration: 0.5, ease: 'easeIn' });
+    // body drops as the strip clears; reveal fades in over the empty scene
+    animate(packDrop, 1, { duration: 0.6, ease: 'easeIn', delay: 0.25 }).then(() =>
+      setStage('reveal')
+    );
   }, [setStage, topFly, packDrop]);
 
   const handleModelReady = useCallback(() => setModelReady(true), []);
   const handleFail = useCallback(() => setFailed(true), []);
-  const handleEjectComplete = useCallback(() => setStage('reveal'), [setStage]);
 
   // Fallback: no WebGL, load failed, or load timed out
   if (!webglSupported || failed) {
@@ -139,14 +137,14 @@ export function PackOpener3D({
           <CardRevealStack cards={cards} onComplete={onAnimationComplete} />
         )}
 
-        {/* Canvas stays mounted through the crossfade so the eject end frame
-            fades over the matching 2D stack (match-cut), then unmounts. */}
+        {/* Canvas stays mounted through the crossfade so the emptied scene
+            (strip flown, body dropping) fades into the 2D stack, then unmounts. */}
         {!canvasGone && (
           <motion.div
             className="absolute inset-0"
             initial={{ opacity: 1 }}
             animate={{ opacity: revealing ? 0 : 1 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
             onAnimationComplete={() => {
               if (revealing) setCanvasGone(true);
             }}
@@ -156,11 +154,6 @@ export function PackOpener3D({
               <PackScene>
                 <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packDrop={packDrop} packImageUrl={packImageUrl} />
                 <CameraRig approach={approach} />
-                <CardEjection
-                  count={cards.length}
-                  active={stage === 'ejecting'}
-                  onComplete={handleEjectComplete}
-                />
                 <ModelReady onReady={handleModelReady} />
                 <GlowPulse active={stage === 'idle' || stage === 'ready'} />
               </PackScene>
