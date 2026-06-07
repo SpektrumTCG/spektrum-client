@@ -1,7 +1,9 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { animate, motion, useMotionValue } from 'framer-motion';
+import { motion, useMotionValue } from 'framer-motion';
+import gsap from 'gsap';
+import { tweenMotionValue } from './tweenMotionValue';
 import { useGLTF, useTexture } from '@react-three/drei';
 import { SpektrumPackOpener } from '@/components/shared/SpektrumPackOpener';
 import { type PackCard } from '@/components/shared/rarityStyles';
@@ -82,6 +84,14 @@ export function PackOpener3D({
   const packDrop = useMotionValue(0);
   const approach = useMotionValue(0);
   const tearHandledRef = useRef(false);
+  const choreoRef = useRef<(gsap.core.Tween | gsap.core.Timeline)[]>([]);
+
+  useEffect(() => {
+    const choreo = choreoRef.current;
+    return () => {
+      choreo.forEach((t) => t.kill());
+    };
+  }, []);
 
   const setStage = useCallback((to: OpenerStage) => {
     setStageRaw((from) => (canTransition(from, to) ? to : from));
@@ -96,7 +106,13 @@ export function PackOpener3D({
 
   const handlePackTap = useCallback(() => {
     setStage('approaching');
-    animate(approach, 1, { duration: 0.7, ease: 'easeOut' }).then(() => setStage('ready'));
+    choreoRef.current.push(
+      tweenMotionValue(approach, 1, {
+        duration: 0.9,
+        ease: 'back.out(1.2)',
+        onComplete: () => setStage('ready'),
+      })
+    );
   }, [setStage, approach]);
 
   const handleTearComplete = useCallback(() => {
@@ -104,11 +120,27 @@ export function PackOpener3D({
     tearHandledRef.current = true;
     setStage('torn');
     if (typeof navigator !== 'undefined') navigator.vibrate?.(40);
-    animate(topFly, 1, { duration: 0.5, ease: 'easeIn' });
-    // body drops as the strip clears; reveal fades in over the empty scene
-    animate(packDrop, 1, { duration: 0.6, ease: 'easeIn', delay: 0.25 }).then(() =>
-      setStage('reveal')
+
+    // strip rips away, body starts dropping while the strip is still in flight
+    const tl = gsap.timeline({ onComplete: () => setStage('reveal') });
+    const fly = { v: topFly.get() };
+    const drop = { v: packDrop.get() };
+    tl.to(fly, {
+      v: 1,
+      duration: 0.55,
+      ease: 'power3.in',
+      onUpdate: () => topFly.set(fly.v),
+    }).to(
+      drop,
+      {
+        v: 1,
+        duration: 0.65,
+        ease: 'power2.in',
+        onUpdate: () => packDrop.set(drop.v),
+      },
+      '-=0.3' // overlap: drop starts 0.3s before the fly ends
     );
+    choreoRef.current.push(tl);
   }, [setStage, topFly, packDrop]);
 
   const handleModelReady = useCallback(() => setModelReady(true), []);

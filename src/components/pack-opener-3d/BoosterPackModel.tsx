@@ -139,6 +139,7 @@ export function BoosterPackModel({ tearProgress, topFly, packDrop, packImageUrl 
   const wobbleRef = useRef<THREE.Group>(null);
   const topRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Group>(null);
+  const tearSmoothRef = useRef(0);
   const { root: body, tearUniforms: bodyUniforms } = useClippedPack(false);
   const { root: top, tearUniforms: topUniforms } = useClippedPack(true);
   // hold each half's shader uniforms in a ref so useFrame mutates a mutable
@@ -172,8 +173,12 @@ export function BoosterPackModel({ tearProgress, topFly, packDrop, packImageUrl 
     };
   }, [body, top]);
 
-  useFrame(({ clock }) => {
-    const p = tearProgress.get();
+  useFrame(({ clock }, delta) => {
+    const target = tearProgress.get();
+    // critically-damped follower kills pointer jitter without adding lag at rest
+    tearSmoothRef.current += (target - tearSmoothRef.current) * Math.min(1, delta * 22);
+    if (Math.abs(target - tearSmoothRef.current) < 0.001) tearSmoothRef.current = target;
+    const p = tearSmoothRef.current;
     const f = topFly.get();
     const t = clock.getElapsedTime();
 

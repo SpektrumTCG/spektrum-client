@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useCallback, useRef } from 'react';
-import { animate, type MotionValue } from 'framer-motion';
+import React, { useCallback, useEffect, useRef } from 'react';
+import type { MotionValue } from 'framer-motion';
+import type gsap from 'gsap';
+import { tweenMotionValue } from './tweenMotionValue';
 import { clampTearProgress, resolveTearRelease } from './tearLogic';
 
 interface TearGestureOverlayProps {
@@ -22,15 +24,27 @@ export function TearGestureOverlay({
 }: TearGestureOverlayProps) {
   const startX = useRef<number | null>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
+
+  // the component can unmount mid-tween (fallback swap) — kill the live tween
+  useEffect(() => {
+    return () => {
+      tweenRef.current?.kill();
+    };
+  }, []);
 
   const finish = useCallback(() => {
     if (startX.current === null) return;
     startX.current = null;
     if (resolveTearRelease(tearProgress.get()) === 'complete') {
-      animate(tearProgress, 1, { duration: 0.15, ease: 'easeOut' });
+      tweenRef.current = tweenMotionValue(tearProgress, 1, { duration: 0.12, ease: 'power2.out' });
       onTearComplete();
     } else {
-      animate(tearProgress, 0, { type: 'spring', stiffness: 400, damping: 30 });
+      // elastic settle reads as the foil snapping back
+      tweenRef.current = tweenMotionValue(tearProgress, 0, {
+        duration: 0.7,
+        ease: 'elastic.out(1, 0.45)',
+      });
       onTearReset();
     }
   }, [tearProgress, onTearComplete, onTearReset]);
