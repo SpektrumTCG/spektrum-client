@@ -81,6 +81,7 @@ export function PackOpener3D({
   const [hasInteracted, setHasInteracted] = useState(false);
   const tearProgress = useMotionValue(0);
   const topFly = useMotionValue(0);
+  const approach = useMotionValue(0);
   const tearHandledRef = useRef(false);
 
   const setStage = useCallback((to: OpenerStage) => {
@@ -93,6 +94,11 @@ export function PackOpener3D({
     const t = setTimeout(() => setFailed(true), LOAD_TIMEOUT_MS);
     return () => clearTimeout(t);
   }, [modelReady, failed]);
+
+  const handlePackTap = useCallback(() => {
+    setStage('approaching');
+    animate(approach, 1, { duration: 0.7, ease: 'easeOut' }).then(() => setStage('ready'));
+  }, [setStage, approach]);
 
   const handleTearComplete = useCallback(() => {
     if (tearHandledRef.current) return; // double pointer-up → single tear
@@ -118,7 +124,7 @@ export function PackOpener3D({
     );
   }
 
-  const interactive = stage === 'idle' || stage === 'tearing';
+  const interactive = stage === 'ready' || stage === 'tearing';
   const revealing = stage === 'reveal';
 
   return (
@@ -143,14 +149,14 @@ export function PackOpener3D({
           >
             <PackErrorBoundary onError={handleFail}>
               <PackScene>
-                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packImageUrl={packImageUrl} />
+                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} approach={approach} packImageUrl={packImageUrl} />
                 <CardEjection
                   count={cards.length}
                   active={stage === 'ejecting'}
                   onComplete={handleEjectComplete}
                 />
                 <ModelReady onReady={handleModelReady} />
-                <GlowPulse active={stage === 'idle'} />
+                <GlowPulse active={stage === 'idle' || stage === 'ready'} />
               </PackScene>
             </PackErrorBoundary>
           </motion.div>
@@ -171,8 +177,23 @@ export function PackOpener3D({
               setStage('tearing');
             }}
             onTearComplete={handleTearComplete}
-            onTearReset={() => setStage('idle')}
+            onTearReset={() => setStage('ready')}
           />
+        )}
+
+        {stage === 'idle' && modelReady && (
+          <button
+            type="button"
+            aria-label="Pick up the pack"
+            className="absolute inset-0 z-10 cursor-pointer"
+            onClick={handlePackTap}
+          />
+        )}
+
+        {stage === 'idle' && modelReady && (
+          <p className="absolute top-4 inset-x-0 text-center text-orange-300 text-sm animate-pulse pointer-events-none">
+            Tap the pack
+          </p>
         )}
 
         {interactive && modelReady && (
@@ -181,7 +202,7 @@ export function PackOpener3D({
           </p>
         )}
 
-        <FingerHint visible={stage === 'idle' && modelReady && !hasInteracted} />
+        <FingerHint visible={stage === 'ready' && !hasInteracted} />
       </div>
     </div>
   );

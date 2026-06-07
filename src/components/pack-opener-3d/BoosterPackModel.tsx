@@ -13,6 +13,7 @@ const PACK_HEIGHT = 3;                              // normalized world height
 const TEAR_LINE = 0.88;                             // crimp starts at 88% of height
 const TEAR_Y = PACK_HEIGHT * (TEAR_LINE - 0.5);     // world y of tear line (model centered)
 const TEAR_TRAVEL_X = 2.2;                          // strip slide distance at progress 1
+const APPROACH_Z = 2.0;                             // world units toward camera at approach=1 (Z-only: clip planes + tear shader use world Y)
 
 interface PackArtDecalProps {
   packImageUrl: string;
@@ -79,6 +80,7 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
 interface BoosterPackModelProps {
   tearProgress: MotionValue<number>; // 0..1, gesture-driven
   topFly: MotionValue<number>;       // 0..1, torn-stage fly-off
+  approach: MotionValue<number>;     // 0..1, tap-to-approach toward camera (Z-only)
   packImageUrl: string;
 }
 
@@ -132,7 +134,7 @@ function useClippedPack(keepTop: boolean): { root: THREE.Group; tearUniforms: Te
   }, [scene, keepTop]);
 }
 
-export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: BoosterPackModelProps) {
+export function BoosterPackModel({ tearProgress, topFly, approach, packImageUrl }: BoosterPackModelProps) {
   const wobbleRef = useRef<THREE.Group>(null);
   const topRef = useRef<THREE.Group>(null);
   const { root: body } = useClippedPack(false);
@@ -174,6 +176,9 @@ export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: Booster
       const damp = (1 - p) * (1 - f);
       wobbleRef.current.rotation.z = Math.sin(t * 1.6) * 0.03 * damp;
       wobbleRef.current.rotation.y = Math.sin(t * 0.9) * 0.08 * damp;
+      // tap-to-approach: move toward camera (Z-only — Y/rotation would break
+      // the world-space clip planes + jagged tear shader)
+      wobbleRef.current.position.z = approach.get() * APPROACH_Z;
     }
     if (topRef.current) {
       topRef.current.position.x = p * TEAR_TRAVEL_X + f * 4;
