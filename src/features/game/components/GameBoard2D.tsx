@@ -15,6 +15,7 @@ import { useAnteGameSync } from '@/features/game/hooks/useAnteGameSync'
 import { AnteBattleResults } from '@/components/shared/ante/AnteBattleResults'
 import { SafeCardImage } from '@/components/shared/SafeCardImage'
 import { Card2D } from './Card2D'
+import { CardPreview, elementDotClass, resolveCardName } from './CardPreview'
 import { SpellEffectAnimation } from './SpellEffectAnimation'
 import { CardDrawEffect } from './CardDrawEffect'
 import { CardPlacementEffect } from './CardPlacementEffect'
@@ -33,83 +34,6 @@ const HpBar: React.FC<{ current: number; max: number }> = ({ current, max }) => 
         className={`h-full rounded-full transition-all duration-500 ${pct > 50 ? 'bg-green-500' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500'}`}
         style={{ width: `${pct}%` }}
       />
-    </div>
-  )
-}
-
-// ─── Element dot ──────────────────────────────────────────────────────────────
-const elementDotClass = (el: string) => {
-  switch (el) {
-    case 'fire':   return 'bg-red-500'
-    case 'water':  return 'bg-blue-500'
-    case 'ground': return 'bg-amber-800'
-    case 'air':    return 'bg-cyan-300'
-    default:       return 'bg-gray-400'
-  }
-}
-
-// ─── Card Preview ─────────────────────────────────────────────────────────────
-function resolveCardName(card: Card): string {
-  if (card.name) return card.name
-  const raw = (card as any).cardId || card.id || ''
-  const parts = raw.split('-')
-  const nameParts = parts.filter((p: string) => !/^\d+$/.test(p) && !['fire', 'water', 'air', 'ground', 'neutral', 'deck', 'copy', 'owned'].includes(p))
-  if (nameParts.length > 0) return nameParts.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
-  return 'Card'
-}
-
-const CardPreview = ({ card, onClose }: { card: Card; onClose: () => void }) => {
-  const damageCounter = card.type === 'avatar' ? (card as AvatarCard).counters?.damage || 0 : 0
-  const isAvatarCard = card.type === 'avatar'
-  const modalWidth = isAvatarCard ? 'max-w-[450px]' : 'max-w-[390px]'
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-2" onClick={onClose}>
-      <div
-        className={`relative bg-gray-800 rounded-lg border-2 border-orange-500 shadow-lg ${modalWidth} max-h-[85vh] overflow-y-auto`}
-        style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button className="absolute top-1 right-1 text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 rounded-full w-6 h-6 flex items-center justify-center text-xs z-10" onClick={onClose}>X</button>
-        <div className="p-1">
-          <div className="mb-1 rounded overflow-hidden">
-            {(card.art || (card as any).imagePath) && (
-              <SafeCardImage src={getFixedCardImagePath(card)} alt={card?.name || 'Card'} className="max-w-full max-h-[45vh] object-cover" />
-            )}
-          </div>
-          <h3 className="text-xs font-bold text-white mb-0.5 leading-tight">{resolveCardName(card)}</h3>
-          <div className="flex justify-between mb-0.5 text-[10px]">
-            <div className="text-gray-300 leading-tight">
-              {card?.type ? card.type.charAt(0).toUpperCase() + card.type.slice(1) : 'Card'} &bull; {card?.element || 'unknown'}
-              {isAvatarCard && ` \u2022 Lv${(card as AvatarCard)?.level || 1}`}
-            </div>
-            {card?.spektraCost && Array.isArray(card.spektraCost) && (
-              <div className="flex items-center gap-0.5">
-                {card.spektraCost.map((spektra: string, i: number) => (
-                  <div key={i} className={`w-2 h-2 rounded-full ${elementDotClass(spektra)}`} />
-                ))}
-              </div>
-            )}
-          </div>
-          {isAvatarCard && (
-            <div className="mb-1">
-              <div className="flex justify-between items-center text-[10px] mb-0.5">
-                <div>HP: {(card as AvatarCard).health}</div>
-                {damageCounter > 0 && <div className="text-red-500 font-bold">{Math.max(0, (card as AvatarCard).health - damageCounter)}</div>}
-              </div>
-              {(card as AvatarCard).skill1 && (
-                <div className="mt-1 p-0.5 bg-gray-700 rounded">
-                  <div className="text-[10px] font-medium leading-tight">{(card as AvatarCard).skill1?.name || 'Skill 1'}</div>
-                  <div className="text-[10px] text-gray-300 leading-tight">
-                    {((card as AvatarCard).skill1?.spektraCost || []).map((e: string) => e.charAt(0).toUpperCase() + e.slice(1)).join(', ') || 'None'} &bull; {(card as AvatarCard).skill1?.damage || 0} dmg
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <div className="text-gray-400 text-[9px] mt-1 leading-tight truncate">{card.id}</div>
-        </div>
-      </div>
     </div>
   )
 }

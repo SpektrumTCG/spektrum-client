@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import type { AvatarCard, ActionCard } from '@spektrum/shared'
 import { useAudio } from '@/stores/useAudioStore'
 import { toast } from 'sonner'
-import { PreviewButton } from './PreviewButton'
 import { getFixedCardImagePath, handleCardImageError } from '@/lib/cardImageFixer'
 
 
@@ -21,67 +20,6 @@ interface Card2DProps {
   scale?: number
 }
 
-const CardPreview = ({
-  card,
-  onClose,
-  damageCounter = 0,
-}: {
-  card: any
-  onClose: () => void
-  damageCounter?: number
-}) => {
-  const isAvatarCard = card.type === 'avatar'
-
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-gray-900 rounded-lg border-2 border-orange-500 shadow-lg max-w-sm w-full max-h-[80vh] overflow-y-auto"
-        style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          className="absolute top-2 right-2 text-orange-400 hover:text-orange-300 text-xl font-bold z-10"
-          onClick={onClose}
-        >
-          X
-        </button>
-
-        <div className="p-4">
-          {(card.art || card.imagePath) && (
-            <div className="mb-3 rounded overflow-hidden">
-              <img
-                src={getFixedCardImagePath(card)}
-                alt={card?.name || 'Card'}
-                className="w-full max-h-[40vh] object-contain rounded"
-                onError={(e) => handleCardImageError(e, card)}
-              />
-            </div>
-          )}
-
-          <h3 className="text-xl font-bold text-white mb-2">
-            {card?.name || card?.cardId || 'Card'}
-          </h3>
-
-          <div className="space-y-2 text-sm text-white">
-            <p><span className="font-semibold text-gray-400">Type:</span> {card.type?.charAt(0).toUpperCase() + card.type?.slice(1)}</p>
-            <p><span className="font-semibold text-gray-400">Element:</span> {card.element}</p>
-            {isAvatarCard && (
-              <>
-                {card.health != null && <p><span className="font-semibold text-gray-400">Health:</span> <span className="text-green-400">{card.health - damageCounter}/{card.health}</span></p>}
-                {card.level != null && <p><span className="font-semibold text-gray-400">Level:</span> {card.level}</p>}
-              </>
-            )}
-            {card.description && <p><span className="font-semibold text-gray-400">Description:</span> {card.description}</p>}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 const Card2DInner: React.FC<Card2DProps> = ({
   card,
   isPlayable = false,
@@ -94,7 +32,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
   scale = 1,
 }) => {
   const [showActions, setShowActions] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
   const playHitSound = useAudio((state) => state.playHit)
   const playCard = useAudio((state) => state.playCard)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -269,8 +206,6 @@ const Card2DInner: React.FC<Card2DProps> = ({
       setShowActions(!showActions)
     } else if (onClick) {
       onClick()
-    } else {
-      setShowPreview(true)
     }
   }
 
@@ -358,25 +293,15 @@ const Card2DInner: React.FC<Card2DProps> = ({
 
   const isMythic = card.rarity === 'Mythic'
 
+  // Portal into the app frame so `fixed inset-0` overlays stay inside the
+  // phone-frame container (its transform makes it the containing block).
+  const portalTarget =
+    typeof document !== 'undefined'
+      ? document.getElementById('app-frame') ?? document.body
+      : null
+
   return (
     <>
-      {showPreview &&
-        createPortal(
-          <CardPreview
-            card={card}
-            onClose={() => setShowPreview(false)}
-            damageCounter={
-              card.type === 'avatar'
-                ? (card as AvatarCard).counters?.damage ||
-                  (card as any).damageCounter ||
-                  counters?.damage ||
-                  0
-                : 0
-            }
-          />,
-          document.body
-        )}
-
       <div
         ref={cardRef}
         className="relative"
@@ -412,17 +337,11 @@ const Card2DInner: React.FC<Card2DProps> = ({
             )}
           </div>
 
-          {!isInHand && card.type === 'avatar' && (
-            <div className="absolute top-1 right-1 z-10">
-              <PreviewButton onClick={() => setShowPreview(true)} />
-            </div>
-          )}
-
           {card.type === 'avatar' ? renderAvatarContent() : renderActionContent()}
         </div>
       </div>
 
-      {showActions && isPlayable && isInHand && document.body &&
+      {showActions && isPlayable && isInHand && portalTarget &&
         createPortal(
           <div
             className="fixed inset-0 z-[9999998] flex items-center justify-center bg-black bg-opacity-60"
@@ -485,7 +404,7 @@ const Card2DInner: React.FC<Card2DProps> = ({
               </div>
             </div>
           </div>,
-          document.body
+          portalTarget
         )}
     </>
   )

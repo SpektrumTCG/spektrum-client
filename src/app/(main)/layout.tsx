@@ -10,6 +10,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
     <GutterBackdrop />
     <div
+      id="app-frame"
       style={{ maxWidth: 420 }}
       className="relative z-10 mx-auto h-[100dvh] overflow-hidden transform-gpu min-[421px]:my-4 min-[421px]:h-[calc(100dvh-2rem)] min-[421px]:rounded-[20px] min-[421px]:shadow-2xl min-[421px]:ring-1 min-[421px]:ring-white/10"
     >
