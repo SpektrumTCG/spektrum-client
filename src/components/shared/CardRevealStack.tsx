@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { RARITY_BORDER, RARITY_GLOW, type PackCard } from './rarityStyles';
 import { advanceReveal, createRevealState, type RevealState } from './revealLogic';
@@ -30,6 +30,14 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
   const [state, setState] = useState<RevealState>(() => createRevealState(cards.length));
 
   const handleAdvance = () => setState((s) => advanceReveal(s));
+
+  // Pocket-style pacing: the fresh top card flips itself; the user's tap only
+  // puts it away.
+  useEffect(() => {
+    if (state.done || state.phases[state.current] !== 'back') return;
+    const t = setTimeout(() => setState((s) => advanceReveal(s)), 350);
+    return () => clearTimeout(t);
+  }, [state]);
 
   if (state.done) {
     return (
@@ -65,7 +73,6 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
   }
 
   const topIndex = state.current;
-  const topFlipped = state.phases[topIndex] === 'flipped';
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full w-full max-w-sm mx-auto">
@@ -86,7 +93,7 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
       </div>
 
       {/* stack */}
-      <div className="relative w-40 h-56" style={{ perspective: 1000 }}>
+      <div className="relative w-72 h-[25.2rem]" style={{ perspective: 1000 }}>
         {cards.map((card, i) => {
           if (state.phases[i] === 'aside') return null;
           const depth = i - topIndex; // 0 = top card
@@ -96,10 +103,10 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
             <motion.div
               key={i}
               layoutId={`reveal-card-${i}`}
-              className={`absolute inset-0 ${isTop ? 'cursor-pointer' : ''}`}
+              className={`absolute inset-0 ${isTop && flipped ? 'cursor-pointer' : ''}`}
               style={{ zIndex: cards.length - i }}
               animate={{ rotate: depth * 2, y: depth * 4 }}
-              onClick={isTop ? handleAdvance : undefined}
+              onClick={isTop && flipped ? handleAdvance : undefined}
             >
               <motion.div
                 className="relative w-full h-full"
@@ -131,7 +138,7 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
       </div>
 
       <p className="absolute bottom-6 inset-x-0 text-center text-orange-300 text-sm animate-pulse pointer-events-none">
-        {topFlipped ? 'Tap to continue' : 'Tap the card'}
+        Tap the card to continue
       </p>
     </div>
   );
