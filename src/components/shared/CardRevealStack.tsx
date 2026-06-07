@@ -29,7 +29,9 @@ function CardFace({ card }: { card: PackCard }) {
 export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
   const [state, setState] = useState<RevealState>(() => createRevealState(cards.length));
 
-  const handleAdvance = () => setState((s) => advanceReveal(s));
+  // Cards are shown face-up — one tap goes straight to 'aside'
+  // (advanceReveal is two-step back→flipped→aside, so compose it twice).
+  const handleAdvance = () => setState((s) => advanceReveal(advanceReveal(s)));
 
   if (state.done) {
     return (
@@ -65,7 +67,6 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
   }
 
   const topIndex = state.current;
-  const topFlipped = state.phases[topIndex] === 'flipped';
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full w-full max-w-sm mx-auto">
@@ -85,53 +86,33 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
         )}
       </div>
 
-      {/* stack */}
-      <div className="relative w-72 h-[25.2rem]" style={{ perspective: 1000 }}>
+      {/* stack — cards are face-up; a tap slides the top card into the mini-row */}
+      <div className="relative w-72 h-[25.2rem]">
         {cards.map((card, i) => {
           if (state.phases[i] === 'aside') return null;
           const depth = i - topIndex; // 0 = top card
           const isTop = i === topIndex;
-          const flipped = state.phases[i] === 'flipped';
           return (
             <motion.div
               key={i}
               layoutId={`reveal-card-${i}`}
-              className={`absolute inset-0 ${isTop ? 'cursor-pointer' : ''}`}
-              style={{ zIndex: cards.length - i }}
+              className={`absolute inset-0 rounded-lg overflow-hidden shadow-xl border-2 ${isTop ? 'cursor-pointer' : ''}`}
+              style={{
+                zIndex: cards.length - i,
+                borderColor: RARITY_BORDER[card.rarity ?? 'Common'] ?? RARITY_BORDER.Common,
+                boxShadow: isTop ? RARITY_GLOW[card.rarity ?? 'Common'] ?? 'none' : 'none',
+              }}
               animate={{ rotate: depth * 2, y: depth * 4 }}
               onClick={isTop ? handleAdvance : undefined}
             >
-              <motion.div
-                className="relative w-full h-full"
-                style={{ transformStyle: 'preserve-3d' }}
-                animate={{ rotateY: flipped ? 180 : 0 }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
-              >
-                <div
-                  className="absolute inset-0 rounded-lg overflow-hidden shadow-xl"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <img src="/cards/card_back.png" alt="Card Back" className="w-full h-full object-cover" />
-                </div>
-                <div
-                  className="absolute inset-0 rounded-lg overflow-hidden shadow-xl border-2"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)',
-                    borderColor: RARITY_BORDER[card.rarity ?? 'Common'] ?? RARITY_BORDER.Common,
-                    boxShadow: flipped ? RARITY_GLOW[card.rarity ?? 'Common'] ?? 'none' : 'none',
-                  }}
-                >
-                  <CardFace card={card} />
-                </div>
-              </motion.div>
+              <CardFace card={card} />
             </motion.div>
           );
         })}
       </div>
 
       <p className="absolute bottom-6 inset-x-0 text-center text-orange-300 text-sm animate-pulse pointer-events-none">
-        {topFlipped ? 'Tap to continue' : 'Tap the card to reveal'}
+        Tap the card for the next one
       </p>
     </div>
   );
