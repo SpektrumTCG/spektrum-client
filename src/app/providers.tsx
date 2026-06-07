@@ -22,7 +22,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         // the SDK doesn't bundle connectors, they must be passed explicitly.
         externalWallets: {
           solana: {
-            connectors: toSolanaWalletConnectors(),
+            // shouldAutoConnect default true makes Privy eager-reconnect every
+            // wallet-standard wallet on load; MetaMask's adapter does this
+            // "loudly" and pops a connect prompt without user action.
+            connectors: toSolanaWalletConnectors({ shouldAutoConnect: false }),
           },
         },
         appearance: {
