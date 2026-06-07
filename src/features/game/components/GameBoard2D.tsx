@@ -20,6 +20,7 @@ import { SpellEffectAnimation } from './SpellEffectAnimation'
 import { CardDrawEffect } from './CardDrawEffect'
 import { CardPlacementEffect } from './CardPlacementEffect'
 import { CardActivationPause } from './CardActivationPause'
+import { PendingChoicePicker } from './PendingChoicePicker'
 import { AnimatePresence } from 'framer-motion'
 import { getFixedCardImagePath } from '@/lib/cardImageFixer'
 import { getValidEvolutionTargets } from '@spektrum/shared'
@@ -1109,6 +1110,23 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
             toY={placementEffect.toY}
             onComplete={() => setPlacementEffect(null)}
           />
+        )}
+
+        {/* ── Pending card choice (reveal_choose / peek / draw_discard) ── */}
+        {game?.pendingChoice && game.pendingChoice.playerIndex === 0 && (
+          <PendingChoicePicker
+            choice={game.pendingChoice}
+            onResolve={(chosenCardIds) => {
+              if (isAnteGame) sendAnteAction({ type: 'resolveChoice', data: { chosenCardIds } })
+              else if (isMultiplayer) sendActionToServer({ type: 'resolveChoice', data: { chosenCardIds } })
+              else gameStore.resolveChoice(chosenCardIds)
+            }}
+          />
+        )}
+        {game?.pendingChoice && game.pendingChoice.playerIndex === 1 && (isMultiplayer || isAnteGame) && (
+          <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[80] px-4 py-2 rounded-lg bg-gray-900/90 border border-cyan-700 text-cyan-300 text-xs font-semibold">
+            Opponent is resolving a card effect…
+          </div>
         )}
 
         {/* Card Activation Pause */}

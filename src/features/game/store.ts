@@ -9,6 +9,7 @@ import {
   playItem,
   executeSkill,
   evolveAvatar,
+  resolveChoice,
   endPhase,
   nextTurn,
   checkWinner,
@@ -97,6 +98,7 @@ interface GameStore {
   addToSpektra: (cardId: string) => void
   useSkill: (skillIndex: number, targetPlayerIndex?: 0 | 1) => void
   evolveAvatar: (handCardId: string, targetSlot: 'active' | number) => void
+  resolveChoice: (chosenCardIds: string[]) => void
   endPhase: () => void
   endTurn: () => void
   resetGame: () => void
@@ -204,6 +206,17 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     get()._maybeRunAI(next)
   },
 
+  resolveChoice: (chosenCardIds) => {
+    const { game } = get()
+    if (!game?.pendingChoice) return
+    const next = resolveChoice(game, game.pendingChoice.playerIndex, chosenCardIds)
+    if (next === game) return // invalid selection — keep the choice open
+    const winner = checkWinner(next)
+    const committed = winner ? { ...next, winner, phase: 'game_over' as const } : next
+    set({ game: committed })
+    if (!winner) get()._maybeRunAI(committed)
+  },
+
   endPhase: () => {
     const { game } = get()
     if (!game) return
@@ -272,6 +285,11 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       lastAction: serverView.lastAction ?? '',
       battleLog: Array.isArray(serverView.battleLog) ? serverView.battleLog : [],
       effectStack: Array.isArray(serverView.effectStack) ? serverView.effectStack : [],
+      // Server remaps pendingChoice into view space (0 = self) and hides the
+      // revealed cards from the opponent — pass through, enriching card art.
+      pendingChoice: serverView.pendingChoice
+        ? { ...serverView.pendingChoice, cards: enrichCardArray(serverView.pendingChoice.cards) }
+        : null,
     }
 
     set({ game, _lastServerSeq: seq })
@@ -315,6 +333,15 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     const current = get().game
     if (!current || current.currentPlayerIndex !== 1 || current.winner) {
       set({ isAIThinking: false })
+      return
+    }
+
+    // Auto-resolve any pending interactive choice the AI created (e.g.
+    // reveal_choose) — pick the first N presented cards.
+    if (current.pendingChoice && current.pendingChoice.playerIndex === 1) {
+      const { cards, count } = current.pendingChoice
+      get().resolveChoice(cards.slice(0, count).map(c => c.id))
+      setTimeout(() => get()._runAILoop(actionCount + 1), 300)
       return
     }
 

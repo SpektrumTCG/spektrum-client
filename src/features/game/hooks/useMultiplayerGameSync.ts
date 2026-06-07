@@ -66,6 +66,7 @@ interface GameAction {
     | 'endTurn'
     | 'discardCard'
     | 'selectReserveAvatar'
+    | 'resolveChoice'
   data?: any
 }
 
