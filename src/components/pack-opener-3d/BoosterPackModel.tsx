@@ -81,7 +81,7 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
 interface BoosterPackModelProps {
   tearProgress: MotionValue<number>; // 0..1, gesture-driven
   topFly: MotionValue<number>;       // 0..1, torn-stage fly-off
-  packDrop: MotionValue<number>;     // 0..1, body drops away during ejection
+  packDrop: MotionValue<number>;     // 0..1, body drops away after the tear
   packImageUrl: string;
 }
 

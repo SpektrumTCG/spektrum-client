@@ -7,7 +7,7 @@ import { type PackCard } from './rarityStyles';
 
 export type { PackCard };
 
-export type Stage = 'opening' | 'tearing' | 'reveal';
+type Stage = 'opening' | 'tearing' | 'reveal';
 
 interface SpektrumPackOpenerProps {
   packImageUrl: string;
