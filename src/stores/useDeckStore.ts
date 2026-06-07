@@ -476,7 +476,7 @@ export const useDeckStore = create<DeckStore>()(
                   skills: dbCard.skills,
                   cardType: dbCard.cardType,
                   type: dbCard.type,
-                  level: dbCard.level !== undefined ? Number(dbCard.level) : (dbCard.type === 'avatar' ? 1 : undefined),
+                  level: dbCard.level != null ? Number(dbCard.level) : (dbCard.type === 'avatar' ? 1 : undefined),
                   subType: dbCard.subType,
                   spektraCost: dbCard.spektraCost,
                   passiveSkills: dbCard.passiveSkills,

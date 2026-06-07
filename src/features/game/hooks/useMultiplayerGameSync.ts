@@ -14,7 +14,8 @@ const DEMO_AS_AI = false
 // Merge each deck card with its registry entry so the server receives full
 // card data (type, element, art, skills) — required for the server-side
 // engine to validate plays and for both clients to render artwork.
-function enrichDeckForSubmit(cards: any[] | null | undefined): any[] {
+// Exported for tests.
+export function enrichDeckForSubmit(cards: any[] | null | undefined): any[] {
   if (!Array.isArray(cards) || cards.length === 0) return []
   const all = cardRegistry.getAllCards()
   const byId = new Map<string, any>()
@@ -36,7 +37,13 @@ function enrichDeckForSubmit(cards: any[] | null | undefined): any[] {
   return cards.map((c) => {
     const reg = byId.get(c?.id) || byId.get(c?.cardId) || byId.get(baseIdOf(c))
     if (!reg) return c
-    const defined = Object.fromEntries(Object.entries(c).filter(([, v]) => v !== undefined))
+    // Filter null as well as undefined — DB-hydrated deck cards carry
+    // level: null (catalog rows lack gameplay fields), and a null/0 level
+    // overriding the registry's level: 1 makes the server engine silently
+    // reject avatar deploys ("Action rejected by engine").
+    const defined = Object.fromEntries(
+      Object.entries(c).filter(([, v]) => v !== undefined && v !== null),
+    )
     return {
       ...reg,
       ...defined,
@@ -44,6 +51,7 @@ function enrichDeckForSubmit(cards: any[] | null | undefined): any[] {
       imagePath: c?.imagePath || (reg as any).imagePath || (reg as any).art,
       art: c?.art || (reg as any).art || (reg as any).imagePath,
       skills: (c as any)?.skills?.length ? (c as any).skills : (reg as any).skills,
+      level: Number((defined as any).level) >= 1 ? Number((defined as any).level) : (reg as any).level,
     }
   })
 }
