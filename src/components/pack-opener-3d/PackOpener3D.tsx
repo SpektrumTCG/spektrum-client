@@ -82,6 +82,7 @@ export function PackOpener3D({
   const [hasInteracted, setHasInteracted] = useState(false);
   const tearProgress = useMotionValue(0);
   const topFly = useMotionValue(0);
+  const packDrop = useMotionValue(0);
   const approach = useMotionValue(0);
   const tearHandledRef = useRef(false);
 
@@ -106,8 +107,11 @@ export function PackOpener3D({
     tearHandledRef.current = true;
     setStage('torn');
     if (typeof navigator !== 'undefined') navigator.vibrate?.(40);
-    animate(topFly, 1, { duration: 0.5, ease: 'easeIn' }).then(() => setStage('ejecting'));
-  }, [setStage, topFly]);
+    animate(topFly, 1, { duration: 0.5, ease: 'easeIn' }).then(() => {
+      setStage('ejecting');
+      animate(packDrop, 1, { duration: 0.6, ease: 'easeIn' });
+    });
+  }, [setStage, topFly, packDrop]);
 
   const handleModelReady = useCallback(() => setModelReady(true), []);
   const handleFail = useCallback(() => setFailed(true), []);
@@ -150,7 +154,7 @@ export function PackOpener3D({
           >
             <PackErrorBoundary onError={handleFail}>
               <PackScene>
-                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packImageUrl={packImageUrl} />
+                <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packDrop={packDrop} packImageUrl={packImageUrl} />
                 <CameraRig approach={approach} />
                 <CardEjection
                   count={cards.length}

@@ -13,6 +13,7 @@ const PACK_HEIGHT = 3;                              // normalized world height
 const TEAR_LINE = 0.88;                             // crimp starts at 88% of height
 const TEAR_Y = PACK_HEIGHT * (TEAR_LINE - 0.5);     // world y of tear line (model centered)
 const TEAR_TRAVEL_X = 2.2;                          // strip slide distance at progress 1
+const DROP_DISTANCE = 3.5;                          // body slides this far down once torn (clears the approached view)
 
 interface PackArtDecalProps {
   packImageUrl: string;
@@ -60,8 +61,9 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
   }, [uniforms]);
 
   useFrame(() => {
-    if (!keepTop || !meshRef.current) return;
-    // top decal sits inside topRef's group — track that group's transform
+    if (!meshRef.current) return;
+    // each decal sits inside its half's moving group (topRef / bodyRef) — track
+    // that group's transform so the jag band stays glued as the half moves
     const parent = meshRef.current.parent;
     if (parent) {
       uniformsRef.current.uTearY.value = TEAR_Y + parent.position.y;
@@ -79,6 +81,7 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
 interface BoosterPackModelProps {
   tearProgress: MotionValue<number>; // 0..1, gesture-driven
   topFly: MotionValue<number>;       // 0..1, torn-stage fly-off
+  packDrop: MotionValue<number>;     // 0..1, body drops away during ejection
   packImageUrl: string;
 }
 
@@ -132,17 +135,22 @@ function useClippedPack(keepTop: boolean): { root: THREE.Group; tearUniforms: Te
   }, [scene, keepTop]);
 }
 
-export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: BoosterPackModelProps) {
+export function BoosterPackModel({ tearProgress, topFly, packDrop, packImageUrl }: BoosterPackModelProps) {
   const wobbleRef = useRef<THREE.Group>(null);
   const topRef = useRef<THREE.Group>(null);
-  const { root: body } = useClippedPack(false);
+  const bodyRef = useRef<THREE.Group>(null);
+  const { root: body, tearUniforms: bodyUniforms } = useClippedPack(false);
   const { root: top, tearUniforms: topUniforms } = useClippedPack(true);
-  // hold the strip's shader uniforms in a ref so useFrame mutates a mutable
+  // hold each half's shader uniforms in a ref so useFrame mutates a mutable
   // container (matches the ref-mutation idiom used for transforms below)
   const topUniformsRef = useRef(topUniforms);
   useEffect(() => {
     topUniformsRef.current = topUniforms;
   }, [topUniforms]);
+  const bodyUniformsRef = useRef(bodyUniforms);
+  useEffect(() => {
+    bodyUniformsRef.current = bodyUniforms;
+  }, [bodyUniforms]);
 
   // full pack bounds (clipping is shader-level, Box3 sees the whole mesh)
   const packSize = useMemo(
@@ -175,6 +183,14 @@ export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: Booster
       wobbleRef.current.rotation.z = Math.sin(t * 1.6) * 0.03 * damp;
       wobbleRef.current.rotation.y = Math.sin(t * 0.9) * 0.08 * damp;
     }
+    if (bodyRef.current) {
+      bodyRef.current.position.y = -packDrop.get() * DROP_DISTANCE;
+      // cut follows the dropping body so geometry above the tear stays hidden
+      const us = bodyUniformsRef.current;
+      for (let i = 0; i < us.length; i++) {
+        us[i].uTearY.value = TEAR_Y + bodyRef.current.position.y;
+      }
+    }
     if (topRef.current) {
       topRef.current.position.x = p * TEAR_TRAVEL_X + f * 4;
       topRef.current.position.y = f * 3;
@@ -193,8 +209,10 @@ export function BoosterPackModel({ tearProgress, topFly, packImageUrl }: Booster
 
   return (
     <group ref={wobbleRef}>
-      <primitive object={body} />
-      <PackArtDecal packImageUrl={packImageUrl} keepTop={false} packSize={packSize} />
+      <group ref={bodyRef}>
+        <primitive object={body} />
+        <PackArtDecal packImageUrl={packImageUrl} keepTop={false} packSize={packSize} />
+      </group>
       <group ref={topRef}>
         <primitive object={top} />
         <PackArtDecal packImageUrl={packImageUrl} keepTop={true} packSize={packSize} />
