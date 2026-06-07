@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { cardProgress, ejectPose } from './ejectionPath';
+import { cardProgress, ejectPose, EJECT_START_Y, EJECT_START_Z } from './ejectionPath';
 
 interface CardEjectionProps {
   count: number;
@@ -48,7 +48,7 @@ export function CardEjection({ count, active, onComplete }: CardEjectionProps) {
           key={i}
           ref={(el) => { groupRefs.current[i] = el; }}
           visible={false}
-          position={[0, -0.4, 0.1]}
+          position={[0, EJECT_START_Y, EJECT_START_Z]}
         >
           <mesh>
             <planeGeometry args={[1, 1.4]} />

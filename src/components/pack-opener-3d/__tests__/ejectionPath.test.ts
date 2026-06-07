@@ -3,6 +3,8 @@ import {
   cardProgress,
   ejectPose,
   EJECT_DURATION,
+  EJECT_START_Y,
+  EJECT_START_Z,
   STACK_TILT,
   STACK_Z,
   STACK_Z_GAP,
@@ -23,11 +25,11 @@ describe('cardProgress', () => {
 });
 
 describe('ejectPose', () => {
-  it('starts inside the pack mouth, hidden', () => {
+  it('starts at the pack mouth, hidden', () => {
     const p = ejectPose(0, 0, 5);
     expect(p.visible).toBe(false);
-    expect(p.y).toBeCloseTo(-0.4);
-    expect(p.z).toBeCloseTo(0.1);
+    expect(p.y).toBeCloseTo(EJECT_START_Y);
+    expect(p.z).toBeCloseTo(EJECT_START_Z);
   });
 
   it('ends centered at stack depth with its tilt', () => {
@@ -47,8 +49,11 @@ describe('ejectPose', () => {
   });
 
   it('rises before it converges', () => {
-    const mid = ejectPose(0.4, 0, 5);
-    expect(mid.y).toBeGreaterThan(0.5); // up out of the pack
-    expect(mid.z).toBeLessThan(1);      // not yet at stack depth
+    // At t=0.25: easeOutCubic(0.25) ≈ 0.578 → rise=1 (capped), converge≈0.156
+    //   y = 0.6 + 1*1.4 − 0.156*2.0 ≈ 1.69  (well above EJECT_START_Y + 0.5 = 1.1)
+    //   z = 2.1 + 0.156*1.3 + gap_term   ≈ 2.30  (well below EJECT_START_Z + 0.5 = 2.6)
+    const mid = ejectPose(0.25, 0, 5);
+    expect(mid.y).toBeGreaterThan(EJECT_START_Y + 0.5); // up out of the pack mouth
+    expect(mid.z).toBeLessThan(EJECT_START_Z + 0.5);    // not yet at stack depth
   });
 });
