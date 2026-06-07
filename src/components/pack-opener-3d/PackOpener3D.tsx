@@ -12,7 +12,6 @@ import { PackScene } from './PackScene';
 import { BoosterPackModel, PACK_MODEL_URL } from './BoosterPackModel';
 import { CameraRig } from './CameraRig';
 import { TearGestureOverlay } from './TearGestureOverlay';
-import { GlowPulse } from './GlowPulse';
 import { FingerHint } from './FingerHint';
 
 const LOAD_TIMEOUT_MS = 3000;
@@ -133,6 +132,28 @@ export function PackOpener3D({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
       <div className="relative w-full max-w-sm h-[70vh]">
+        {/* Screen-space glow: lives outside the canvas so it bleeds freely
+            past the canvas bounds instead of cropping to its rectangle. */}
+        <motion.div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{
+            width: 480,
+            height: 560,
+            background: 'radial-gradient(closest-side, rgba(251,146,60,0.4), transparent)',
+          }}
+          animate={
+            (stage === 'idle' || stage === 'ready') && modelReady
+              ? { opacity: [0.5, 1, 0.5], scale: [0.95, 1.06, 0.95] }
+              : { opacity: 0 }
+          }
+          transition={
+            (stage === 'idle' || stage === 'ready') && modelReady
+              ? { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }
+              : { duration: 0.4 }
+          }
+        />
+
         {revealing && (
           <CardRevealStack cards={cards} onComplete={onAnimationComplete} />
         )}
@@ -155,7 +176,6 @@ export function PackOpener3D({
                 <BoosterPackModel tearProgress={tearProgress} topFly={topFly} packDrop={packDrop} packImageUrl={packImageUrl} />
                 <CameraRig approach={approach} />
                 <ModelReady onReady={handleModelReady} />
-                <GlowPulse active={stage === 'idle' || stage === 'ready'} />
               </PackScene>
             </PackErrorBoundary>
           </motion.div>
