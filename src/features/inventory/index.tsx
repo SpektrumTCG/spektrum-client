@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInventoryStore } from '@/stores/useInventoryStore';
 import type { InventoryBoosterPack } from '@/stores/useInventoryStore';
@@ -27,12 +27,14 @@ const PackOpener3D = dynamic(
 );
 import { CollectionBadges } from '@/components/shared/CollectionBadges';
 import { Button } from '@/components/ui/button';
-import { Package, ExternalLink, ShoppingCart } from 'lucide-react';
+import { Package, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export function InventoryFeature() {
+export function InventoryFeature({ highlightPackId }: { highlightPackId?: string }) {
   const router = useRouter();
   const requireAuth = useRequireAuth('open-pack');
+  const [highlightId, setHighlightId] = useState<string | undefined>(highlightPackId);
+  const highlightRef = useRef<HTMLDivElement | null>(null);
   const {
     getUnopened,
     openBoosterPack,
@@ -58,6 +60,22 @@ export function InventoryFeature() {
 
   const unopenedPacks = getUnopened();
 
+  // Only highlight when ?new= still points at a real unopened pack (ignore stale links)
+  const activeHighlight =
+    highlightId && unopenedPacks.some((p) => p.id === highlightId) ? highlightId : undefined;
+
+  // Bring the freshly-purchased pack into view so the buy flow lands on it
+  useEffect(() => {
+    if (activeHighlight && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [activeHighlight]);
+
+  const dismissHighlight = () => {
+    setHighlightId(undefined);
+    router.replace('/inventory');
+  };
+
   const getPackImageUrl = (pack: InventoryBoosterPack): string => {
     if (pack.artUrl) return pack.artUrl;
     const artUrlMap: Record<string, string> = {
@@ -77,6 +95,18 @@ export function InventoryFeature() {
     void import('@/components/pack-opener-3d/PackOpener3D')
       .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
       .catch(() => { /* preload is best-effort; opener falls back if needed */ });
+  };
+
+  // Open-now from the highlighted just-bought pack: no purchase-y confirm modal,
+  // the user already committed in the shop — go straight to the reveal.
+  const handleOpenNow = (pack: InventoryBoosterPack) => {
+    if (isOpening || isProcessing) return;
+    setHighlightId(undefined);
+    router.replace('/inventory');
+    void import('@/components/pack-opener-3d/PackOpener3D')
+      .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
+      .catch(() => { /* preload is best-effort */ });
+    requireAuth(() => { void runOpenPack(pack); });
   };
 
   const handleConfirmOpenPack = async () => {
@@ -230,12 +260,26 @@ export function InventoryFeature() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2 pr-2">
-              {unopenedPacks.map((pack) => (
-                <div key={pack.id} className="bg-gray-800 border-2 border-orange-500 border-opacity-40 rounded-lg overflow-hidden hover:border-opacity-100 transition-all" style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.1)' }}>
+              {unopenedPacks.map((pack) => {
+                const isNew = pack.id === activeHighlight;
+                return (
+                <div
+                  key={pack.id}
+                  ref={isNew ? highlightRef : undefined}
+                  className={`bg-gray-800 border-2 rounded-lg overflow-hidden transition-all ${isNew ? 'border-orange-500 animate-[pulse_1.6s_ease-in-out_3]' : 'border-orange-500 border-opacity-40 hover:border-opacity-100'}`}
+                  style={{ boxShadow: isNew ? '0 0 28px rgba(249, 115, 22, 0.55)' : '0 0 15px rgba(249, 115, 22, 0.1)' }}
+                >
                   <div className="p-2">
                     <div className="flex justify-between items-start gap-2 mb-1">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-orange-400 text-xs">{pack.name}</h3>
+                        <div className="flex items-center gap-1.5">
+                          {isNew && (
+                            <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                              New
+                            </span>
+                          )}
+                          <h3 className="font-bold text-orange-400 text-xs truncate">{pack.name}</h3>
+                        </div>
                         <p className="text-xs text-gray-500 line-clamp-1">
                           {formatDate(pack.purchaseDate)} &bull; Fire and Water
                         </p>
@@ -245,27 +289,53 @@ export function InventoryFeature() {
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-xs text-gray-500 truncate">
-                        {pack.cNFTId?.slice(0, 8)}...
-                      </span>
-                      <Button
-                        onClick={() => handleOpenPack(pack)}
-                        disabled={isOpening}
-                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-7 px-2 font-semibold border border-orange-400 text-xs flex-shrink-0"
-                        size="sm"
-                      >
-                        {isOpening ? (
-                          <span className="flex items-center text-xs">
-                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
-                            Opening...
-                          </span>
-                        ) : 'Open'}
-                      </Button>
-                    </div>
+                    {isNew ? (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Button
+                          onClick={() => handleOpenNow(pack)}
+                          disabled={isOpening}
+                          className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-8 font-semibold border border-orange-400 text-xs"
+                          size="sm"
+                        >
+                          {isOpening ? (
+                            <span className="flex items-center text-xs">
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                              Opening...
+                            </span>
+                          ) : 'Open now'}
+                        </Button>
+                        <button
+                          onClick={dismissHighlight}
+                          disabled={isOpening}
+                          className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+                        >
+                          Later
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-xs text-gray-500 truncate">
+                          {pack.cNFTId?.slice(0, 8)}...
+                        </span>
+                        <Button
+                          onClick={() => handleOpenPack(pack)}
+                          disabled={isOpening}
+                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-7 px-2 font-semibold border border-orange-400 text-xs flex-shrink-0"
+                          size="sm"
+                        >
+                          {isOpening ? (
+                            <span className="flex items-center text-xs">
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                              Opening...
+                            </span>
+                          ) : 'Open'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -319,7 +389,7 @@ export function InventoryFeature() {
 
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-orange-600/20 p-3 rounded-lg border border-orange-500/50">
-                <ShoppingCart className="text-orange-400" size={24} />
+                <Package className="text-orange-400" size={24} />
               </div>
               <h2 className="text-2xl font-bold text-orange-400">Open Booster Pack</h2>
             </div>
@@ -336,20 +406,7 @@ export function InventoryFeature() {
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-white mb-2">{pendingPackOpen.name}</h3>
               <p className="text-sm text-gray-300">
-                Reveal {pendingPackOpen.pack.cardCount} cards from this pack
-              </p>
-            </div>
-
-            <div className="bg-gray-800 border-2 border-orange-500 border-opacity-30 rounded-lg p-4 mb-6" style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.1)' }}>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Price:</span>
-                <span className="text-2xl font-bold text-orange-400">$0.00 USDC</span>
-              </div>
-            </div>
-
-            <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-6">
-              <p className="text-sm text-blue-300 text-center">
-                This is a mock purchase. No real payment will be processed.
+                Reveal {pendingPackOpen.pack.cardCount} cards from this pack. Opening is permanent.
               </p>
             </div>
 
@@ -373,12 +430,12 @@ export function InventoryFeature() {
                 {isProcessing ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Processing...
+                    Opening...
                   </>
                 ) : (
                   <>
-                    <ShoppingCart size={20} />
-                    Confirm Purchase
+                    <Package size={20} />
+                    Open Pack
                   </>
                 )}
               </button>

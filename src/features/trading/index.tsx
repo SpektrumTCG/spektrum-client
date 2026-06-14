@@ -177,9 +177,9 @@ export function TradingFeature() {
                 <Button
                   onClick={() => login()}
                   disabled={connectionStatus === 'connecting'}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
-                  {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Wallet'}
+                  {connectionStatus === 'connecting' ? 'Signing in...' : 'Sign In'}
                 </Button>
               )}
             </div>
@@ -194,7 +194,7 @@ export function TradingFeature() {
             </div>
 
             {!isConnected ? (
-              <div className="text-center py-8 text-gray-500">Connect your wallet to view marketplace</div>
+              <div className="text-center py-8 text-gray-500">Sign in to view marketplace</div>
             ) : marketplaceListings.length === 0 && !isLoadingMarketplace ? (
               <div className="text-center py-8 text-gray-500">No cards available in marketplace</div>
             ) : (
@@ -226,7 +226,7 @@ export function TradingFeature() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Your Cards - Sell</h2>
 
             {!isConnected ? (
-              <div className="text-center py-8 text-gray-500">Connect your wallet to see your cards</div>
+              <div className="text-center py-8 text-gray-500">Sign in to see your cards</div>
             ) : nftCards.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <p>No cards in your collection</p>
@@ -304,7 +304,7 @@ export function TradingFeature() {
             {isRealBlockchain ? (
               <div className="space-y-1">
                 <p>Real Solana blockchain integration enabled</p>
-                <p>Phantom wallet connected with actual SOL balance</p>
+                <p>Wallet connected with actual SOL balance</p>
                 <p>Trading operations use real mint addresses</p>
                 <p>NFT cards synced from wallet</p>
                 <p>Marketplace listings are currently simulated (real marketplace integration pending)</p>
@@ -313,7 +313,7 @@ export function TradingFeature() {
               <div className="space-y-1">
                 <p>Running in development mode with simulated data</p>
                 <p>Set NEXT_PUBLIC_USE_REAL_BLOCKCHAIN=true to enable live blockchain</p>
-                <p>Phantom wallet integration available for testing</p>
+                <p>Wallet integration available for testing</p>
                 <p>Trading functions simulate marketplace operations</p>
               </div>
             )}

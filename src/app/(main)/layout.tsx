@@ -32,23 +32,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         />
       </div>
 
-      {/* Decorative hexagon elements */}
+      {/* Decorative hexagon elements — CSS backgrounds (not next/image) so they
+          aren't treated as LCP candidates and don't warn about dimensions. */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <Image
-          src="/ui/v2-ui/bg-element.png"
-          alt=""
-          width={280}
-          height={330}
-          className="absolute top-12 -right-12 opacity-[0.07]"
+        <div
           aria-hidden="true"
+          className="absolute top-12 -right-12 opacity-[0.07] bg-contain bg-no-repeat"
+          style={{ width: 280, height: 330, backgroundImage: "url('/ui/v2-ui/bg-element.png')" }}
         />
-        <Image
-          src="/ui/v2-ui/bg-element.png"
-          alt=""
-          width={240}
-          height={280}
-          className="absolute bottom-36 -left-16 opacity-[0.07] rotate-12"
+        <div
           aria-hidden="true"
+          className="absolute bottom-36 -left-16 opacity-[0.07] rotate-12 bg-contain bg-no-repeat"
+          style={{ width: 240, height: 280, backgroundImage: "url('/ui/v2-ui/bg-element.png')" }}
         />
       </div>
 

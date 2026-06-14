@@ -363,11 +363,11 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
 
             {decks.length < 5 && (
               <div
-                className="p-3 rounded-lg cursor-pointer flex flex-col items-center bg-green-700 hover:bg-green-600 transition-colors border border-green-600"
+                className="p-3 rounded-lg cursor-pointer flex flex-col items-center bg-gray-800 hover:bg-gray-700 transition-colors border border-orange-500/40 hover:border-orange-500"
                 onClick={handleNewDeck}
               >
-                <div className="w-24 h-32 bg-green-800 rounded-lg mb-2 flex items-center justify-center">
-                  <span className="text-3xl text-white">+</span>
+                <div className="w-24 h-32 bg-gray-900 rounded-lg mb-2 flex items-center justify-center border border-dashed border-orange-500/40">
+                  <span className="text-3xl text-orange-400">+</span>
                 </div>
                 <span className="font-medium text-sm text-white">New Deck</span>
                 <span className="text-xs text-gray-300">{decks.length}/5 decks</span>

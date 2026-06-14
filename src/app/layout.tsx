@@ -32,6 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
+      // UI-scale store sets documentElement font-size on the client (theming);
+      // SSR can't know the persisted value, so allow this attribute to differ.
+      suppressHydrationWarning
       className={`${inter.variable} ${zenDots.variable} ${notoSans.variable} ${jetbrains.variable}`}
     >
       <body className={inter.className}>
