@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronDown,
   Copy,
+  Mail,
   LogOut,
   LogIn,
 } from 'lucide-react';
@@ -22,10 +23,13 @@ import { useAuthSession } from '@/lib/auth';
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="mt-8 first:mt-6">
-      <h2 className="px-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+      <h2 className="px-1 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
         {label}
       </h2>
-      <div className="mt-2 divide-y divide-slate-900/[0.06] rounded-2xl bg-white/80 ring-1 ring-slate-900/[0.08] shadow-sm">
+      <div
+        className="mt-2 divide-y divide-white/10 rounded-2xl bg-gray-900 border-2 border-orange-500 shadow-lg overflow-hidden"
+        style={{ boxShadow: "0 0 25px rgba(249, 115, 22, 0.2)" }}
+      >
         {children}
       </div>
     </section>
@@ -60,7 +64,7 @@ function Toggle({
     >
       <span
         className={`flex h-7 w-12 items-center rounded-full px-0.5 transition-colors motion-reduce:transition-none ${
-          checked ? 'bg-orange-500' : 'bg-slate-300'
+          checked ? 'bg-orange-500' : 'bg-gray-300'
         }`}
       >
         <span
@@ -85,8 +89,8 @@ function VolumeSlider({
   return (
     <div className="px-4 pb-3 pt-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-slate-500">{label}</span>
-        <span className="font-mono text-xs tabular-nums text-slate-500">
+        <span className="text-xs text-gray-400">{label}</span>
+        <span className="font-mono text-xs tabular-nums text-gray-400">
           {Math.round(value * 100)}%
         </span>
       </div>
@@ -117,13 +121,13 @@ function SelectRow({
 }) {
   return (
     <Row>
-      <span className="text-sm font-medium text-slate-900">{label}</span>
+      <span className="text-sm font-medium text-white">{label}</span>
       <div className="relative">
         <select
           value={value}
           aria-label={label}
           onChange={(e) => onChange(e.target.value)}
-          className="min-h-[44px] appearance-none rounded-lg bg-slate-900/[0.05] py-2 pl-3 pr-8 text-sm text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+          className="min-h-[44px] appearance-none rounded-lg bg-white/10 py-2 pl-3 pr-8 text-sm text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
         >
           {options.map((o) => (
             <option key={o.value} value={o.value}>
@@ -133,7 +137,7 @@ function SelectRow({
         </select>
         <ChevronDown
           size={14}
-          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
         />
       </div>
     </Row>
@@ -153,13 +157,13 @@ function LinkRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[52px] w-full items-center justify-between gap-4 px-4 py-2 text-left transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-slate-900/[0.03] active:bg-slate-900/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
+      className="flex min-h-[52px] w-full items-center justify-between gap-4 px-4 py-2 text-left transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-white/5 active:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
     >
       <span className="flex min-w-0 items-center gap-3">
-        <span className="text-slate-500">{icon}</span>
-        <span className="truncate text-sm font-medium text-slate-900">{label}</span>
+        <span className="text-gray-400">{icon}</span>
+        <span className="truncate text-sm font-medium text-white">{label}</span>
       </span>
-      <ChevronRight size={16} className="shrink-0 text-slate-400" />
+      <ChevronRight size={16} className="shrink-0 text-gray-400" />
     </button>
   );
 }
@@ -180,7 +184,7 @@ export function SettingsFeature() {
   } = useAudio();
 
   const { scale, setScale } = useUIScale();
-  const { isSignedIn, email, walletAddress, login, logout } = useAuthSession();
+  const { isSignedIn, email, walletAddress, login, logout, linkEmail } = useAuthSession();
 
   // Scale is client-only (persisted/auto-detected). Gate on mount so SSR (100)
   // matches the first client render, then swap to the real value — avoids hydration mismatch.
@@ -251,12 +255,12 @@ export function SettingsFeature() {
   return (
     <div className="min-h-dvh pb-28 pt-14">
       <div className="mx-auto w-full max-w-md px-4">
-        <h1 className="px-1 pt-4 text-[26px] font-bold tracking-tight text-slate-900">Settings</h1>
+        <h1 className="px-1 pt-4 text-[26px] font-bold tracking-tight text-gray-900">Settings</h1>
 
         <Section label="Audio">
           <div>
             <Row>
-              <span className="text-sm font-medium text-slate-900">Music</span>
+              <span className="text-sm font-medium text-white">Music</span>
               <Toggle checked={musicEnabled} onChange={toggleMusic} label="Music" />
             </Row>
             {musicEnabled && (
@@ -265,7 +269,7 @@ export function SettingsFeature() {
           </div>
           <div>
             <Row>
-              <span className="text-sm font-medium text-slate-900">Sound effects</span>
+              <span className="text-sm font-medium text-white">Sound effects</span>
               <Toggle checked={sfxEnabled} onChange={toggleSfx} label="Sound effects" />
             </Row>
             {sfxEnabled && (
@@ -277,7 +281,7 @@ export function SettingsFeature() {
         <Section label="Display">
           <div className="px-4 py-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-slate-900">Interface size</span>
+              <span className="text-sm font-medium text-white">Interface size</span>
               <span className="font-mono text-xs tabular-nums text-orange-600">{displayScale}%</span>
             </div>
             <input
@@ -290,13 +294,13 @@ export function SettingsFeature() {
               onChange={(e) => setScale(parseInt(e.target.value))}
               className="mt-3 h-1.5 w-full cursor-pointer accent-orange-500"
             />
-            <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+            <div className="mt-1.5 flex justify-between text-[11px] text-gray-400">
               <span>Smaller</span>
               <span>Larger</span>
             </div>
           </div>
           <Row>
-            <span className="text-sm font-medium text-slate-900">Animations</span>
+            <span className="text-sm font-medium text-white">Animations</span>
             <Toggle
               checked={gameSettings.animations}
               onChange={() => handleGameSettingChange('animations', !gameSettings.animations)}
@@ -360,19 +364,25 @@ export function SettingsFeature() {
         <Section label="Account">
           {isSignedIn ? (
             <>
-              {email && (
+              {email ? (
                 <Row>
-                  <span className="shrink-0 text-sm font-medium text-slate-900">Email</span>
-                  <span className="truncate text-sm text-slate-500">{email}</span>
+                  <span className="shrink-0 text-sm font-medium text-white">Email</span>
+                  <span className="truncate text-sm text-gray-400">{email}</span>
                 </Row>
+              ) : (
+                <LinkRow
+                  icon={<Mail size={18} strokeWidth={1.75} />}
+                  label="Connect email"
+                  onClick={() => linkEmail()}
+                />
               )}
               {walletAddress && (
                 <Row>
-                  <span className="text-sm font-medium text-slate-900">Wallet</span>
+                  <span className="text-sm font-medium text-white">Wallet</span>
                   <button
                     type="button"
                     onClick={handleCopyWallet}
-                    className="-m-2 flex min-h-[44px] items-center gap-2 rounded-lg p-2 text-slate-500 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                    className="-m-2 flex min-h-[44px] items-center gap-2 rounded-lg p-2 text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
                   >
                     <span className="font-mono text-xs">
                       {walletAddress.slice(0, 4)}…{walletAddress.slice(-4)}
@@ -384,7 +394,7 @@ export function SettingsFeature() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 transition-colors last:rounded-b-2xl hover:bg-slate-900/[0.03] active:bg-slate-900/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
+                className="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 transition-colors last:rounded-b-2xl hover:bg-white/5 active:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
               >
                 <LogOut size={18} strokeWidth={1.75} />
                 Sign out
@@ -394,7 +404,7 @@ export function SettingsFeature() {
             <button
               type="button"
               onClick={login}
-              className="flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-4 py-2 text-left text-sm font-medium text-orange-600 transition-colors hover:bg-slate-900/[0.03] active:bg-slate-900/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
+              className="flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-4 py-2 text-left text-sm font-medium text-orange-600 transition-colors hover:bg-white/5 active:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400"
             >
               <LogIn size={18} strokeWidth={1.75} />
               Sign in
