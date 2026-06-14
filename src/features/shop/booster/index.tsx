@@ -19,10 +19,10 @@ const EXPANSION = {
   locked: false,
 }
 
-const ACTIVE_TIERS = ["Beginner", "Advanced"] as const
+const ACTIVE_TIERS = ["Beginner"] as const
 
 const TIER_LABELS: Record<string, string> = {
-  Beginner: "Fire",
+  Beginner: "Fire and Water",
   Advanced: "Water",
 }
 
@@ -123,9 +123,10 @@ export function BoosterFeature() {
     setIsProcessing(true)
 
     try {
+      const label = TIER_LABELS[tier.rarity] || tier.rarity
       const variant: BoosterVariant = {
         id: `variant-${tier.rarity.toLowerCase()}-${Date.now()}`,
-        name: `${tier.rarity} Pack`,
+        name: `${label} Pack`,
         subtitle: tier.subtitle,
         artUrl: TIER_IMAGES[tier.rarity] || "",
         rarity: tier.rarity,
@@ -138,7 +139,7 @@ export function BoosterFeature() {
 
       const pack: BoosterPack = {
         id: `pack-${EXPANSION.id}-${tier.rarity.toLowerCase()}`,
-        name: `${EXPANSION.name} ${tier.rarity} Pack`,
+        name: `${EXPANSION.name} ${label} Pack`,
         element: "mixed",
         price: tier.price,
         description: tier.description,
@@ -149,9 +150,8 @@ export function BoosterFeature() {
         artUrl: TIER_IMAGES[tier.rarity] || "",
       }
 
-      addBoosterPack(variant, pack, tier.price)
-      toast.success(`Purchased ${tier.rarity} Pack! Check your Inventory to open it.`)
-      router.push("/inventory")
+      const packId = addBoosterPack(variant, pack, tier.price)
+      router.push(`/inventory?new=${packId}`)
     } catch {
       toast.error("Purchase failed. Please try again.")
     } finally {
@@ -166,7 +166,7 @@ export function BoosterFeature() {
         {step === "tier-selection" && (
           <motion.div initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <StepHeader step="tier-selection" onBack={handleBack} title="Genesis Series" />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mx-auto grid max-w-[220px] grid-cols-1 gap-3">
               {variantTemplates
                 .filter((tier) => (ACTIVE_TIERS as readonly string[]).includes(tier.rarity))
                 .map((tier) => {
