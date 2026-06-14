@@ -14,6 +14,10 @@ interface CardRewardPopupProps {
   cards: Card[];
   onMintCards?: () => Promise<void>;
   showMintButton?: boolean;
+  // Optional "continue" action — used by bundle opening to chain to the next
+  // sealed pack without returning to the inventory list.
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
 export const CardRewardPopup: React.FC<CardRewardPopupProps> = ({
@@ -23,7 +27,9 @@ export const CardRewardPopup: React.FC<CardRewardPopupProps> = ({
   subtitle,
   cards,
   onMintCards,
-  showMintButton = false
+  showMintButton = false,
+  primaryActionLabel,
+  onPrimaryAction
 }) => {
   const [isMinting, setIsMinting] = useState(false);
 
@@ -51,40 +57,38 @@ export const CardRewardPopup: React.FC<CardRewardPopupProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-3 pt-16 pb-24">
       <div
-        className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl border-2 border-orange-500 max-w-xs sm:max-w-sm lg:max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden"
+        className="flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border-2 border-orange-500 w-full max-w-sm max-h-full overflow-hidden"
         style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.4), inset 0 0 20px rgba(249, 115, 22, 0.05)' }}
       >
-        <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-3 sm:p-4 flex justify-between items-center border-b-2 border-orange-400">
-          <div>
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{title}</h2>
-            {subtitle && <p className="text-orange-100 text-xs sm:text-sm">{subtitle}</p>}
+        <div className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-3 flex justify-between items-center gap-2 border-b-2 border-orange-400">
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-white truncate">{title}</h2>
+            {subtitle && <p className="text-orange-100 text-xs truncate">{subtitle}</p>}
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-white hover:bg-orange-700 p-1 sm:p-2"
+            className="text-white hover:bg-orange-700/60 p-1.5 h-auto flex-shrink-0"
           >
-            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="p-3 sm:p-4 lg:p-6 max-h-[70vh] sm:max-h-[60vh] overflow-y-auto">
-          <div className="text-center mb-4 sm:mb-6">
-            <p className="text-gray-300 text-base sm:text-lg">
-              You received <span className="font-bold text-orange-400">{cards.length}</span> cards!
-            </p>
-          </div>
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+          <p className="text-center text-gray-300 text-sm mb-4">
+            You received <span className="font-bold text-orange-400">{cards.length}</span> cards!
+          </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-3 justify-items-center">
+          <div className="grid grid-cols-2 gap-3">
             {cards.map((card, index) => (
               <div
                 key={`${card.id}-${index}`}
-                className="bg-gray-800 rounded-lg p-2 sm:p-2 lg:p-3 border-2 border-orange-500/40 hover:border-orange-500 transition-colors w-full"
+                className="relative bg-gray-800 rounded-lg border-2 border-orange-500/40 hover:border-orange-500 transition-colors overflow-hidden"
               >
-                <div className="aspect-[3/4] bg-gray-700 rounded-lg mb-2 sm:mb-2 lg:mb-3 flex items-center justify-center overflow-hidden">
+                <div className="aspect-[3/4] bg-gray-700 flex items-center justify-center overflow-hidden">
                   {((card as AvatarCard).imagePath || card.art) ? (
                     <SafeCardImage
                       src={(card as AvatarCard).imagePath || card.art || ''}
@@ -94,36 +98,53 @@ export const CardRewardPopup: React.FC<CardRewardPopupProps> = ({
                   ) : null}
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-bold text-white text-xs sm:text-sm lg:text-base truncate leading-tight">{card.name}</h3>
-                  <div className="flex justify-center">
-                    <span
-                      className="inline-flex items-center rounded-md border border-transparent px-2.5 py-0.5 text-[10px] sm:text-xs lg:text-sm font-semibold leading-tight"
-                      style={getRarityStyle(card.rarity)}
-                    >
-                      {card.rarity || 'Common'}
-                    </span>
-                  </div>
+                {/* Rarity chip — overlaid to keep tiles compact */}
+                <span
+                  className="absolute top-1.5 left-1.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none shadow-md"
+                  style={getRarityStyle(card.rarity)}
+                >
+                  {card.rarity || 'Common'}
+                </span>
+
+                <div className="px-2 py-1.5">
+                  <h3 className="font-bold text-white text-xs truncate leading-tight">{card.name}</h3>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-3 sm:p-4 lg:p-6 border-t-2 border-orange-500/30 bg-gradient-to-r from-gray-800 to-gray-800">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div className="text-gray-300 text-xs sm:text-sm text-center sm:text-left">
-              All cards automatically minted as cNFTs and added to your wallet
-            </div>
-            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex-shrink-0 p-4 border-t-2 border-orange-500/30 bg-gray-800">
+          <p className="text-gray-400 text-xs text-center mb-3">
+            All cards automatically minted as cNFTs and added to your wallet
+          </p>
+          <div className="flex gap-2">
+            {primaryActionLabel && onPrimaryAction ? (
+              <>
+                <Button
+                  onClick={onClose}
+                  variant="outline"
+                  className="flex-1 text-sm font-semibold border-orange-500/40 text-gray-300 hover:bg-gray-700 hover:text-white transition-all"
+                >
+                  Done
+                </Button>
+                <Button
+                  onClick={onPrimaryAction}
+                  className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-sm font-bold border border-orange-400 transition-all"
+                  style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.4)' }}
+                >
+                  {primaryActionLabel}
+                </Button>
+              </>
+            ) : (
               <Button
                 onClick={onClose}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 w-full sm:w-auto text-sm sm:text-base font-bold border border-orange-400 transition-all"
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-sm font-bold border border-orange-400 transition-all"
                 style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.4)' }}
               >
                 View Collection
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </div>

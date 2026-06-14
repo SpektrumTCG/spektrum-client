@@ -25,9 +25,8 @@ const PackOpener3D = dynamic(
     ),
   }
 );
-import { CollectionBadges } from '@/components/shared/CollectionBadges';
 import { Button } from '@/components/ui/button';
-import { Package, ExternalLink } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function InventoryFeature({ highlightPackId }: { highlightPackId?: string }) {
@@ -38,6 +37,7 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
   const {
     getUnopened,
     openBoosterPack,
+    getPackById,
     initializeInventory
   } = useInventoryStore();
 
@@ -46,19 +46,27 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
   const [rewardCards, setRewardCards] = useState<Card[]>([]);
   const [rewardTitle, setRewardTitle] = useState('');
   const [openingPack, setOpeningPack] = useState<InventoryBoosterPack | null>(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingPackOpen, setPendingPackOpen] = useState<InventoryBoosterPack | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showOpeningAnimation, setShowOpeningAnimation] = useState(false);
   const [isOnChainOpen, setIsOnChainOpen] = useState(false);
   const [showAnimatedReveal, setShowAnimatedReveal] = useState(false);
   const [animationCards, setAnimationCards] = useState<Card[]>([]);
+  // When a bundle still has sealed packs after a reveal, this holds the bundle
+  // so the reward popup can offer "Open next pack" without leaving the flow.
+  const [bundleNext, setBundleNext] = useState<InventoryBoosterPack | null>(null);
 
   useEffect(() => {
     initializeInventory();
   }, [initializeInventory]);
 
   const unopenedPacks = getUnopened();
+
+  const isBundle = (pack: InventoryBoosterPack) => (pack.bundleSize ?? 1) > 1;
+  const packsLeft = (pack: InventoryBoosterPack) =>
+    pack.packsRemaining ?? pack.bundleSize ?? 1;
+
+  const singlePacks = unopenedPacks.filter((p) => !isBundle(p));
+  const bundlePacks = unopenedPacks.filter(isBundle);
 
   // Only highlight when ?new= still points at a real unopened pack (ignore stale links)
   const activeHighlight =
@@ -87,14 +95,13 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
     return artUrlMap[rarity] || '/boosters/beginner.png';
   };
 
-  const handleOpenPack = async (pack: InventoryBoosterPack) => {
+  const handleOpenPack = (pack: InventoryBoosterPack) => {
     if (isOpening || isProcessing) return;
-    setPendingPackOpen(pack);
-    setShowConfirmModal(true);
-    // warm the 3D chunk + GLB + card-back texture while the user reads the modal
+    // warm the 3D chunk + GLB + card-back texture before the reveal
     void import('@/components/pack-opener-3d/PackOpener3D')
       .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
       .catch(() => { /* preload is best-effort; opener falls back if needed */ });
+    requireAuth(() => { void runOpenPack(pack); });
   };
 
   // Open-now from the highlighted just-bought pack: no purchase-y confirm modal,
@@ -109,16 +116,9 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
     requireAuth(() => { void runOpenPack(pack); });
   };
 
-  const handleConfirmOpenPack = async () => {
-    const pack = pendingPackOpen;
-    if (!pack || isProcessing || isOpening) return;
-    requireAuth(() => { void runOpenPack(pack); });
-  };
-
   const runOpenPack = async (pack: InventoryBoosterPack) => {
     setIsProcessing(true);
     setIsOpening(true);
-    setShowConfirmModal(false);
 
     try {
       const cards = await openBoosterPack(pack.id);
@@ -137,40 +137,49 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
       setIsOpening(false);
     } finally {
       setIsProcessing(false);
-      setPendingPackOpen(null);
     }
+  };
+
+  // After a pack reveal finishes, surface the reward popup. For bundles that
+  // still hold sealed packs, stash the updated bundle so the popup can chain.
+  const finishReveal = (openedPack: InventoryBoosterPack | null) => {
+    if (animationCards.length > 0) {
+      const updated = openedPack ? getPackById(openedPack.id) : undefined;
+      const remaining = updated && !updated.isOpened ? packsLeft(updated) : 0;
+      setBundleNext(remaining > 0 ? updated! : null);
+      setRewardCards(animationCards);
+      setRewardTitle(
+        updated && isBundle(updated)
+          ? `Pack opened · ${remaining} left`
+          : `Opened ${openedPack?.name || 'Pack'}`
+      );
+      setShowRewardPopup(true);
+      toast.success(`Received ${animationCards.length} cards!`);
+    }
+    setOpeningPack(null);
+    setAnimationCards([]);
+    setIsOpening(false);
   };
 
   const handleAnimatedRevealComplete = () => {
     setShowAnimatedReveal(false);
     setIsOnChainOpen(false);
-    if (animationCards.length > 0) {
-      setRewardCards(animationCards);
-      setRewardTitle(`Opened ${openingPack?.name || 'Pack'}`);
-      setShowRewardPopup(true);
-      toast.success(`Received ${animationCards.length} cards!`);
-    }
-    setOpeningPack(null);
-    setAnimationCards([]);
-    setIsOpening(false);
+    finishReveal(openingPack);
   };
 
   const handleOpeningAnimationComplete = () => {
     setShowOpeningAnimation(false);
-    if (animationCards.length > 0) {
-      setRewardCards(animationCards);
-      setRewardTitle(`Opened ${openingPack?.name || 'Pack'}`);
-      setShowRewardPopup(true);
-      toast.success(`Received ${animationCards.length} cards!`);
-    }
-    setOpeningPack(null);
-    setAnimationCards([]);
-    setIsOpening(false);
+    finishReveal(openingPack);
   };
 
-  const handleTradeOnMarketplace = () => {
-    window.open('https://www.tensor.trade/', '_blank');
-    toast.info('Opening NFT marketplace to trade your booster packs...');
+  // Chain to the next sealed pack in a bundle straight from the reward popup.
+  const handleOpenNextInBundle = () => {
+    const next = bundleNext;
+    if (!next) return;
+    setShowRewardPopup(false);
+    setBundleNext(null);
+    setRewardCards([]);
+    requireAuth(() => { void runOpenPack(next); });
   };
 
   const getRarityColor = (rarity: string) => {
@@ -191,6 +200,117 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
     }).format(new Date(date));
   };
 
+  const renderPack = (pack: InventoryBoosterPack) => {
+    const isNew = pack.id === activeHighlight;
+    const bundle = isBundle(pack);
+    const left = packsLeft(pack);
+    return (
+      <div
+        key={pack.id}
+        ref={isNew ? highlightRef : undefined}
+        className={`relative h-full ${bundle ? 'mt-2.5' : ''}`}
+      >
+        {/* Stacked sealed packs — only on bundles, to read as a multi-pack */}
+        {bundle && (
+          <>
+            <div aria-hidden className="absolute -top-2.5 left-5 right-5 h-3 rounded-t-xl border-2 border-b-0 border-orange-500/25 bg-gray-800/70" />
+            <div aria-hidden className="absolute -top-1.5 left-3 right-3 h-3 rounded-t-xl border-2 border-b-0 border-orange-500/40 bg-gray-800/90" />
+          </>
+        )}
+
+        <div
+          className={`relative flex h-full flex-col bg-gray-800 border-2 rounded-xl overflow-hidden transition-all ${isNew ? 'border-orange-500 animate-[pulse_1.6s_ease-in-out_3]' : 'border-orange-500 border-opacity-40 hover:border-opacity-100'}`}
+          style={{ boxShadow: isNew ? '0 0 28px rgba(249, 115, 22, 0.55)' : '0 0 15px rgba(249, 115, 22, 0.1)' }}
+        >
+          {/* Pack art */}
+          <div className="relative flex aspect-[4/5] items-center justify-center bg-gray-900/40 p-3">
+            <SafeCardImage
+              src={getPackImageUrl(pack)}
+              alt={pack.name}
+              className="max-h-full max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+            />
+
+            {/* Badges */}
+            <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+              {isNew && (
+                <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                  New
+                </span>
+              )}
+            </div>
+
+            {/* Price */}
+            <span className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-bold text-orange-400">
+              ${pack.purchasePrice}
+            </span>
+
+            {/* Quantity chip — marks this as a multi-pack at a glance */}
+            {bundle && (
+              <span className="absolute bottom-2 left-2 rounded-md bg-orange-500 px-2 py-0.5 text-sm font-extrabold text-white shadow-[0_0_12px_rgba(249,115,22,0.6)]">
+                {pack.bundleSize}×
+              </span>
+            )}
+          </div>
+
+          {/* Info + action */}
+          <div className="flex flex-1 flex-col gap-2 p-2.5">
+            <div className="min-w-0">
+              <h3 className="font-bold text-orange-400 text-sm truncate">
+                {bundle ? `${pack.bundleSize}× ${pack.name}` : pack.name}
+              </h3>
+              <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+                {bundle
+                  ? `${left} of ${pack.bundleSize} packs sealed`
+                  : formatDate(pack.purchaseDate)}
+              </p>
+            </div>
+
+            <div className="mt-auto">
+              {isNew ? (
+                <div className="flex flex-col gap-1.5">
+                  <Button
+                    onClick={() => handleOpenNow(pack)}
+                    disabled={isOpening}
+                    className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-8 font-semibold border border-orange-400 text-xs"
+                    size="sm"
+                  >
+                    {isOpening ? (
+                      <span className="flex items-center text-xs">
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                        Opening...
+                      </span>
+                    ) : bundle ? 'Open first pack' : 'Open now'}
+                  </Button>
+                  <button
+                    onClick={dismissHighlight}
+                    disabled={isOpening}
+                    className="text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    Later
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => handleOpenPack(pack)}
+                  disabled={isOpening}
+                  className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-8 font-semibold border border-orange-400 text-xs"
+                  size="sm"
+                >
+                  {isOpening ? (
+                    <span className="flex items-center text-xs">
+                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                      Opening...
+                    </span>
+                  ) : bundle ? 'Open pack' : 'Open'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh pt-14" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <motion.div
@@ -200,48 +320,17 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
         transition={{ duration: 0.4, ease: 'easeInOut' }}
       >
         <motion.div
-          className="text-center mb-6"
+          className="mb-8 flex items-center gap-3"
           initial={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -40 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
-            <Package className="text-spektrum-orange" size={28} />
-            Inventory
-          </h1>
-          <p className="text-gray-500 text-sm">Manage your collection and booster packs</p>
-        </motion.div>
-
-        {/* Collection Badges */}
-        <CollectionBadges />
-
-        {/* Stats Section */}
-        <div className="mb-6">
-          <div className="bg-gray-900 border-2 border-orange-500 p-4 rounded-xl text-center" style={{ boxShadow: '0 0 25px rgba(249, 115, 22, 0.15)' }}>
-            <div className="text-lg font-bold text-orange-400">{unopenedPacks.length}</div>
-            <div className="text-sm text-gray-500">Unopened Packs</div>
+          <Package className="text-spektrum-orange flex-shrink-0" size={28} />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-800 leading-tight">Inventory</h1>
+            <p className="text-gray-500 text-sm">Manage your collection and booster packs</p>
           </div>
-        </div>
-
-        {/* Trade Button */}
-        {unopenedPacks.length > 0 && (
-          <Button
-            onClick={handleTradeOnMarketplace}
-            className="w-full mb-6 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white border border-orange-400 font-semibold"
-            style={{ boxShadow: '0 0 25px rgba(249, 115, 22, 0.4)' }}
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Trade Packs on NFT Marketplace
-          </Button>
-        )}
-
-        {/* Unopened Packs Header */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-orange-400 flex items-center">
-            <Package className="w-5 h-5 mr-2" />
-            Unopened Packs ({unopenedPacks.length})
-          </h2>
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-orange-600 scrollbar-track-gray-800">
@@ -259,83 +348,19 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-2 pr-2">
-              {unopenedPacks.map((pack) => {
-                const isNew = pack.id === activeHighlight;
-                return (
-                <div
-                  key={pack.id}
-                  ref={isNew ? highlightRef : undefined}
-                  className={`bg-gray-800 border-2 rounded-lg overflow-hidden transition-all ${isNew ? 'border-orange-500 animate-[pulse_1.6s_ease-in-out_3]' : 'border-orange-500 border-opacity-40 hover:border-opacity-100'}`}
-                  style={{ boxShadow: isNew ? '0 0 28px rgba(249, 115, 22, 0.55)' : '0 0 15px rgba(249, 115, 22, 0.1)' }}
-                >
-                  <div className="p-2">
-                    <div className="flex justify-between items-start gap-2 mb-1">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          {isNew && (
-                            <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
-                              New
-                            </span>
-                          )}
-                          <h3 className="font-bold text-orange-400 text-xs truncate">{pack.name}</h3>
-                        </div>
-                        <p className="text-xs text-gray-500 line-clamp-1">
-                          {formatDate(pack.purchaseDate)} &bull; Fire and Water
-                        </p>
-                      </div>
-                      <span className="text-xs font-bold text-orange-400 flex-shrink-0">
-                        ${pack.purchasePrice}
-                      </span>
-                    </div>
-
-                    {isNew ? (
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          onClick={() => handleOpenNow(pack)}
-                          disabled={isOpening}
-                          className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-8 font-semibold border border-orange-400 text-xs"
-                          size="sm"
-                        >
-                          {isOpening ? (
-                            <span className="flex items-center text-xs">
-                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
-                              Opening...
-                            </span>
-                          ) : 'Open now'}
-                        </Button>
-                        <button
-                          onClick={dismissHighlight}
-                          disabled={isOpening}
-                          className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
-                        >
-                          Later
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 truncate">
-                          {pack.cNFTId?.slice(0, 8)}...
-                        </span>
-                        <Button
-                          onClick={() => handleOpenPack(pack)}
-                          disabled={isOpening}
-                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white h-7 px-2 font-semibold border border-orange-400 text-xs flex-shrink-0"
-                          size="sm"
-                        >
-                          {isOpening ? (
-                            <span className="flex items-center text-xs">
-                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
-                              Opening...
-                            </span>
-                          ) : 'Open'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                );
-              })}
+            <div>
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="text-base font-semibold text-orange-400 flex items-center">
+                  <Package className="w-4 h-4 mr-2 flex-shrink-0" />
+                  Unopened Packs
+                </h2>
+                <span className="rounded-full bg-orange-500/15 border border-orange-500/40 px-2.5 py-0.5 text-xs font-bold text-orange-400">
+                  {unopenedPacks.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[...singlePacks, ...bundlePacks].map(renderPack)}
+              </div>
             </div>
           )}
         </div>
@@ -365,84 +390,13 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
       {/* Card Reward Popup */}
       <CardRewardPopup
         isOpen={showRewardPopup}
-        onClose={() => setShowRewardPopup(false)}
+        onClose={() => { setShowRewardPopup(false); setBundleNext(null); }}
         title={rewardTitle}
         subtitle="Cards added to your collection"
         cards={rewardCards}
+        primaryActionLabel={bundleNext ? `Open next pack (${packsLeft(bundleNext)} left)` : undefined}
+        onPrimaryAction={bundleNext ? handleOpenNextInBundle : undefined}
       />
-
-      {/* Pack Opening Confirmation Modal */}
-      {pendingPackOpen && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 ${showConfirmModal ? '' : 'hidden'}`}>
-          <div className="bg-gray-900 border-2 border-orange-500 rounded-xl shadow-2xl max-w-lg w-full p-6 relative" style={{ boxShadow: '0 0 40px rgba(249, 115, 22, 0.3)' }}>
-            {!isProcessing && (
-              <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setPendingPackOpen(null);
-                }}
-                className="absolute top-4 right-4 text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                X
-              </button>
-            )}
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-orange-600/20 p-3 rounded-lg border border-orange-500/50">
-                <Package className="text-orange-400" size={24} />
-              </div>
-              <h2 className="text-2xl font-bold text-orange-400">Open Booster Pack</h2>
-            </div>
-
-            {/* Pack Image */}
-            <div className="mb-6 flex justify-center">
-              <SafeCardImage
-                src={getPackImageUrl(pendingPackOpen)}
-                alt={pendingPackOpen.name}
-                className="w-40 h-auto object-contain rounded-lg border border-orange-500/30"
-              />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-white mb-2">{pendingPackOpen.name}</h3>
-              <p className="text-sm text-gray-300">
-                Reveal {pendingPackOpen.pack.cardCount} cards from this pack. Opening is permanent.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setPendingPackOpen(null);
-                }}
-                disabled={isProcessing}
-                className="flex-1 px-4 py-3 rounded-lg border-2 border-orange-500 border-opacity-40 text-gray-300 font-semibold hover:bg-gray-800 hover:border-opacity-100 transition-all disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmOpenPack}
-                disabled={isProcessing}
-                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-orange-400"
-                style={{ boxShadow: '0 0 20px rgba(249, 115, 22, 0.4)' }}
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Opening...
-                  </>
-                ) : (
-                  <>
-                    <Package size={20} />
-                    Open Pack
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
