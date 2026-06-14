@@ -46,12 +46,12 @@ export function CardRevealStack({ cards, onComplete }: CardRevealStackProps) {
         >
           Cards Revealed!
         </motion.h2>
-        <div className="flex justify-center flex-wrap gap-2">
+        <div className="mx-auto flex max-w-[19rem] flex-wrap justify-center gap-2">
           {cards.map((card, i) => (
             <motion.div
               key={i}
               layoutId={`reveal-card-${i}`}
-              className="relative w-20 h-28 rounded-lg overflow-hidden border-2 shadow-xl"
+              className="relative w-24 h-32 rounded-lg overflow-hidden border-2 shadow-xl"
               style={{
                 borderColor: RARITY_BORDER[card.rarity ?? 'Common'] ?? RARITY_BORDER.Common,
                 boxShadow: RARITY_GLOW[card.rarity ?? 'Common'] ?? 'none',

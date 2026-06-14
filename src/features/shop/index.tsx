@@ -8,8 +8,7 @@ export function ShopFeature() {
 
   const items = [
     { label: "Booster Packs", sub: "Randomized Card Packs", path: "/shop/booster" },
-    { label: "Premade Decks", sub: "Ready-to-play Strategies", path: "/shop/premade" },
-    { label: "Battle Sets", sub: "Ready-to-play Strategies", path: "/shop/battle-sets" },
+    { label: "Battle Sets", sub: "Coming Soon", path: "/shop/battle-sets", disabled: true },
     { label: "Booster Packs Inventory", sub: "Open Your Booster Packs", path: "/inventory" },
   ]
 
@@ -31,7 +30,11 @@ export function ShopFeature() {
             <button
               key={item.path}
               onClick={() => router.push(item.path)}
-              className="relative w-full h-[72px] flex flex-col items-center justify-center text-white hover:brightness-110 transition-all"
+              disabled={item.disabled}
+              aria-disabled={item.disabled}
+              className={`relative w-full h-[72px] flex flex-col items-center justify-center text-white transition-all ${
+                item.disabled ? "cursor-not-allowed opacity-50 grayscale" : "hover:brightness-110"
+              }`}
             >
               <img
                 src="/ui/v2-ui/Button.png"

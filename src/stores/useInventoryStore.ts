@@ -10,6 +10,64 @@ import { toast } from 'sonner';
 
 const ARTWORK_VERSION = 2; // v2: New booster pack artwork (Oct 2025)
 
+// Records a purchase to the backend (best-effort). Shared by single packs and
+// bundles; `bundleSize` is forwarded so the server can group sealed packs.
+async function persistPurchase(
+  packId: string,
+  variant: BoosterVariant,
+  pack: BoosterPack,
+  price: number,
+  bundleSize?: number,
+) {
+  const walletAddress = useWalletStore.getState().walletAddress;
+  const isConnected = useWalletStore.getState().isConnected;
+
+  if (!walletAddress || !isConnected) {
+    toast.warning('Wallet not connected - purchase saved locally only', { duration: 4000 });
+    return;
+  }
+
+  try {
+    await apiFetch('/api/player/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ walletAddress })
+    });
+
+    await Promise.all([
+      apiFetch('/api/purchases/booster-pack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          packName: variant.name,
+          packId,
+          price,
+          metadata: { variantName: variant.name, artUrl: variant.artUrl, packType: pack.name, bundleSize }
+        })
+      }),
+      apiFetch('/api/booster-packs/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          packId,
+          packName: variant.name,
+          purchasePrice: price,
+          variantData: variant,
+          packData: pack,
+          artUrl: variant.artUrl,
+          bundleSize,
+          packsRemaining: bundleSize
+        })
+      })
+    ]);
+  } catch {
+    toast.error('Failed to record purchase — please try again')
+  }
+}
+
 export interface InventoryBoosterPack {
   id: string;
   name: string;
@@ -20,6 +78,10 @@ export interface InventoryBoosterPack {
   isOpened: boolean;
   cNFTId?: string; // Compressed NFT identifier for trading
   artUrl: string;
+  // Bundle support: a 10x purchase is ONE inventory entry holding multiple
+  // sealed packs, opened one-by-one. Single packs leave both undefined.
+  bundleSize?: number;      // total packs sealed in this bundle (e.g. 10)
+  packsRemaining?: number;  // packs still sealed; isOpened flips true at 0
 }
 
 interface InventoryStore {
@@ -28,6 +90,7 @@ interface InventoryStore {
 
   // Actions
   addBoosterPack: (variant: BoosterVariant, pack: BoosterPack, price: number) => string;
+  addBoosterPackBundle: (variant: BoosterVariant, pack: BoosterPack, pricePerPack: number, size: number) => string;
   removeBoosterPack: (packId: string) => boolean;
   openBoosterPack: (packId: string) => Promise<Card[]>;
   generateCardsForPack: (pack: InventoryBoosterPack) => Promise<Card[]>;
@@ -63,54 +126,36 @@ export const useInventoryStore = create<InventoryStore>()(
           boosterPacks: [...state.boosterPacks, newPack]
         }));
 
-        const walletAddress = useWalletStore.getState().walletAddress;
-        const isConnected = useWalletStore.getState().isConnected;
-
-        if (!walletAddress || !isConnected) {
-          toast.warning('Wallet not connected - purchase saved locally only', { duration: 4000 });
-        } else {
-          (async () => {
-            try {
-              await apiFetch('/api/player/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ walletAddress })
-              });
-
-              await Promise.all([
-                apiFetch('/api/purchases/booster-pack', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    packName: variant.name,
-                    packId,
-                    price,
-                    metadata: { variantName: variant.name, artUrl: variant.artUrl, packType: pack.name }
-                  })
-                }),
-                apiFetch('/api/booster-packs/save', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    packId,
-                    packName: variant.name,
-                    purchasePrice: price,
-                    variantData: variant,
-                    packData: pack,
-                    artUrl: variant.artUrl
-                  })
-                })
-              ]);
-            } catch {
-              toast.error('Failed to record purchase — please try again')
-            }
-          })();
-        }
+        void persistPurchase(packId, variant, pack, price);
 
         toast.success(`${variant.name} added to inventory!`);
+        return packId;
+      },
+
+      addBoosterPackBundle: (variant: BoosterVariant, pack: BoosterPack, pricePerPack: number, size: number) => {
+        const packId = `inventory-bundle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const totalPrice = pricePerPack * size;
+        const newPack: InventoryBoosterPack = {
+          id: packId,
+          name: variant.name,
+          variant,
+          pack,
+          purchaseDate: new Date(),
+          purchasePrice: totalPrice,
+          isOpened: false,
+          artUrl: variant.artUrl,
+          cNFTId: `cnft-${packId}`,
+          bundleSize: size,
+          packsRemaining: size
+        };
+
+        set(state => ({
+          boosterPacks: [...state.boosterPacks, newPack]
+        }));
+
+        void persistPurchase(packId, variant, pack, totalPrice, size);
+
+        toast.success(`${size}x ${variant.name} bundle added to inventory!`);
         return packId;
       },
 
@@ -221,13 +266,23 @@ export const useInventoryStore = create<InventoryStore>()(
             toast.warning('Wallet not connected - cards saved locally only', { duration: 4000 });
           }
 
+          // Bundle: this open consumes ONE sealed pack. Only flip isOpened (and
+          // notify the backend) once the last pack is drawn — otherwise just
+          // decrement so the bundle stays in inventory, resumable.
+          const isBundle = (pack.bundleSize ?? 1) > 1;
+          const prevRemaining = pack.packsRemaining ?? pack.bundleSize ?? 1;
+          const nextRemaining = prevRemaining - 1;
+          const fullyOpened = !isBundle || nextRemaining <= 0;
+
           set(state => ({
             boosterPacks: state.boosterPacks.map(p =>
-              p.id === packId ? { ...p, isOpened: true } : p
+              p.id === packId
+                ? { ...p, packsRemaining: isBundle ? Math.max(nextRemaining, 0) : p.packsRemaining, isOpened: fullyOpened }
+                : p
             )
           }));
 
-          if (walletAddress && isConnected) {
+          if (walletAddress && isConnected && fullyOpened) {
             apiFetch('/api/booster-packs/open', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -238,7 +293,11 @@ export const useInventoryStore = create<InventoryStore>()(
             });
           }
 
-          toast.success(`Opened ${pack.name}! Received ${cards.length} cards.`);
+          toast.success(
+            isBundle
+              ? `Opened a pack! ${cards.length} cards · ${Math.max(nextRemaining, 0)} left in bundle.`
+              : `Opened ${pack.name}! Received ${cards.length} cards.`
+          );
 
           return cards;
         } catch {
@@ -314,6 +373,7 @@ export const useInventoryStore = create<InventoryStore>()(
                 };
               }
             }
+            const bundleSize = dbPack.bundleSize ?? dbPack.packData?.bundleSize;
             return {
               id: dbPack.packId,
               name: dbPack.packName,
@@ -323,7 +383,10 @@ export const useInventoryStore = create<InventoryStore>()(
               purchasePrice: dbPack.purchasePrice || 0,
               isOpened: dbPack.isOpened || false,
               artUrl: dbPack.artUrl || '',
-              cNFTId: `cnft-${dbPack.packId}`
+              cNFTId: `cnft-${dbPack.packId}`,
+              ...(bundleSize && bundleSize > 1
+                ? { bundleSize, packsRemaining: dbPack.packsRemaining ?? bundleSize }
+                : {})
             };
           });
 

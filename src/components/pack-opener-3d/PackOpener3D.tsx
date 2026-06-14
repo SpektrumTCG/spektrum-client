@@ -162,8 +162,8 @@ export function PackOpener3D({
   const revealing = stage === 'reveal';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 overflow-hidden">
-      <div className="relative w-full max-w-sm h-[70vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 px-4 pt-4 pb-20 overflow-hidden">
+      <div className="relative w-full max-w-sm h-full">
         {/* Screen-space glow: lives outside the canvas so it bleeds freely
             past the canvas bounds instead of cropping to its rectangle. */}
         <motion.div
