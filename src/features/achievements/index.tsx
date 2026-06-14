@@ -148,7 +148,7 @@ export function AchievementsFeature() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05, duration: 0.4 }}
-        className={`relative p-3 rounded-lg border transition-all cursor-pointer ${
+        className={`relative flex h-full flex-col p-3 rounded-lg border transition-all cursor-pointer ${
           isUnlocked
             ? 'bg-gray-900 border-orange-500 shadow-lg hover:scale-105'
             : 'bg-gray-900 border-gray-700 opacity-60 hover:scale-105'
@@ -165,13 +165,13 @@ export function AchievementsFeature() {
           {getAchievementIcon(achievement.id, '28')}
         </div>
 
-        <h3 className={`font-bold text-xs text-center mb-1 leading-tight ${
+        <h3 className={`flex min-h-[28px] items-center justify-center font-bold text-xs text-center mb-1 leading-tight ${
           isUnlocked ? getRarityColor(achievement.rarity) : 'text-gray-400'
         }`}>
           {achievement.hidden && !isUnlocked ? '???' : achievement.name}
         </h3>
 
-        <p className={`text-[10px] text-center mb-2 line-clamp-2 h-6 ${
+        <p className={`text-[10px] text-center mb-2 line-clamp-2 min-h-[30px] leading-snug ${
           isUnlocked ? 'text-gray-300' : 'text-gray-500'
         }`}>
           {achievement.hidden && !isUnlocked
@@ -194,7 +194,7 @@ export function AchievementsFeature() {
         )}
 
         {achievement.reward && (
-          <div className="flex justify-center">
+          <div className="mt-auto flex justify-center pt-1">
             <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
               achievement.reward.tier === 'premium' ? 'bg-purple-900 border-purple-500 text-purple-300' :
               achievement.reward.tier === 'standard' ? 'bg-blue-900 border-blue-500 text-blue-300' :
@@ -211,7 +211,7 @@ export function AchievementsFeature() {
   };
 
   return (
-    <div className="flex flex-col items-center pb-24 overflow-y-auto min-h-dvh justify-center" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
+    <div className="flex flex-col items-center pt-14 pb-24 overflow-y-auto min-h-dvh" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-orange-400 mb-2">
@@ -312,7 +312,7 @@ export function AchievementsFeature() {
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-3 gap-3"
+              className="grid grid-cols-3 gap-3 auto-rows-fr"
               initial="hidden"
               animate="visible"
               variants={{
