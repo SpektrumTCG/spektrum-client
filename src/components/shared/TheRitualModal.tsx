@@ -217,19 +217,21 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
 
         {step === 1 && (
           <div className="relative z-10">
-            <div className="text-center mb-4 sm:mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full mb-3 sm:mb-4 shadow-lg shadow-orange-500/30">
-                <Sparkles className="text-white" size={28} />
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full mb-2 shadow-lg shadow-orange-500/30">
+                <Sparkles className="text-white" size={26} />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">The Ritual</h2>
-              <p className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto">
-                You have proven yourself worthy. Now, choose the path that will define your destiny.
+              <h2 className="text-2xl font-bold text-white mb-1">The Ritual</h2>
+              <p className="text-gray-400 text-xs max-w-xs mx-auto leading-relaxed">
+                You have proven yourself worthy. Choose the path that will define your destiny.
               </p>
             </div>
 
-            <h3 className="text-lg font-semibold text-orange-400 text-center mb-4">Choose Your Path</h3>
+            <h3 className="text-xs font-semibold text-orange-400 text-center mb-3 uppercase tracking-[0.2em]">
+              Choose Your Path
+            </h3>
 
-            <div className="grid grid-cols-1 gap-3 mb-6">
+            <div className="flex flex-col gap-3 mb-5">
               {(['guardians', 'corrupted'] as Faction[]).map((faction) => {
                 const info = FACTION_INFO[faction];
                 const Icon = info.icon;
@@ -238,27 +240,29 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
                   <button
                     key={faction}
                     onClick={() => handleFactionSelect(faction)}
-                    className={`relative p-5 rounded-xl border-2 transition-all duration-300 text-left ${
+                    className={`relative flex gap-3 p-3.5 rounded-xl border-2 text-left transition-all duration-300 ${
                       isSelected
-                        ? `${info.borderColor} ${info.bgColor} scale-[1.02] shadow-lg`
+                        ? `${info.borderColor} ${info.bgColor} shadow-lg`
                         : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                     }`}
                   >
+                    <div className={`shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${info.color} ${isSelected ? 'shadow-md' : ''}`}>
+                      <Icon className="text-white" size={24} />
+                    </div>
+                    <div className="min-w-0 flex-1 pr-5">
+                      <h4 className={`text-base font-bold leading-tight ${isSelected ? info.textColor : 'text-white'}`}>
+                        {info.name}
+                      </h4>
+                      <p className="text-[11px] text-gray-400 mb-1">{info.tribes}</p>
+                      <p className="text-[11px] text-gray-400/80 leading-snug">{info.description}</p>
+                    </div>
                     {isSelected && (
-                      <div className="absolute top-3 right-3">
-                        <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${info.color} flex items-center justify-center`}>
-                          <Check size={14} className="text-white" />
+                      <div className="absolute top-2.5 right-2.5">
+                        <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${info.color} flex items-center justify-center`}>
+                          <Check size={12} className="text-white" />
                         </div>
                       </div>
                     )}
-                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${info.color} mb-3`}>
-                      <Icon className="text-white" size={28} />
-                    </div>
-                    <h4 className={`text-xl font-bold mb-1 ${isSelected ? info.textColor : 'text-white'}`}>
-                      {info.name}
-                    </h4>
-                    <p className="text-sm text-gray-400 mb-2">{info.tribes}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{info.description}</p>
                   </button>
                 );
               })}
@@ -267,7 +271,7 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
             <button
               onClick={handleConfirmFaction}
               disabled={!selectedFaction}
-              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 ${
+              className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
                 selectedFaction
                   ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl'
                   : 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -280,13 +284,15 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
 
         {step === 2 && (
           <div className="relative z-10">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">Elemental Affinity</h2>
-              <p className="text-gray-400 text-sm">The elements choose you...</p>
+            <div className="text-center mb-5">
+              <h2 className="text-2xl font-bold text-white mb-1">Elemental Affinity</h2>
+              <p className="text-gray-400 text-sm">
+                {isSpinning ? 'The elements choose you…' : 'Your fate is sealed.'}
+              </p>
             </div>
 
-            <div className="flex justify-center mb-8">
-              <div className={`relative w-40 h-40 rounded-full flex items-center justify-center transition-all duration-300 ${
+            <div className="flex justify-center mb-6">
+              <div className={`relative w-36 h-36 rounded-full flex items-center justify-center transition-all duration-300 ${
                 isSpinning ? 'animate-pulse' : ''
               } ${ELEMENT_INFO[spinElement].bgColor} border-4 ${ELEMENT_INFO[spinElement].borderColor}`}>
                 {spinElement === 'fire' ? (
@@ -300,34 +306,52 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
               </div>
             </div>
 
-            {!isSpinning && assignedElement && (
-              <div className="text-center mb-6">
-                <h3 className={`text-2xl font-bold ${ELEMENT_INFO[assignedElement].color} mb-2`}>
-                  {ELEMENT_INFO[assignedElement].name} Affinity!
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  The {ELEMENT_INFO[assignedElement].name.toLowerCase()} element has chosen you.
-                </p>
-              </div>
-            )}
+            {!isSpinning && assignedElement && selectedFaction && (
+              <div className="animate-fade-in">
+                <div className="text-center mb-4">
+                  <h3 className={`text-2xl font-bold ${ELEMENT_INFO[assignedElement].color} mb-1`}>
+                    {ELEMENT_INFO[assignedElement].name} Affinity!
+                  </h3>
+                  <p className="text-gray-400 text-sm">
+                    The {ELEMENT_INFO[assignedElement].name.toLowerCase()} element has chosen you.
+                  </p>
+                </div>
 
-            {showResult && selectedFaction && assignedElement && (
-              <div className="bg-gray-800/80 rounded-xl p-4 mb-6 border border-orange-500/30">
-                <h4 className="text-lg font-bold text-orange-400 text-center mb-2">Your Starter Deck</h4>
-                <p className="text-white text-center text-xl font-semibold">
-                  {ELEMENT_INFO[assignedElement].name} {FACTION_INFO[selectedFaction].tribes} Tribal
-                </p>
-                <p className="text-gray-400 text-center text-sm mt-1">40 cards ready for battle!</p>
-              </div>
-            )}
+                {showResult && (
+                  <>
+                    <div className="bg-gray-800/80 rounded-xl p-4 mb-5 border border-orange-500/30">
+                      <div className="flex items-center justify-center gap-3 mb-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${FACTION_INFO[selectedFaction].color}`}>
+                          {React.createElement(FACTION_INFO[selectedFaction].icon, { size: 24, className: 'text-white' })}
+                        </div>
+                        <div className="text-gray-500 text-xl font-light">+</div>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${ELEMENT_INFO[assignedElement].gradient}`}>
+                          {React.createElement(ELEMENT_INFO[assignedElement].icon, { size: 24, className: 'text-white' })}
+                        </div>
+                      </div>
+                      <p className="text-[11px] font-semibold text-orange-400 text-center uppercase tracking-[0.2em] mb-1">
+                        Your Starter Deck
+                      </p>
+                      <p className="text-white text-center text-lg font-bold leading-tight">
+                        {ELEMENT_INFO[assignedElement].name} {FACTION_INFO[selectedFaction].tribes} Tribal
+                      </p>
+                      <p className="text-gray-400 text-center text-xs mt-1">40 cards ready for battle</p>
+                    </div>
 
-            {showResult && (
-              <button
-                onClick={handleClaimDeck}
-                className="w-full py-4 px-6 rounded-xl font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Claim Your Deck
-              </button>
+                    <button
+                      onClick={handleClaimDeck}
+                      disabled={claiming}
+                      className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
+                        claiming
+                          ? 'bg-gray-700 text-gray-400 cursor-wait'
+                          : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl'
+                      }`}
+                    >
+                      {claiming ? 'Claiming…' : 'Claim Your Deck'}
+                    </button>
+                  </>
+                )}
+              </div>
             )}
 
             {isSpinning && (
@@ -339,34 +363,34 @@ export function TheRitualModal({ isOpen, onClose, onComplete }: TheRitualModalPr
         )}
 
         {step === 3 && selectedFaction && assignedElement && (
-          <div className="relative z-10 text-center">
-            <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-4">
-                <Check size={48} className="text-white" />
+          <div className="relative z-10 text-center animate-fade-in">
+            <div className="mb-5">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-3 shadow-lg shadow-emerald-500/30">
+                <Check size={40} className="text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-white mb-2">The Ritual is Complete!</h2>
-              <p className="text-gray-400">You have received your starter deck.</p>
+              <h2 className="text-2xl font-bold text-white mb-1">The Ritual is Complete!</h2>
+              <p className="text-gray-400 text-sm">You have received your starter deck.</p>
             </div>
 
-            <div className="bg-gray-800/80 rounded-xl p-6 mb-6 border border-orange-500/30">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br ${FACTION_INFO[selectedFaction].color}`}>
-                  {React.createElement(FACTION_INFO[selectedFaction].icon, { size: 32, className: 'text-white' })}
+            <div className="bg-gray-800/80 rounded-xl p-4 mb-5 border border-orange-500/30">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${FACTION_INFO[selectedFaction].color}`}>
+                  {React.createElement(FACTION_INFO[selectedFaction].icon, { size: 24, className: 'text-white' })}
                 </div>
-                <div className="text-3xl">+</div>
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br ${ELEMENT_INFO[assignedElement].gradient}`}>
-                  {React.createElement(ELEMENT_INFO[assignedElement].icon, { size: 32, className: 'text-white' })}
+                <div className="text-gray-500 text-xl font-light">+</div>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${ELEMENT_INFO[assignedElement].gradient}`}>
+                  {React.createElement(ELEMENT_INFO[assignedElement].icon, { size: 24, className: 'text-white' })}
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">
+              <h3 className="text-lg font-bold text-white mb-1 leading-tight">
                 {ELEMENT_INFO[assignedElement].name} {FACTION_INFO[selectedFaction].tribes} Tribal
               </h3>
-              <p className="text-orange-400 font-semibold">40 Cards</p>
+              <p className="text-orange-400 font-semibold text-sm">40 Cards</p>
             </div>
 
             <button
               onClick={handleFinish}
-              className="w-full py-4 px-6 rounded-xl font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="w-full py-3.5 px-6 rounded-xl font-bold text-base bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Start Building Your Deck
             </button>
