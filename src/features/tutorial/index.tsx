@@ -8,7 +8,7 @@ import { useAchievementsStore } from '@/stores/useAchievementsStore';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { Card2D } from '@/features/game/components/Card2D';
 import { TheRitualModal } from '@/components/shared/TheRitualModal';
-import { Swords } from 'lucide-react';
+import { Swords, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function TutorialFeature() {
@@ -20,7 +20,7 @@ export function TutorialFeature() {
   const { incrementProgress, initialize } = useAchievementsStore();
   const { walletAddress } = useWalletStore();
 
-  const totalSteps = 12;
+  const totalSteps = 16;
 
   const [ritualCompleted, setRitualCompleted] = useState(false);
   const [tutorialStarted, setTutorialStarted] = useState(false);
@@ -130,8 +130,7 @@ export function TutorialFeature() {
     const allCompleted = new Set(Array.from({ length: totalSteps }, (_, i) => i + 1));
     saveProgress(totalSteps, allCompleted);
     incrementProgress('tutorial_complete');
-    // Reward for finishing: claim the starter deck (the Ritual). Skip path triggers this too.
-    if (!ritualCompleted) { setShowRitualModal(true); return; }
+    // Starter-deck claim now happens AFTER the interactive battle, not here.
     router.push('/tutorial/interactive');
   };
 
@@ -170,103 +169,111 @@ export function TutorialFeature() {
     {
       title: 'Card Types: Avatars',
       content: (
-        <div className="space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-            <h3 className="font-bold text-orange-400 mb-2">Avatar Cards</h3>
-            <p className="text-sm text-gray-200 mb-3">Your fighters on the battlefield. Each avatar has Health, Attack, Skills, and can have Passive abilities.</p>
-          </div>
+        <div className="space-y-3">
           <div className="flex justify-center">
-            {exampleAvatar && <div className="w-56"><Card2D card={exampleAvatar} /></div>}
+            {exampleAvatar && <Card2D card={exampleAvatar} isPlayable scale={2.4} />}
+          </div>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Avatar Cards</h3>
+            <p className="text-xs text-gray-300">Your fighters on the battlefield — each has Health, Attack, Skills, and can have Passive abilities.</p>
           </div>
         </div>
       )
     },
     {
-      title: 'Level 1 vs Level 2 Avatars',
+      title: 'Level 1 Avatars',
       content: (
-        <div className="space-y-4">
-          <p className="text-orange-400 mb-4">Avatars come in two levels, each with different strategic purposes.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h3 className="font-bold text-orange-400 mb-3">Level 1 Avatars</h3>
-              <ul className="space-y-2 text-sm text-gray-200 mb-3">
-                <li>• <strong>Lower Stats:</strong> 4-8 HP, deal 2-4 damage</li>
-                <li>• <strong>Spektra Generation:</strong> Perfect for early game</li>
-                <li>• <strong>Consistent:</strong> Easy to play multiple copies</li>
-              </ul>
-              {exampleLevel1Avatar && <div className="flex justify-center mt-3"><div className="w-48"><Card2D card={exampleLevel1Avatar} /></div></div>}
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h3 className="font-bold text-orange-400 mb-3">Level 2 Avatars</h3>
-              <ul className="space-y-2 text-sm text-gray-200 mb-3">
-                <li>• <strong>Higher Stats:</strong> 8-12 HP, deal 4-8 damage</li>
-                <li>• <strong>Powerful Effects:</strong> Often have passive skills</li>
-                <li>• <strong>Game Changers:</strong> Turn the tide of battle</li>
-              </ul>
-              {exampleLevel2Avatar && <div className="flex justify-center mt-3"><div className="w-48"><Card2D card={exampleLevel2Avatar} /></div></div>}
-            </div>
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleLevel1Avatar && <Card2D card={exampleLevel1Avatar} isPlayable scale={2.4} />}
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border border-yellow-600">
-            <h3 className="font-bold text-orange-400 mb-2">Strategic Tips</h3>
-            <ul className="space-y-1 text-sm text-gray-200">
-              <li>• Use Level 1 avatars for early spektra generation</li>
-              <li>• Save Level 2 avatars for mid-to-late game</li>
-              <li>• Balance both levels: typically 8-12 Level 1s and 2-4 Level 2s</li>
-            </ul>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Level 1 Avatars</h3>
+            <p className="text-xs text-gray-300">4–8 HP, deal 2–4 damage. Great spektra fuel and consistent early plays — run ~8–12.</p>
           </div>
         </div>
       )
     },
     {
-      title: 'Action Cards: Part 1',
+      title: 'Level 2 Avatars',
       content: (
-        <div className="space-y-4">
-          <p className="text-orange-400 mb-4">Action cards provide powerful effects to support your strategy.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h4 className="font-semibold text-orange-400 mb-2">Spell Cards</h4>
-              <p className="text-sm text-gray-200 mb-3">Played during your Main Phase, go to the graveyard after use.</p>
-              {exampleSpell && <div className="flex justify-center"><div className="w-44"><Card2D card={exampleSpell} /></div></div>}
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h4 className="font-semibold text-orange-400 mb-2">Quick Spell Cards</h4>
-              <p className="text-sm text-gray-200 mb-3">Can be played instantly, even during your opponent's turn!</p>
-              {exampleQuickSpell && <div className="flex justify-center"><div className="w-44"><Card2D card={exampleQuickSpell} /></div></div>}
-            </div>
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleLevel2Avatar && <Card2D card={exampleLevel2Avatar} isPlayable scale={2.4} />}
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-            <h4 className="font-semibold text-orange-400 mb-2">Equipment Cards (Ritual Armor)</h4>
-            <p className="text-sm text-gray-200 mb-3">Attach to avatars to enhance their abilities or provide protection.</p>
-            {exampleEquipment && <div className="flex justify-center"><div className="w-44"><Card2D card={exampleEquipment} /></div></div>}
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Level 2 Avatars</h3>
+            <p className="text-xs text-gray-300">8–12 HP, deal 4–8 damage. Often have passive skills — game changers. Run 2–4 for late game.</p>
           </div>
         </div>
       )
     },
     {
-      title: 'Action Cards: Part 2',
+      title: 'Action Cards: Spells',
       content: (
-        <div className="space-y-4">
-          <p className="text-orange-400 mb-4">Utility and battlefield-altering action cards.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h4 className="font-semibold text-orange-400 mb-2">Field Cards</h4>
-              <p className="text-sm text-gray-200 mb-3">Change the battlefield itself, affecting all avatars for a limited duration.</p>
-              {exampleField && <div className="flex justify-center"><div className="w-44"><Card2D card={exampleField} /></div></div>}
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h4 className="font-semibold text-orange-400 mb-2">Item Cards</h4>
-              <p className="text-sm text-gray-200 mb-3">Utility cards for drawing cards, healing, or searching your deck.</p>
-              {exampleItem && <div className="flex justify-center"><div className="w-44"><Card2D card={exampleItem} /></div></div>}
-            </div>
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleSpell && <Card2D card={exampleSpell} isPlayable scale={2.4} />}
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-            <h3 className="font-bold text-orange-400 mb-2">Building Your Action Card Mix</h3>
-            <ul className="space-y-1 text-sm text-gray-200">
-              <li>• Include 3-5 damage spells for offense</li>
-              <li>• Add 2-3 Quick Spells for defense and surprise plays</li>
-              <li>• Consider 1-2 Equipment cards to boost key avatars</li>
-              <li>• Add utility Items for card draw and deck searching</li>
-            </ul>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Spell Cards</h3>
+            <p className="text-xs text-gray-300">Played in your Main Phase, then go to the graveyard. Run 3–5 damage spells for offense.</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Action Cards: Quick Spells',
+      content: (
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleQuickSpell && <Card2D card={exampleQuickSpell} isPlayable scale={2.4} />}
+          </div>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Quick Spell Cards</h3>
+            <p className="text-xs text-gray-300">Play instantly — even on your opponent&apos;s turn! Add 2–3 for defense and surprise plays.</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Action Cards: Equipment',
+      content: (
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleEquipment && <Card2D card={exampleEquipment} isPlayable scale={2.4} />}
+          </div>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Equipment (Ritual Armor)</h3>
+            <p className="text-xs text-gray-300">Attach to avatars to boost abilities or add protection. Consider 1–2 to buff key avatars.</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Action Cards: Fields',
+      content: (
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleField && <Card2D card={exampleField} isPlayable scale={2.4} />}
+          </div>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Field Cards</h3>
+            <p className="text-xs text-gray-300">Change the battlefield itself, affecting all avatars for a limited duration.</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Action Cards: Items',
+      content: (
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {exampleItem && <Card2D card={exampleItem} isPlayable scale={2.4} />}
+          </div>
+          <div className="bg-gray-800/60 p-3 rounded-lg border border-orange-500/50 text-center">
+            <h3 className="font-bold text-orange-400 mb-1 text-sm">Item Cards</h3>
+            <p className="text-xs text-gray-300">Utility cards for drawing cards, healing, or searching your deck.</p>
           </div>
         </div>
       )
@@ -370,8 +377,8 @@ export function TutorialFeature() {
           </div>
           {examplePassiveCard && 'passiveSkill' in examplePassiveCard && (examplePassiveCard as any).passiveSkill && (
             <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
-              <h3 className="font-bold text-orange-400 mb-3">Example:</h3>
-              <div className="flex justify-center"><div className="w-56"><Card2D card={examplePassiveCard} /></div></div>
+              <h3 className="font-bold text-orange-400 mb-3 text-center">Example</h3>
+              <div className="flex justify-center"><Card2D card={examplePassiveCard} isPlayable scale={2.4} /></div>
             </div>
           )}
         </div>
@@ -479,6 +486,13 @@ export function TutorialFeature() {
   return (
     <div className="flex flex-col items-center pb-24 pt-14 overflow-y-auto" style={{ fontFamily: 'Noto Sans, Inter, sans-serif' }}>
       <div className="max-w-md mx-auto p-4 w-full">
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-1.5 mb-3 text-sm text-gray-400 hover:text-orange-400 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </button>
         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg p-4 mb-4 border-2 border-yellow-400" style={{ boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)' }}>
           <div className="flex justify-between items-center mb-3">
             <h1 className="text-3xl font-bold text-white">Tutorial</h1>
@@ -519,7 +533,7 @@ export function TutorialFeature() {
               </button>
               {!ritualCompleted && (
                 <p className="mt-3 text-center text-xs text-gray-400">
-                  Finish the tutorial (or skip) to claim your free starter deck.
+                  Win the interactive tutorial battle to claim your free starter deck.
                 </p>
               )}
             </>
@@ -543,18 +557,6 @@ export function TutorialFeature() {
                 >
                   &larr; Prev
                 </button>
-                <div className="flex space-x-1">
-                  {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-                    <div
-                      key={step}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        step === currentStep ? 'bg-orange-500 w-6 shadow-lg'
-                          : completedSteps.has(step) ? 'bg-green-500' : 'bg-gray-600'
-                      }`}
-                      style={step === currentStep ? { boxShadow: '0 0 8px rgba(249, 115, 22, 0.8)' } : {}}
-                    />
-                  ))}
-                </div>
                 {currentStep < totalSteps ? (
                   <button
                     onClick={handleNext}
@@ -569,7 +571,7 @@ export function TutorialFeature() {
                     className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium hover:from-orange-400 hover:to-orange-500 transition-all text-sm shadow-lg"
                     style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.6)' }}
                   >
-                    {ritualCompleted ? 'Play!' : 'Claim Starter Deck'}
+                    Start Battle &rarr;
                   </button>
                 )}
               </div>

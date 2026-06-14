@@ -4,6 +4,9 @@ import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card2D } from '@/features/game/components/Card2D'
+import { TheRitualModal } from '@/components/shared/TheRitualModal'
+import { useWalletStore } from '@/stores/useWalletStore'
+import { apiFetch } from '@/lib/api'
 import { newFireAvatarCards, newFireSpellCards } from '@spektrum/shared/data'
 import type { AvatarCard, ActionCard } from '@spektrum/shared'
 
@@ -103,6 +106,10 @@ type OppPhase = 'idle' | 'banner' | 'spektra' | 'attacking' | 'result' | 'player
 // ─── Main component ───────────────────────────────────────────────────────────
 export function InteractiveTutorialFeature() {
   const router = useRouter()
+  const { walletAddress } = useWalletStore()
+
+  const [ritualCompleted, setRitualCompleted]   = useState(false)
+  const [showRitualModal, setShowRitualModal]   = useState(false)
 
   const [step, setStep]                         = useState(0)
   const [selectedId, setSelectedId]             = useState<string | null>(null)
@@ -353,6 +360,38 @@ export function InteractiveTutorialFeature() {
     return () => window.removeEventListener('keydown', h)
   }, [])
 
+  // Has the player already claimed their starter deck (the Ritual)?
+  useEffect(() => {
+    if (!walletAddress) return
+    apiFetch(`/api/player/ritual-status/${walletAddress}`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data) setRitualCompleted(data.hasCompletedRitual === true) })
+      .catch(() => {})
+  }, [walletAddress])
+
+  const handleClaimReward = useCallback(() => {
+    if (ritualCompleted) { router.push('/cards'); return }
+    setShowVictory(false)
+    setShowRitualModal(true)
+  }, [ritualCompleted, router])
+
+  const handleRitualComplete = useCallback(async (faction: string, element: string, deckId: string) => {
+    if (walletAddress) {
+      try {
+        await apiFetch('/api/player/complete-ritual', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ walletAddress, faction, element, starterDeckId: deckId }),
+        })
+      } catch { /* silently fail */ }
+    }
+    setRitualCompleted(true)
+    setShowRitualModal(false)
+    toast.success('Welcome to Spektrum! Your starter deck is ready.')
+    router.push('/cards')
+  }, [walletAddress, router])
+
   const activeAvatarCurrentHp = (activeAvatar?.health ?? 0) - activeAvatarDmg
   const oppCurrentHp = Math.max(0, REPO_GIRL.health - oppDmg)
   const isPlayerTurnBanner = oppPhase === 'player-banner'
@@ -373,16 +412,21 @@ export function InteractiveTutorialFeature() {
           >
             <div className="text-6xl mb-4">🏆</div>
             <h1 className="text-3xl font-bold text-orange-400 mb-2">You Win!</h1>
-            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+            <p className="text-gray-300 text-sm leading-relaxed mb-4">
               Repo Girl was defeated. You&apos;ve mastered Setup, Spektra, Spells,
               Summoning Sickness, Evolution, and Battle!
             </p>
+            {!ritualCompleted && (
+              <p className="text-orange-300 text-sm font-semibold mb-6">
+                🎁 Time to claim your free starter deck!
+              </p>
+            )}
             <button
-              onClick={() => router.push('/tutorial')}
+              onClick={handleClaimReward}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-orange-400"
               style={{ boxShadow: '0 0 20px rgba(249,115,22,0.4)' }}
             >
-              Exit
+              {ritualCompleted ? 'Continue to Collection' : 'Claim Starter Deck'}
             </button>
           </div>
         </div>
@@ -824,6 +868,12 @@ export function InteractiveTutorialFeature() {
 
         </div>
       </div>
+
+      <TheRitualModal
+        isOpen={showRitualModal}
+        onClose={() => { setShowRitualModal(false); router.push('/cards'); }}
+        onComplete={handleRitualComplete}
+      />
     </div>
   )
 }
