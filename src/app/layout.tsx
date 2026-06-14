@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter, Zen_Dots, Noto_Sans, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
@@ -26,6 +26,15 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Spektrum",
   description: "Spektrum Trading Card Game",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Unlocks env(safe-area-inset-*) on notch/home-bar phones; without it those
+  // values resolve to 0 and the body safe-area padding is dead code.
+  viewportFit: "cover",
+  themeColor: "#ffffff",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
