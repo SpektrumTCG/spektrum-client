@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card2D } from '@/features/game/components/Card2D'
+import { TutorialTour } from './TutorialTour'
 import { TheRitualModal } from '@/components/shared/TheRitualModal'
 import { useWalletStore } from '@/stores/useWalletStore'
 import { apiFetch } from '@/lib/api'
@@ -386,11 +387,12 @@ export function InteractiveTutorialFeature() {
         })
       } catch { /* silently fail */ }
     }
+    // Mark complete but keep the modal open so the step-3 "Ritual Complete"
+    // reveal shows. Navigation happens when the user taps "Start Building Your
+    // Deck" (modal handleFinish → onClose). Previously this closed + pushed to
+    // /cards immediately, so step 3 flashed past on the way out.
     setRitualCompleted(true)
-    setShowRitualModal(false)
-    toast.success('Welcome to Spektrum! Your starter deck is ready.')
-    router.push('/cards')
-  }, [walletAddress, router])
+  }, [walletAddress])
 
   const activeAvatarCurrentHp = (activeAvatar?.health ?? 0) - activeAvatarDmg
   const oppCurrentHp = Math.max(0, REPO_GIRL.health - oppDmg)
@@ -499,10 +501,18 @@ export function InteractiveTutorialFeature() {
           </button>
         </div>
 
-        {/* Instruction banner */}
-        <div className="mx-2 mb-2 px-3 py-2 bg-gray-800 border border-orange-500/50 rounded-lg">
-          <p className="text-xs text-orange-200 leading-relaxed">{stepDef.instruction}</p>
-        </div>
+        {/* Interactive tour popover — anchors to the spotlit zone */}
+        <TutorialTour
+          stepIndex={step}
+          total={STEPS.length}
+          phase={stepDef.phase}
+          title={stepDef.title}
+          instruction={stepDef.instruction}
+          anchorId={stepDef.spotlit[0]}
+          spotlitIds={stepDef.spotlit}
+          hidden={oppPhase !== 'idle' || showVictory}
+          onExit={() => router.push('/tutorial')}
+        />
 
         {/* Selected card hint */}
         {(selectedId || attackingField) && (
