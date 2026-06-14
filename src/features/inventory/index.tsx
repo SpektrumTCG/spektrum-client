@@ -338,7 +338,7 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
         </motion.div>
 
         {/* Content */}
-        <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-orange-600 scrollbar-track-gray-800">
+        <div>
           {unopenedPacks.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
