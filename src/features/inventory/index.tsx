@@ -24,6 +24,20 @@ const PackOpener3D = dynamic(
     ),
   }
 );
+
+// 10x bundles get a 3D carousel hub before the per-pack opener. Lazy like the
+// single opener so browsing the inventory stays free of the three.js chunk.
+const BundlePackOpener = dynamic(
+  () => import('@/components/pack-opener-3d/BundlePackOpener').then((m) => m.BundlePackOpener),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-orange-400 border-t-transparent" />
+      </div>
+    ),
+  }
+);
 import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -46,6 +60,8 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
   const [isOnChainOpen, setIsOnChainOpen] = useState(false);
   const [showAnimatedReveal, setShowAnimatedReveal] = useState(false);
   const [animationCards, setAnimationCards] = useState<Card[]>([]);
+  // A 10x bundle currently being opened through the 3D carousel.
+  const [bundleOpening, setBundleOpening] = useState<InventoryBoosterPack | null>(null);
 
   useEffect(() => {
     initializeInventory();
@@ -89,6 +105,10 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
 
   const handleOpenPack = (pack: InventoryBoosterPack) => {
     if (isOpening || isProcessing) return;
+    if (isBundle(pack)) {
+      requireAuth(() => setBundleOpening(pack)); // bundles open via the carousel hub
+      return;
+    }
     // warm the 3D chunk + GLB + card-back texture before the reveal
     void import('@/components/pack-opener-3d/PackOpener3D')
       .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
@@ -102,10 +122,23 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
     if (isOpening || isProcessing) return;
     setHighlightId(undefined);
     router.replace('/inventory');
+    if (isBundle(pack)) {
+      requireAuth(() => setBundleOpening(pack));
+      return;
+    }
     void import('@/components/pack-opener-3d/PackOpener3D')
       .then((m) => m.preloadPackOpenerAssets(getPackImageUrl(pack)))
       .catch(() => { /* preload is best-effort */ });
     requireAuth(() => { void runOpenPack(pack); });
+  };
+
+  // The carousel session ended (bundle emptied or user exited). Cards were
+  // already saved to the collection as each pack opened.
+  const handleBundleExit = (cards: Card[]) => {
+    setBundleOpening(null);
+    if (cards.length > 0) {
+      toast.success(`Opened ${cards.length} cards from your bundle!`);
+    }
   };
 
   const runOpenPack = async (pack: InventoryBoosterPack) => {
@@ -251,7 +284,7 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
                         <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
                         Opening...
                       </span>
-                    ) : bundle ? 'Open first pack' : 'Open now'}
+                    ) : bundle ? 'Open bundle pack' : 'Open now'}
                   </Button>
                   <button
                     onClick={dismissHighlight}
@@ -273,7 +306,7 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
                       <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
                       Opening...
                     </span>
-                  ) : bundle ? 'Open pack' : 'Open'}
+                  ) : bundle ? 'Open bundle pack' : 'Open'}
                 </Button>
               )}
             </div>
@@ -356,6 +389,15 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
           packName={openingPack.name}
           cards={animationCards}
           onAnimationComplete={handleOpeningAnimationComplete}
+        />
+      )}
+
+      {/* 10x bundle: carousel hub → per-pack opener */}
+      {bundleOpening && (
+        <BundlePackOpener
+          pack={bundleOpening}
+          packArt={getPackImageUrl(bundleOpening)}
+          onExit={handleBundleExit}
         />
       )}
     </div>
