@@ -1045,8 +1045,8 @@ export function MultiplayerFeature() {
                 <Coins size={16} className="text-slate-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-800">Wallet not connected</p>
-                <p className="text-[11px] text-slate-500">Connect to unlock Ante Mode &amp; NFT rewards.</p>
+                <p className="text-xs font-bold text-slate-800">Not signed in</p>
+                <p className="text-[11px] text-slate-500">Sign in to unlock Ante Mode &amp; NFT rewards.</p>
               </div>
               <div className="shrink-0">
                 <SolanaWalletConnect onConnected={(address) => setWalletAddress(address)} />

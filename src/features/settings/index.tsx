@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -182,6 +182,12 @@ export function SettingsFeature() {
   const { scale, setScale } = useUIScale();
   const { isSignedIn, email, walletAddress, login, logout } = useAuthSession();
 
+  // Scale is client-only (persisted/auto-detected). Gate on mount so SSR (100)
+  // matches the first client render, then swap to the real value — avoids hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const displayScale = mounted ? scale : 100;
+
   const [gameSettings, setGameSettings] = useState({
     visualQuality: 'high',
     gameSpeed: 'normal',
@@ -272,14 +278,14 @@ export function SettingsFeature() {
           <div className="px-4 py-3">
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-medium text-slate-900">Interface size</span>
-              <span className="font-mono text-xs tabular-nums text-orange-600">{scale}%</span>
+              <span className="font-mono text-xs tabular-nums text-orange-600">{displayScale}%</span>
             </div>
             <input
               type="range"
               min="25"
               max="125"
               step="5"
-              value={scale}
+              value={displayScale}
               aria-label="Interface size"
               onChange={(e) => setScale(parseInt(e.target.value))}
               className="mt-3 h-1.5 w-full cursor-pointer accent-orange-500"

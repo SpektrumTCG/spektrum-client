@@ -8,7 +8,7 @@ import { useAchievementsStore } from '@/stores/useAchievementsStore';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { Card2D } from '@/features/game/components/Card2D';
 import { TheRitualModal } from '@/components/shared/TheRitualModal';
-import { Swords, Sparkles } from 'lucide-react';
+import { Swords } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function TutorialFeature() {
@@ -130,6 +130,8 @@ export function TutorialFeature() {
     const allCompleted = new Set(Array.from({ length: totalSteps }, (_, i) => i + 1));
     saveProgress(totalSteps, allCompleted);
     incrementProgress('tutorial_complete');
+    // Reward for finishing: claim the starter deck (the Ritual). Skip path triggers this too.
+    if (!ritualCompleted) { setShowRitualModal(true); return; }
     router.push('/tutorial/interactive');
   };
 
@@ -400,7 +402,7 @@ export function TutorialFeature() {
             <div className="bg-gray-800 p-4 rounded-lg border border-orange-500 text-orange-100">
               <h3 className="font-bold text-orange-400 mb-3">Payment &amp; Wallet</h3>
               <ul className="space-y-1 text-xs text-gray-300">
-                <li>• Connect your Solana wallet (Phantom, Solflare, etc.) to make purchases</li>
+                <li>• Sign in to make purchases — your wallet is created for you automatically</li>
                 <li>• Purchased packs appear in your Inventory</li>
                 <li>• Cards are minted as cNFTs when you open packs</li>
               </ul>
@@ -509,20 +511,16 @@ export function TutorialFeature() {
               </div>
               <button
                 onClick={() => setTutorialStarted(true)}
-                className="w-full mb-3 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center shadow-lg border border-blue-500"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 rounded-lg font-semibold hover:from-orange-400 hover:to-orange-500 transition-all flex items-center justify-center shadow-lg"
+                style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.6)' }}
               >
                 <Swords className="w-4 h-4 mr-2" />
                 Start Tutorial
               </button>
               {!ritualCompleted && (
-                <button
-                  onClick={() => setShowRitualModal(true)}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 rounded-lg font-semibold hover:from-orange-400 hover:to-orange-500 transition-all flex items-center justify-center shadow-lg"
-                  style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.6)' }}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Begin The Ritual
-                </button>
+                <p className="mt-3 text-center text-xs text-gray-400">
+                  Finish the tutorial (or skip) to claim your free starter deck.
+                </p>
               )}
             </>
           ) : (
@@ -568,9 +566,10 @@ export function TutorialFeature() {
                 ) : (
                   <button
                     onClick={handleComplete}
-                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium hover:from-green-400 hover:to-green-500 transition-all text-sm shadow-lg"
+                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium hover:from-orange-400 hover:to-orange-500 transition-all text-sm shadow-lg"
+                    style={{ boxShadow: '0 0 15px rgba(249, 115, 22, 0.6)' }}
                   >
-                    Play!
+                    {ritualCompleted ? 'Play!' : 'Claim Starter Deck'}
                   </button>
                 )}
               </div>
