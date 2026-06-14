@@ -8,7 +8,6 @@ import type { Card } from '@spektrum/shared';
 import { toast } from 'sonner';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { useRequireAuth } from '@/components/shared/AuthGateModal';
-import { CardRewardPopup } from '@/components/shared/CardRewardPopup';
 import { AnimatedCardReveal } from '@/components/shared/AnimatedCardReveal';
 import dynamic from 'next/dynamic';
 
@@ -37,23 +36,16 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
   const {
     getUnopened,
     openBoosterPack,
-    getPackById,
     initializeInventory
   } = useInventoryStore();
 
   const [isOpening, setIsOpening] = useState(false);
-  const [showRewardPopup, setShowRewardPopup] = useState(false);
-  const [rewardCards, setRewardCards] = useState<Card[]>([]);
-  const [rewardTitle, setRewardTitle] = useState('');
   const [openingPack, setOpeningPack] = useState<InventoryBoosterPack | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showOpeningAnimation, setShowOpeningAnimation] = useState(false);
   const [isOnChainOpen, setIsOnChainOpen] = useState(false);
   const [showAnimatedReveal, setShowAnimatedReveal] = useState(false);
   const [animationCards, setAnimationCards] = useState<Card[]>([]);
-  // When a bundle still has sealed packs after a reveal, this holds the bundle
-  // so the reward popup can offer "Open next pack" without leaving the flow.
-  const [bundleNext, setBundleNext] = useState<InventoryBoosterPack | null>(null);
 
   useEffect(() => {
     initializeInventory();
@@ -140,20 +132,10 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
     }
   };
 
-  // After a pack reveal finishes, surface the reward popup. For bundles that
-  // still hold sealed packs, stash the updated bundle so the popup can chain.
-  const finishReveal = (openedPack: InventoryBoosterPack | null) => {
+  // After a pack reveal finishes, reset back to the inventory list. Bundles keep
+  // their remaining sealed packs in the grid — the user opens the next from there.
+  const finishReveal = () => {
     if (animationCards.length > 0) {
-      const updated = openedPack ? getPackById(openedPack.id) : undefined;
-      const remaining = updated && !updated.isOpened ? packsLeft(updated) : 0;
-      setBundleNext(remaining > 0 ? updated! : null);
-      setRewardCards(animationCards);
-      setRewardTitle(
-        updated && isBundle(updated)
-          ? `Pack opened · ${remaining} left`
-          : `Opened ${openedPack?.name || 'Pack'}`
-      );
-      setShowRewardPopup(true);
       toast.success(`Received ${animationCards.length} cards!`);
     }
     setOpeningPack(null);
@@ -164,22 +146,12 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
   const handleAnimatedRevealComplete = () => {
     setShowAnimatedReveal(false);
     setIsOnChainOpen(false);
-    finishReveal(openingPack);
+    finishReveal();
   };
 
   const handleOpeningAnimationComplete = () => {
     setShowOpeningAnimation(false);
-    finishReveal(openingPack);
-  };
-
-  // Chain to the next sealed pack in a bundle straight from the reward popup.
-  const handleOpenNextInBundle = () => {
-    const next = bundleNext;
-    if (!next) return;
-    setShowRewardPopup(false);
-    setBundleNext(null);
-    setRewardCards([]);
-    requireAuth(() => { void runOpenPack(next); });
+    finishReveal();
   };
 
   const getRarityColor = (rarity: string) => {
@@ -386,17 +358,6 @@ export function InventoryFeature({ highlightPackId }: { highlightPackId?: string
           onAnimationComplete={handleOpeningAnimationComplete}
         />
       )}
-
-      {/* Card Reward Popup */}
-      <CardRewardPopup
-        isOpen={showRewardPopup}
-        onClose={() => { setShowRewardPopup(false); setBundleNext(null); }}
-        title={rewardTitle}
-        subtitle="Cards added to your collection"
-        cards={rewardCards}
-        primaryActionLabel={bundleNext ? `Open next pack (${packsLeft(bundleNext)} left)` : undefined}
-        onPrimaryAction={bundleNext ? handleOpenNextInBundle : undefined}
-      />
     </div>
   );
 }

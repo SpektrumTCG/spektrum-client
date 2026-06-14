@@ -73,7 +73,9 @@ function PackArtDecal({ packImageUrl, keepTop, packSize }: PackArtDecalProps) {
 
   return (
     <mesh ref={meshRef} material={material} position={[0, 0, packSize.z / 2 + 0.012]}>
-      <planeGeometry args={[packSize.x * 0.94, PACK_HEIGHT * 0.97]} />
+      {/* Over-scale slightly so the art's body bleeds to the pack edges and the
+          GLB base never peeks through as a white border. */}
+      <planeGeometry args={[packSize.x * 1.16, PACK_HEIGHT * 1.12]} />
     </mesh>
   );
 }
@@ -123,6 +125,9 @@ function useClippedPack(keepTop: boolean): { root: THREE.Group; tearUniforms: Te
               clone.metalness = 0.6;
               clone.roughness = 0.25;
               clone.envMapIntensity = 1.2;
+              // Tint the base into a dark foil so the pack's curved side edges
+              // read as a subtle metallic rim — not white plastic, not flat black.
+              clone.color = new THREE.Color('#2a2730');
             }
             tearUniforms.push(applyTearEdge(clone, keepTop, TEAR_Y));
             return clone;

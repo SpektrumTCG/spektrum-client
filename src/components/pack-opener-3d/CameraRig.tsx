@@ -11,7 +11,7 @@ import type { MotionValue } from 'framer-motion';
  * Moving the camera (not the pack) keeps the world-space clipping planes and
  * tear-shader uniforms valid.
  */
-export const CAM_APPROACH_DY = 1.4;  // camera rises → pack appears lower
+export const CAM_APPROACH_DY = 0.6;  // camera rises → pack appears lower
 export const CAM_APPROACH_DZ = 2.75; // camera advances 9 → 6.25
 
 export function CameraRig({ approach }: { approach: MotionValue<number> }) {
