@@ -79,13 +79,13 @@ export const variantTemplates: PackSlotConfig[] = [
   {
     rarity: 'Beginner',
     subtitle: 'Basic Collection',
-    description: '5 cards: 3x Common, 1x Uncommon, 1x Wild Slot',
+    description: '5 cards: 3x Common, 1x Uncommon, 1x Rare Slot',
     price: 1.00,
     priceMultiplier: 1.0,
     guaranteedSlots: ['Common', 'Common', 'Common', 'Uncommon'],
-    wildSlotWeights: { 'Common': 0.90, 'Uncommon': 0.00, 'Rare': 0.099, 'Super Rare': 0.001, 'Mythic': 0.00 },
-    guaranteedRarities: ['Uncommon'],
-    rarityWeights: { 'Common': 0.90, 'Uncommon': 0.00, 'Rare': 0.099, 'Super Rare': 0.001, 'Mythic': 0.00 }
+    wildSlotWeights: { 'Common': 0.00, 'Uncommon': 0.00, 'Rare': 0.98, 'Super Rare': 0.018, 'Mythic': 0.002 },
+    guaranteedRarities: ['Rare'],
+    rarityWeights: { 'Common': 0.00, 'Uncommon': 0.00, 'Rare': 0.98, 'Super Rare': 0.018, 'Mythic': 0.002 }
   },
   {
     rarity: 'Advanced',
