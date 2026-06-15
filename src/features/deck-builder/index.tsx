@@ -8,7 +8,7 @@ import type { Deck } from '@/stores/useDeckStore';
 import type { Card, ElementType, AvatarCard, RarityType } from '@spektrum/shared';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { getRarityColor, getRarityTextColor, getOriginalCardId, countOwnedCopies } from '@/lib/rarityUtils';
 import { useWalletStore } from '@/stores/useWalletStore';
@@ -437,7 +437,7 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
                     </div>
                     <button
                       onClick={handleAddAllCards}
-                      className="w-full mb-2 px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-medium border border-purple-500 transition-colors"
+                      className="mb-2 w-full rounded-lg border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-xs font-semibold text-orange-300 transition-colors hover:border-orange-500/70 hover:bg-orange-500/20 hover:text-orange-200"
                     >
                       + Add All Owned Cards
                     </button>
@@ -448,35 +448,44 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
                           No cards added yet. Add cards from the collection.
                         </div>
                       ) : (
-                        <div className="space-y-1">
-                          {selectedCards.map((card, index) => (
-                            <div
-                              key={`${card.id}-${index}`}
-                              className="flex items-center justify-between bg-gray-800 rounded p-2 text-sm"
-                            >
-                              <div className="flex items-center">
+                        <div className="space-y-1.5">
+                          {selectedCards.map((card, index) => {
+                            const accent =
+                              card.element === 'fire' ? 'bg-red-500' :
+                              card.element === 'water' ? 'bg-blue-500' :
+                              card.element === 'air' ? 'bg-cyan-400' :
+                              card.element === 'ground' ? 'bg-amber-600' : 'bg-gray-400';
+                            return (
+                              <div
+                                key={`${card.id}-${index}`}
+                                className="group flex items-center gap-2.5 overflow-hidden rounded-lg border border-white/10 bg-gray-800 pr-2 text-sm transition-colors hover:border-orange-500/40"
+                              >
+                                <span className={`h-12 w-1 shrink-0 ${accent}`} aria-hidden />
                                 {((card as AvatarCard).imagePath || card.art) ? (
-                                  <div className={`w-8 h-8 mr-2 rounded overflow-hidden border-2 ${card.rarity ? getRarityColor(card.rarity) : 'border-gray-400'}`}>
-                                    <SafeCardImage src={(card as AvatarCard).imagePath || card.art || ''} alt={card.name} className="w-full h-full object-cover" />
+                                  <div className={`my-1.5 h-9 w-9 shrink-0 overflow-hidden rounded border ${card.rarity ? getRarityColor(card.rarity) : 'border-gray-600'}`}>
+                                    <SafeCardImage src={(card as AvatarCard).imagePath || card.art || ''} alt={card.name} className="h-full w-full object-cover" />
                                   </div>
                                 ) : (
-                                  <div
-                                    className={`w-3 h-3 rounded-full mr-2 ${
-                                      card.element === 'fire' ? 'bg-red-500' :
-                                      card.element === 'water' ? 'bg-blue-500' :
-                                      card.element === 'air' ? 'bg-cyan-300' :
-                                      card.element === 'ground' ? 'bg-amber-700' : 'bg-gray-400'
-                                    }`}
-                                  />
+                                  <span className={`my-1.5 h-3 w-3 shrink-0 rounded-full ${accent}`} />
                                 )}
-                                <span className="truncate max-w-[140px] text-white">{card.name}</span>
+                                <div className="min-w-0 flex-1 py-1.5">
+                                  <p className="truncate font-medium text-white">{card.name}</p>
+                                  <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                                    {card.type}
+                                    {card.type === 'avatar' && <> &middot; Lv{(card as AvatarCard).level}</>}
+                                  </p>
+                                </div>
+                                <button
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                                  onClick={() => handleRemoveCard(index)}
+                                  title="Remove card"
+                                  aria-label={`Remove ${card.name}`}
+                                >
+                                  <X size={15} />
+                                </button>
                               </div>
-                              <div className="flex items-center">
-                                <span className="text-xs bg-gray-700 px-1 rounded mr-2 text-white">{card.type}</span>
-                                <button className="text-red-400 hover:text-red-300" onClick={() => handleRemoveCard(index)}>X</button>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -566,7 +575,7 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
                   </div>
 
                   {/* Card grid */}
-                  <div className={`grid gap-4 overflow-y-auto p-4 w-full max-h-[600px] ${embedded ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
+                  <div className={`grid gap-3 overflow-y-auto p-1 w-full max-h-[600px] ${embedded ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
                     {filteredCards.map((card, index) => {
                       const countKey = getCountKey(card);
                       const deckCount = cardCounts[countKey] || 0;
@@ -577,101 +586,83 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
 
                       if (walletCount === 0) return null;
 
+                      const elementBg =
+                        card.element === 'fire' ? 'bg-gradient-to-b from-red-900/80 to-gray-900' :
+                        card.element === 'water' ? 'bg-gradient-to-b from-blue-900/80 to-gray-900' :
+                        card.element === 'air' ? 'bg-gradient-to-b from-cyan-900/80 to-gray-900' :
+                        card.element === 'ground' ? 'bg-gradient-to-b from-amber-900/80 to-gray-900' :
+                        'bg-gradient-to-b from-gray-700/80 to-gray-900';
+                      const elementText =
+                        card.element === 'fire' ? 'text-red-300' :
+                        card.element === 'water' ? 'text-blue-300' :
+                        card.element === 'air' ? 'text-cyan-300' :
+                        card.element === 'ground' ? 'text-amber-300' :
+                        'text-gray-300';
+                      const img = (card as AvatarCard).imagePath || card.art;
+
                       return (
                         <div
                           key={`${card.id}-${index}`}
-                          className={`bg-gray-700 rounded-lg overflow-hidden transition-transform hover:scale-110 shadow-lg ${isMaxed ? 'opacity-50' : ''}`}
+                          className={`group relative flex flex-col overflow-hidden rounded-xl border border-white/10 bg-gray-800 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:border-orange-500/60 hover:shadow-[0_8px_24px_rgba(249,115,22,0.18)] ${isMaxed ? 'opacity-60' : ''}`}
                         >
-                          <div className="relative group">
-                            <div
-                              className={`h-32 flex items-center justify-center relative ${
-                                card.element === 'fire' ? 'bg-red-900' :
-                                card.element === 'water' ? 'bg-blue-900' :
-                                card.element === 'air' ? 'bg-cyan-900' :
-                                card.element === 'ground' ? 'bg-amber-900' : 'bg-gray-800'
-                              }`}
-                            >
-                              {((card as AvatarCard).imagePath || card.art) ? (
-                                <>
-                                  <SafeCardImage
-                                    src={(card as AvatarCard).imagePath || card.art || ''}
-                                    alt={card.name}
-                                    className="h-full w-full object-contain opacity-85"
-                                  />
-
-                                  {/* Hover tooltip */}
-                                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 bg-gray-900 bg-opacity-95 border border-orange-500 rounded-lg p-4 shadow-2xl w-72 text-sm text-left pointer-events-none" style={{ top: '120%', right: 0, maxHeight: '400px', overflowY: 'auto' }}>
-                                    <h3 className="font-bold text-lg mb-1 text-white">{card.name}</h3>
-                                    <div className="flex justify-between mb-2">
-                                      <div className="text-orange-300 font-semibold">
-                                        {card.type} &bull; {card.element}
-                                        {card.type === 'avatar' && ` \u2022 Lv${(card as AvatarCard).level}`}
-                                      </div>
-                                    </div>
-                                    {card.type === 'avatar' && (
-                                      <div className="mb-2 text-white">
-                                        <div>Health: {(card as AvatarCard).health}</div>
-                                      </div>
-                                    )}
-                                    {(card.type === 'spell' || card.type === 'quickSpell' || card.type === 'ritualArmor' || card.type === 'equipment') && (
-                                      <div className="mb-2">
-                                        <div className="text-gray-100">{card.description}</div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="text-center p-2 text-white">
-                                  <div className="font-bold">{card.name}</div>
-                                  <div className="text-xs bg-orange-600 border border-orange-400 text-white px-2 py-0.5 rounded inline-block font-bold mt-1">{card.type}</div>
-                                </div>
-                              )}
-                            </div>
-
-                            {deckCount > 0 && (
-                              <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center z-20">
-                                {deckCount}
+                          {/* Art */}
+                          <div className={`relative flex aspect-[3/4] items-center justify-center overflow-hidden ${elementBg}`}>
+                            {img ? (
+                              <SafeCardImage
+                                src={img}
+                                alt={card.name}
+                                className="h-full w-full object-contain"
+                              />
+                            ) : (
+                              <div className="px-2 text-center">
+                                <div className="text-sm font-bold text-white">{card.name}</div>
+                                <div className="mt-1 inline-block rounded border border-orange-400 bg-orange-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{card.type}</div>
                               </div>
                             )}
 
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-gray-900/70 to-transparent" />
+
                             {walletCount > 0 && (
-                              <div className="absolute top-1 left-1 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center z-20">
+                              <span className="absolute left-1.5 top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[11px] font-bold text-white shadow-md ring-1 ring-black/20" title="Owned">
                                 {walletCount}
-                              </div>
+                              </span>
+                            )}
+                            {deckCount > 0 && (
+                              <span className="absolute right-1.5 top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[11px] font-bold text-white shadow-md ring-1 ring-black/20" title="In deck">
+                                {deckCount}
+                              </span>
+                            )}
+                            {isMaxed && (
+                              <span className="absolute bottom-1.5 left-1.5 z-20 rounded bg-gray-900/85 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300 ring-1 ring-orange-500/40">
+                                Max
+                              </span>
                             )}
                           </div>
 
-                          <div className="p-3 bg-gray-800">
-                            <h3 className="text-xs font-bold text-white mb-2 line-clamp-2 leading-tight">{card.name}</h3>
+                          {/* Body */}
+                          <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+                            <h3 className="truncate text-xs font-bold leading-tight text-white" title={card.name}>{card.name}</h3>
 
-                            <div className="flex items-center gap-1 mb-2">
-                              <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded border border-orange-400 font-semibold">{card.type}</span>
-                              {card.type === 'avatar' && (card as AvatarCard).subType && (
-                                <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded border border-blue-400 font-semibold">
-                                  {(card as AvatarCard).subType.charAt(0).toUpperCase() + (card as AvatarCard).subType.slice(1)}
-                                </span>
-                              )}
+                            <div className="flex flex-wrap items-center gap-1">
+                              <span className={`text-[10px] font-bold uppercase tracking-wide ${elementText}`}>{card.element}</span>
+                              <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold text-gray-300 ring-1 ring-white/10">{card.type}</span>
                               {card.type === 'avatar' && (
-                                <span className="text-[10px] bg-gray-700 text-orange-300 px-1.5 py-0.5 rounded border border-gray-600 font-semibold ml-auto">
+                                <span className="ml-auto rounded bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-bold text-orange-300 ring-1 ring-orange-500/30">
                                   Lv{(card as AvatarCard).level}
                                 </span>
                               )}
                             </div>
 
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs font-semibold text-orange-300">{card.element}</span>
-                            </div>
-
-                            <div className="flex gap-2">
+                            <div className="mt-auto flex items-center gap-1.5 pt-1">
                               <button
-                                className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 disabled:bg-gray-600 disabled:text-gray-400 px-2 py-1 rounded-lg text-xs border border-orange-400 font-medium text-white"
+                                className="flex flex-1 items-center justify-center rounded-lg border border-orange-400 bg-gradient-to-r from-orange-600 to-orange-700 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:from-orange-500 hover:to-orange-600 disabled:cursor-not-allowed disabled:border-gray-600 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-400"
                                 onClick={(e) => { e.stopPropagation(); handleAddCard(card); }}
                                 disabled={isMaxed}
                               >
                                 {isMaxed ? 'Max' : 'Add'}
                               </button>
                               <button
-                                className="bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded-lg text-white text-xs border border-gray-500 font-medium transition-colors"
+                                className="flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-gray-300 transition-colors hover:border-orange-500/50 hover:text-orange-300"
                                 onClick={(e) => { e.stopPropagation(); setPreviewCard(card); }}
                                 title="Preview card details"
                               >
@@ -679,8 +670,8 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
                               </button>
                             </div>
 
-                            <div className="text-xs text-gray-400 mt-1 text-center">
-                              Own: {walletCount} | Variants: {variantCount}/4
+                            <div className="text-center text-[10px] text-gray-500">
+                              Own {walletCount} &middot; {variantCount}/4 variants
                             </div>
                           </div>
                         </div>
@@ -794,67 +785,29 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
       {/* Card Preview Modal */}
       {previewCard && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           onClick={() => setPreviewCard(null)}
         >
-          <div
-            className="bg-gray-900 rounded-lg border-2 border-spektrum-orange w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-full md:w-2/5 flex items-center justify-center bg-gray-800 p-4 md:p-6">
-              {(previewCard as AvatarCard).imagePath || previewCard.art ? (
-                <SafeCardImage
-                  src={(previewCard as AvatarCard).imagePath || previewCard.art || ''}
-                  alt={previewCard.name}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="w-full h-96 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
-                  No Image
-                </div>
-              )}
-            </div>
-
-            <div className="w-full md:w-3/5 p-6 overflow-y-auto flex flex-col">
-              <h2 className="text-3xl font-bold text-white mb-2">{previewCard.name}</h2>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <div className="text-spektrum-orange font-semibold">{previewCard.type}</div>
-                <div className="text-gray-400">&bull;</div>
-                <div className="text-blue-400 font-semibold">{previewCard.element}</div>
-                {previewCard.rarity && (
-                  <>
-                    <div className="text-gray-400">&bull;</div>
-                    <div className="text-yellow-400 font-semibold">{previewCard.rarity}</div>
-                  </>
-                )}
+          <div className="relative flex max-h-[90vh] max-w-[92vw] items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewCard(null)}
+              aria-label="Close preview"
+              className="absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-orange-400 bg-gray-900/90 text-orange-300 shadow-lg transition-colors hover:bg-gray-800 hover:text-orange-200"
+            >
+              <X size={18} />
+            </button>
+            {(previewCard as AvatarCard).imagePath || previewCard.art ? (
+              <SafeCardImage
+                src={(previewCard as AvatarCard).imagePath || previewCard.art || ''}
+                alt={previewCard.name}
+                className="max-h-[90vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+              />
+            ) : (
+              <div className="flex aspect-[3/4] w-[70vw] max-w-[320px] flex-col items-center justify-center rounded-xl border-2 border-spektrum-orange bg-gray-900 p-6 text-center">
+                <div className="text-xl font-bold text-white">{previewCard.name}</div>
+                <div className="mt-2 text-sm uppercase tracking-wide text-orange-300">{previewCard.type} &middot; {previewCard.element}</div>
               </div>
-
-              {previewCard.type === 'avatar' && (
-                <div className="mb-4 bg-gray-800 rounded p-4 border border-gray-700">
-                  <div className="text-white mb-3">
-                    <div className="text-sm mb-2">
-                      <span className="text-gray-400">Level:</span> <span className="font-bold ml-2">{(previewCard as AvatarCard).level}</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-gray-400">Health:</span> <span className="font-bold text-green-400 ml-2">{(previewCard as AvatarCard).health}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(previewCard.type === 'spell' || previewCard.type === 'quickSpell' || previewCard.type === 'equipment' || previewCard.type === 'ritualArmor' || previewCard.type === 'item') && previewCard.description && (
-                <div className="mb-4 bg-gray-800 rounded p-4 border border-gray-700">
-                  <div className="text-gray-100 text-sm leading-relaxed">{previewCard.description}</div>
-                </div>
-              )}
-
-              <button
-                onClick={() => setPreviewCard(null)}
-                className="w-full bg-spektrum-orange hover:bg-orange-600 text-white py-3 rounded-lg font-semibold mt-auto"
-              >
-                Close Preview
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}

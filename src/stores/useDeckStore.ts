@@ -552,34 +552,48 @@ export const useDeckStore = create<DeckStore>()(
             const hydratedCards = dbDeck.hydratedCards || [];
 
             if (hydratedCards.length > 0) {
-              const deckCards: Card[] = hydratedCards.map((card: any, index: number) => ({
-                id: `${dbDeck.deckId}-${card.cardId}-${index}`,
-                cardId: card.cardId,
-                name: card.name,
-                element: card.element,
-                tribe: card.tribe,
-                cardNumber: card.cardNumber,
-                imagePath: card.imagePath,
-                attack: card.attack,
-                health: card.health,
-                cost: card.cost,
-                rarity: card.rarity,
-                art: card.art,
-                description: card.description,
-                skills: card.skills,
-                cardType: card.cardType,
-                type: card.type,
-                level: card.level !== undefined ? Number(card.level) : (card.type === 'avatar' ? 1 : undefined),
-                subType: card.subType,
-                effectType: card.effectType,
-                effectValue: card.effectValue,
-                effectValue2: card.effectValue2,
-                effectTarget: card.effectTarget,
-                spektraCost: card.spektraCost,
-                passiveSkills: card.passiveSkills,
-                activeSkills: card.activeSkills,
-                equipmentSlots: card.equipmentSlots,
-              }));
+              const deckCards: Card[] = hydratedCards.map((card: any, index: number) => {
+                // Start from the canonical catalog card so display fields (name,
+                // art, skills, stats) are always populated even when the DB
+                // hydration is partial — premade purchases save card ids only, so
+                // server-side hydration can return rows with a blank name/art.
+                const base = cardRegistry.getCardById(card.cardId);
+                const merged: any = base ? { ...base } : {};
+                const dbFields: Record<string, any> = {
+                  name: card.name,
+                  element: card.element,
+                  tribe: card.tribe,
+                  cardNumber: card.cardNumber,
+                  imagePath: card.imagePath,
+                  attack: card.attack,
+                  health: card.health,
+                  cost: card.cost,
+                  rarity: card.rarity,
+                  art: card.art,
+                  description: card.description,
+                  skills: card.skills,
+                  cardType: card.cardType,
+                  type: card.type,
+                  level: card.level !== undefined ? Number(card.level) : undefined,
+                  subType: card.subType,
+                  effectType: card.effectType,
+                  effectValue: card.effectValue,
+                  effectValue2: card.effectValue2,
+                  effectTarget: card.effectTarget,
+                  spektraCost: card.spektraCost,
+                  passiveSkills: card.passiveSkills,
+                  activeSkills: card.activeSkills,
+                  equipmentSlots: card.equipmentSlots,
+                };
+                // Override base only with DB values that are actually present.
+                for (const [key, value] of Object.entries(dbFields)) {
+                  if (value !== undefined && value !== null && value !== '') merged[key] = value;
+                }
+                if (merged.level === undefined && merged.type === 'avatar') merged.level = 1;
+                merged.id = `${dbDeck.deckId}-${card.cardId}-${index}`;
+                merged.cardId = card.cardId;
+                return merged as Card;
+              });
 
               const persistedCoverId = (dbDeck as any).coverCardId;
               const resolvedCoverId = persistedCoverId
