@@ -242,6 +242,87 @@ export function buildDeckCards(deck: PremadeDeck): Card[] {
   return result.slice(0, DECK_SIZE)
 }
 
+export interface DeckContentItem {
+  name: string
+  quantity: number
+}
+export interface DeckContentGroup {
+  label: string
+  count: number
+  items: DeckContentItem[]
+}
+export interface DeckRandomChoice {
+  label: string
+  quantity: number
+  options: string[]
+}
+
+const GROUP_ORDER = [
+  "Avatar · Lv1",
+  "Avatar · Lv2",
+  "Spell",
+  "Quick Spell",
+  "Ritual Armor",
+  "Field",
+  "Item",
+  "Equipment",
+]
+
+function groupLabel(card: Card): string {
+  switch (card.type) {
+    case "avatar":
+      return (card as { level?: number }).level === 2 ? "Avatar · Lv2" : "Avatar · Lv1"
+    case "spell":
+      return "Spell"
+    case "quickSpell":
+      return "Quick Spell"
+    case "ritualArmor":
+      return "Ritual Armor"
+    case "field":
+      return "Field"
+    case "item":
+      return "Item"
+    case "equipment":
+      return "Equipment"
+    default:
+      return "Other"
+  }
+}
+
+/**
+ * Resolve a deck's card lists to display rows for the shop. Fixed cards are
+ * grouped by type (and avatar level); random slots are returned separately so the
+ * UI can present them as "1 of N" instead of guaranteed cards.
+ */
+export function getDeckContents(deck: PremadeDeck): {
+  groups: DeckContentGroup[]
+  random: DeckRandomChoice[]
+} {
+  const byLabel = new Map<string, Map<string, number>>()
+  for (const entry of deck.cards) {
+    const base = cardRegistry.getCardById(entry.cardId)
+    if (!base) continue
+    const label = groupLabel(base)
+    if (!byLabel.has(label)) byLabel.set(label, new Map())
+    const items = byLabel.get(label)!
+    items.set(base.name, (items.get(base.name) || 0) + entry.quantity)
+  }
+
+  const groups: DeckContentGroup[] = Array.from(byLabel, ([label, items]) => ({
+    label,
+    count: Array.from(items.values()).reduce((a, b) => a + b, 0),
+    items: Array.from(items, ([name, quantity]) => ({ name, quantity })),
+  })).sort((a, b) => GROUP_ORDER.indexOf(a.label) - GROUP_ORDER.indexOf(b.label))
+
+  const random: DeckRandomChoice[] = deck.randomSlots.map((slot) => {
+    const cards = slot.choices.map((id) => cardRegistry.getCardById(id)).filter(Boolean) as Card[]
+    const label = cards[0] ? `Random ${groupLabel(cards[0])}` : "Random"
+    return { label, quantity: slot.quantity, options: cards.map((c) => c.name) }
+  })
+
+  return { groups, random }
+}
+
 /** Collapse a built deck to canonical catalog ids with owned quantities. */
 export function deckCardQuantities(cards: Card[]): Array<{ cardId: string; quantity: number }> {
   const counts = new Map<string, number>()

@@ -3,13 +3,13 @@
 import { useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { useDeckStore } from "@/stores/useDeckStore"
 import { useWalletStore } from "@/stores/useWalletStore"
 import { useRequireAuth } from "@/components/shared/AuthGateModal"
 import { apiFetch } from "@/lib/api"
-import { PREMADE_DECKS, buildDeckCards, deckCardQuantities, type PremadeDeck } from "./premadeDecks"
+import { PREMADE_DECKS, buildDeckCards, deckCardQuantities, getDeckContents, type PremadeDeck } from "./premadeDecks"
 
 type Step = "deck-selection" | "confirm"
 
@@ -59,6 +59,40 @@ function StepHeader({
   )
 }
 
+function DeckContents({ deck }: { deck: PremadeDeck }) {
+  const { groups, random } = getDeckContents(deck)
+  return (
+    <div className="mt-3 space-y-3">
+      {groups.map((group) => (
+        <div key={group.label}>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-400">
+            {group.label} <span className="text-gray-500">· {group.count}</span>
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {group.items.map((item) => (
+              <li key={item.name} className="flex items-center justify-between text-xs text-gray-300">
+                <span>{item.name}</span>
+                <span className="text-gray-500">×{item.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      {random.map((slot, i) => (
+        <div key={`${slot.label}-${i}`} className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-400">
+            {slot.label} <span className="text-gray-500">· 1 random</span>
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            You get {slot.quantity} of: <span className="text-gray-300">{slot.options.join(" / ")}</span>
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function PremadeDeckFeature() {
   const router = useRouter()
   const { addCards, addDeck } = useDeckStore()
@@ -66,6 +100,7 @@ export function PremadeDeckFeature() {
   const [step, setStep] = useState<Step>("deck-selection")
   const [selectedDeck, setSelectedDeck] = useState<PremadeDeck | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showContents, setShowContents] = useState(false)
   const prefersReducedMotion = useReducedMotion()
 
   const handleBack = () => {
@@ -79,6 +114,7 @@ export function PremadeDeckFeature() {
 
   const handleDeckSelect = (deck: PremadeDeck) => {
     setSelectedDeck(deck)
+    setShowContents(false)
     setStep("confirm")
   }
 
@@ -238,7 +274,6 @@ export function PremadeDeckFeature() {
                       <span className="text-2xl" aria-hidden>{deck.emoji}</span>
                     </div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-400">{deck.subtitle}</p>
-                    <p className="mt-1.5 text-xs leading-snug text-gray-400">{deck.description}</p>
                     <div className="mt-3 flex items-end justify-between border-t border-white/10 pt-3">
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Contents</p>
@@ -287,6 +322,26 @@ export function PremadeDeckFeature() {
                     <span className="text-gray-400">Contents</span>
                     <span className="font-semibold text-white">40 cards · ready to play</span>
                   </div>
+
+                  <div className="border-t border-white/10 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowContents((v) => !v)}
+                      aria-expanded={showContents}
+                      className="flex w-full items-center justify-between text-gray-300 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                    >
+                      <span className="font-semibold">{showContents ? "Hide" : "View"} the 40 cards</span>
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform duration-200 ${showContents ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    {showContents && (
+                      <DeckContents deck={selectedDeck} />
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between border-t border-white/10 pt-3">
                     <span className="text-gray-400">Price</span>
                     <span className="text-lg font-bold text-orange-400">${selectedDeck.price} USDC</span>
