@@ -8,6 +8,7 @@ export function ShopFeature() {
 
   const items = [
     { label: "Booster Packs", sub: "Randomized Card Packs", path: "/shop/booster" },
+    { label: "Premade Decks", sub: "Ready-to-Play 40-Card Decks", path: "/shop/premade" },
     { label: "Battle Sets", sub: "Coming Soon", path: "/shop/battle-sets", disabled: true },
     { label: "Booster Packs Inventory", sub: "Open Your Booster Packs", path: "/inventory" },
   ]

@@ -12,6 +12,12 @@ import { ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { SafeCardImage } from '@/components/shared/SafeCardImage';
 import { getRarityColor, getRarityTextColor, getOriginalCardId, countOwnedCopies } from '@/lib/rarityUtils';
 import { useWalletStore } from '@/stores/useWalletStore';
+import { PREMADE_DECKS } from '@/features/shop/premade/premadeDecks';
+
+// Premade decks carry their shop pack art as the deck cover (matched by name,
+// which persists through DB sync — premade copies have no resolvable cover card).
+const getPremadeDeckArt = (deckName: string): string | undefined =>
+  PREMADE_DECKS.find(d => d.name === deckName)?.artUrl;
 
 export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } = {}) {
   const { decks, activeDeckId, getAvailableCards, getAvailableCardsWithCNFTs, ownedCards, addDeck, updateDeck, deleteDeck, setActiveDeck, normalizeCardImagePaths, syncCardsFromDatabase, syncDecksFromDatabase } = useDeckStore();
@@ -316,7 +322,13 @@ export function DeckBuilderFeature({ embedded = false }: { embedded?: boolean } 
                 onClick={() => handleEditDeck(deck)}
               >
                 <div className="w-24 h-32 bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
-                  {deck.coverCardId ? (
+                  {getPremadeDeckArt(deck.name) ? (
+                    <SafeCardImage
+                      src={getPremadeDeckArt(deck.name)!}
+                      alt={`${deck.name} cover`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : deck.coverCardId ? (
                     (() => {
                       let coverCard = allCards.find(card => card.id === deck.coverCardId);
                       if (!coverCard) {
