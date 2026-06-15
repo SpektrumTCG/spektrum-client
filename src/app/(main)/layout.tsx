@@ -16,21 +16,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     >
     <AppBootstrap />
     <div className="h-full w-full relative bg-white overflow-hidden flex flex-col">
-      {/* Header bar — anchored during transitions */}
-      <div
-        className="absolute top-0 left-0 w-full z-20 pointer-events-none overflow-hidden min-[421px]:rounded-t-[20px]"
-        style={{ viewTransitionName: "site-header" }}
-      >
-        <Image
-          src="/ui/v2-ui/bg-header.png"
-          alt=""
-          width={480}
-          height={48}
-          className="w-full h-auto"
-          aria-hidden="true"
-          priority
-        />
-      </div>
+      {/* Header bar — hidden for now */}
+      {false && (
+        <div
+          className="absolute top-0 left-0 w-full z-20 pointer-events-none overflow-hidden min-[421px]:rounded-t-[20px]"
+          style={{ viewTransitionName: "site-header" }}
+        >
+          <Image
+            src="/ui/v2-ui/bg-header.png"
+            alt=""
+            width={480}
+            height={48}
+            className="w-full h-auto"
+            aria-hidden="true"
+            priority
+          />
+        </div>
+      )}
 
       {/* Decorative hexagon elements — CSS backgrounds (not next/image) so they
           aren't treated as LCP candidates and don't warn about dimensions. */}
