@@ -29,11 +29,20 @@ import type { AvatarCard, Card } from '@spektrum/shared'
 // ─── HP bar ───────────────────────────────────────────────────────────────────
 const HpBar: React.FC<{ current: number; max: number }> = ({ current, max }) => {
   const pct = Math.max(0, Math.min(100, (current / max) * 100))
+  const low = pct <= 25
+  const fill = pct > 50 ? '#22c55e' : pct > 25 ? '#facc15' : '#ef4444'
   return (
-    <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mt-0.5">
+    <div
+      className="w-full h-2 rounded-full overflow-hidden mt-0.5 relative"
+      style={{ background: 'rgba(0,0,0,0.55)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.6)' }}
+    >
       <div
-        className={`h-full rounded-full transition-all duration-500 ${pct > 50 ? 'bg-green-500' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500'}`}
-        style={{ width: `${pct}%` }}
+        className={`h-full rounded-full transition-all duration-500 ${low ? 'animate-pulse' : ''}`}
+        style={{
+          width: `${pct}%`,
+          background: `linear-gradient(180deg, ${fill}, ${fill}cc)`,
+          boxShadow: `0 0 6px ${fill}99`,
+        }}
       />
     </div>
   )
@@ -157,7 +166,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       if (card.type === 'spell' || card.type === 'quickSpell' || card.type === 'item') {
         const cost = ((card as any).spektraCost ?? []) as string[]
         if (cost.length > 0 && !checkSpektraCost(cost)) {
-          toast.error(`Not enough spektra! Need: ${cost.join(', ')}`)
+          toast.error(`Not enough spektra! Need ${cost.length}, have ${playerState?.spektraPile.length ?? 0}`)
           return
         }
         if (card.type === 'item' && playerState?.hasPlayedItemThisTurn) {
@@ -200,7 +209,7 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     // Check spektra cost with neutral wildcard support
     if (skill?.spektraCost && skill.spektraCost.length > 0) {
       if (!checkSpektraCost(skill.spektraCost)) {
-        toast.error(`Not enough spektra! Need: ${skill.spektraCost.join(', ')}`)
+        toast.error(`Not enough spektra! Need ${skill.spektraCost.length}, have ${playerState?.spektraPile.length ?? 0}`)
         return
       }
     }
@@ -417,6 +426,16 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
       if (winnerId) reportVictory(winnerId)
     }
   }, [game?.winner, isAnteMode, reportVictory, playerId, opponentId, playerState?.id])
+
+  // Multiplayer game decided: release the local multiplayer session so the next
+  // /multiplayer visit shows mode-select, not the stale finished lobby. The win
+  // overlay still renders off useGameStore.game.winner, which this leaves alone.
+  // (Ante handles its own teardown above.)
+  useEffect(() => {
+    if (!game?.winner || isAnteGame) return
+    if (!useMultiplayerStore.getState().isMultiplayerSession) return
+    useMultiplayerStore.getState().leaveRoom()
+  }, [game?.winner, isAnteGame])
 
   // Track hand container width for adaptive card layout
   useEffect(() => {
@@ -659,7 +678,12 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
           {/* ── OPPONENT ── */}
           <div>
-            <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">Opponent</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-xs font-bold tracking-widest uppercase text-red-300/90">Opponent</h3>
+              {currentPlayer === 'opponent' && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-600/30 text-red-200 border border-red-500/50 animate-pulse">THEIR TURN</span>
+              )}
+            </div>
 
             {/* Opponent hand */}
             <div className="bg-gray-800 bg-opacity-30 p-2 rounded-lg mb-2 flex justify-center">
@@ -681,8 +705,8 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
             {/* Opponent board */}
             <div
-              className="flex justify-between bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30"
-              style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
+              className={`flex justify-between p-2 rounded-lg border transition-all duration-300 ${currentPlayer === 'opponent' ? 'zone-active turn-glow-foe' : 'zone-idle'}`}
+              style={{ background: 'var(--zone-foe)', borderColor: 'var(--zone-edge)' }}
             >
               {/* Deck + life */}
               <div className="flex flex-col gap-1.5">
@@ -728,9 +752,11 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                       ${shakingId === 'opp-active-zone' ? 'animate-shake' : ''}
                     `}
                   >
-                    <Card2D card={oppAvatar} isPlayable={targetingSkill !== null || !!(selectedCardId && (selectedCard?.type === 'spell' || selectedCard?.type === 'quickSpell'))} isInHand={false} isTapped={oppAvatar.isTapped} counters={oppAvatar.counters} scale={0.85} />
+                    <div className={currentPlayer === 'opponent' ? 'avatar-breathe' : ''}>
+                      <Card2D card={oppAvatar} isPlayable={targetingSkill !== null || !!(selectedCardId && (selectedCard?.type === 'spell' || selectedCard?.type === 'quickSpell'))} isInHand={false} isTapped={oppAvatar.isTapped} counters={oppAvatar.counters} scale={0.85} />
+                    </div>
                     <HpBar current={oppAvatarHp} max={oppAvatar.health} />
-                    <div className="text-center text-[9px] text-yellow-300 font-bold mt-0.5">
+                    <div className="text-center text-[11px] text-yellow-200 font-bold mt-0.5 tabular-nums">
                       HP {oppAvatarHp}/{oppAvatar.health}
                     </div>
                   </div>
@@ -761,13 +787,15 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
             </div>
           </div>
 
-          {/* ── FIELD ── */}
-          <div
-            className="flex items-center justify-center bg-gray-800 bg-opacity-30 p-2 rounded-lg border border-orange-500 border-opacity-30"
-            style={{ minHeight: '56px', boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
-          >
-            <div className="flex gap-4 items-center">
-              <h3 className="text-xs font-bold text-orange-400 tracking-widest uppercase">Field</h3>
+          {/* ── FIELD (spectrum no-man's-land divider) ── */}
+          <div className="flex items-center gap-2 py-1">
+            <div className="spektra-rail flex-1" />
+            <div
+              className="flex items-center justify-center px-3 py-1.5 rounded-lg"
+              style={{ background: 'var(--board-felt)', border: '1px solid var(--zone-edge)' }}
+            >
+            <div className="flex gap-3 items-center">
+              <h3 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Field</h3>
               {playerState?.field && playerState.field.length > 0 ? (
                 <div className="text-xs text-center bg-purple-900 bg-opacity-70 p-2 rounded border border-purple-500 min-w-[80px]">
                   <div className="font-bold truncate">{playerState.field[0].name}</div>
@@ -779,6 +807,8 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                 </div>
               )}
             </div>
+            </div>
+            <div className="spektra-rail flex-1" />
           </div>
 
           {/* ── BATTLE LOG ── */}
@@ -795,10 +825,15 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
           {/* ── PLAYER BOARD ── */}
           <div>
-            <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">Your Board</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-xs font-bold tracking-widest uppercase text-sky-300/90">Your Board</h3>
+              {isPlayerTurn && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-600/30 text-sky-200 border border-sky-500/50 animate-pulse">YOUR TURN</span>
+              )}
+            </div>
             <div
-              className="flex justify-between bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30"
-              style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)' }}
+              className={`flex justify-between p-2 rounded-lg border transition-all duration-300 ${isPlayerTurn ? 'zone-active turn-glow-mine' : 'zone-idle'}`}
+              style={{ background: 'var(--zone-mine)', borderColor: 'var(--zone-edge)' }}
             >
               {/* Player stats + deck */}
               <div className="flex flex-col gap-1.5">
@@ -875,9 +910,11 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                       ${shakingId === 'zone-active' ? 'animate-shake' : ''}
                     `}
                   >
-                    <Card2D card={playerState.activeAvatar} isPlayable={true} isInHand={false} isTapped={playerState.activeAvatar.isTapped} counters={playerState.activeAvatar.counters} scale={0.85} />
+                    <div className={isPlayerTurn && targetingSkill === null ? 'avatar-breathe' : ''}>
+                      <Card2D card={playerState.activeAvatar} isPlayable={true} isInHand={false} isTapped={playerState.activeAvatar.isTapped} counters={playerState.activeAvatar.counters} scale={0.85} />
+                    </div>
                     <HpBar current={activeAvatarHp} max={playerState.activeAvatar.health} />
-                    <div className="text-center text-[9px] text-yellow-300 font-bold mt-0.5">
+                    <div className="text-center text-[11px] text-yellow-200 font-bold mt-0.5 tabular-nums">
                       HP {activeAvatarHp}/{playerState.activeAvatar.health}
                     </div>
                   </div>
@@ -976,13 +1013,13 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
 
           {/* ── PLAYER HAND ── */}
           <div>
-            <h3 className="text-xs font-bold mb-1 text-orange-400 tracking-widest uppercase">
-              Your Hand ({playerState?.hand?.length || 0} cards)
+            <h3 className="text-xs font-bold mb-1 tracking-widest uppercase text-sky-300/90">
+              Your Hand <span className="text-gray-500 tabular-nums">({playerState?.hand?.length || 0})</span>
             </h3>
             <div
               ref={handContainerRef}
-              className="bg-gray-800 bg-opacity-50 p-2 rounded-lg border border-orange-500 border-opacity-30 relative"
-              style={{ boxShadow: '0 0 15px rgba(249,115,22,0.1)', minHeight: '130px' }}
+              className="p-2 rounded-lg border relative"
+              style={{ background: 'var(--zone-mine)', borderColor: 'var(--zone-edge)', minHeight: '130px' }}
             >
               {(playerState?.hand as Card[] | undefined)?.length ? (
                 <div className="flex items-end" style={{ minHeight: '120px', paddingTop: '10px' }}>
@@ -1013,14 +1050,15 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
                               : `${Math.max(30, (containerW - cardWidth) / (total - 1))}px`,
                           marginRight: fitsFullWidth && index < total - 1 ? '6px' : '0px',
                           zIndex: isSelected ? 50 : index,
-                          marginTop: isSelected ? '-16px' : '0',
+                          marginTop: isSelected ? '-20px' : playable ? '-8px' : '0',
+                          opacity: !playable && !isSelected ? 0.55 : 1,
                           filter: isSelected ? 'drop-shadow(0 0 12px rgba(255,255,255,0.5))' : undefined,
                         }}
                       >
                         <div
                           className={`
                             transition-all duration-200 rounded-lg
-                            ${playable && !isSelected ? 'ring-1 ring-orange-500/40' : ''}
+                            ${playable && !isSelected ? 'ring-2 ring-orange-400 shadow-lg shadow-orange-500/40' : ''}
                             ${isSelected ? 'ring-4 ring-white shadow-xl shadow-white/40' : ''}
                           `}
                         >
@@ -1152,18 +1190,21 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
             Exit
           </button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 hidden sm:inline">
-              Turn {turn} &bull; {gamePhase}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end leading-none">
+              <span className="text-[10px] uppercase tracking-widest text-gray-500">Turn {turn}</span>
+              <span className="text-xs font-bold tabular-nums" style={{ color: isPlayerTurn ? '#7dd3fc' : '#fca5a5' }}>
+                {isPlayerTurn ? 'Your turn' : 'Opponent'} &bull; {gamePhase}
+              </span>
+            </div>
             <button
               onClick={handleNextAction}
               disabled={!isPlayerTurn || gamePhase === 'setup'}
               className={`
-                px-6 py-2 rounded-lg font-bold text-sm transition-all duration-200 border-2
+                px-7 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 min-w-[124px]
                 ${isPlayerTurn && gamePhase !== 'setup'
-                  ? 'bg-orange-600 border-orange-400 text-white hover:bg-orange-500 active:scale-95'
-                  : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'}
+                  ? 'bg-orange-600 border-orange-400 text-white hover:bg-orange-500 active:scale-95 shadow-lg shadow-orange-500/40 animate-pulse'
+                  : 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed'}
               `}
             >
               {nextActionLabel}

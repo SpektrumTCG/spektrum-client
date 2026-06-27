@@ -152,6 +152,11 @@ export const useMultiplayerGameSync = () => {
     if (DEMO_AS_AI) return
     if (!isInMultiplayerLobby || !socket || hasSentDeck.current) return
 
+    // Reconnecting into an already-running game (hard refresh / late mount):
+    // the server already holds our engine, so resubmitting a deck would be
+    // wrong. The hydration effect below restores the board instead.
+    if (currentRoom?.status === 'playing') return
+
     let deckIdToSubmit = activeDeckId
     if (!deckIdToSubmit && decks.length > 0) {
       const fallbackDeck =
@@ -203,6 +208,17 @@ export const useMultiplayerGameSync = () => {
       }
     }
   }, [isMultiplayer, socket, pendingDeck, setPendingDeck, decks, activeDeckId, submitAttempt])
+
+  // Cold-load / reconnect hydration: we believe we're in an active game but
+  // have no local board yet (hard refresh, or this hook mounted after the
+  // server's one-shot game_started already fired). Pull authoritative state.
+  // The server replies with game_state_sync, caught by the handler below.
+  useEffect(() => {
+    if (!socket || !isMultiplayer) return
+    if (currentRoom?.status !== 'playing') return
+    if (useGameStore.getState().game) return
+    socket.emit('request_game_state')
+  }, [socket, isMultiplayer, currentRoom?.status])
 
   useEffect(() => {
     if (!isMultiplayer || !socket) return
