@@ -427,6 +427,16 @@ export function GameBoard2D({ onAction, onForfeit }: GameBoard2DProps) {
     }
   }, [game?.winner, isAnteMode, reportVictory, playerId, opponentId, playerState?.id])
 
+  // Multiplayer game decided: release the local multiplayer session so the next
+  // /multiplayer visit shows mode-select, not the stale finished lobby. The win
+  // overlay still renders off useGameStore.game.winner, which this leaves alone.
+  // (Ante handles its own teardown above.)
+  useEffect(() => {
+    if (!game?.winner || isAnteGame) return
+    if (!useMultiplayerStore.getState().isMultiplayerSession) return
+    useMultiplayerStore.getState().leaveRoom()
+  }, [game?.winner, isAnteGame])
+
   // Track hand container width for adaptive card layout
   useEffect(() => {
     const el = handContainerRef.current
