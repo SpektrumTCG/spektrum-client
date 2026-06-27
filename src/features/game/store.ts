@@ -13,7 +13,6 @@ import {
   endPhase,
   nextTurn,
   checkWinner,
-  checkDefeatedAvatars,
   hasEnoughSpektra,
 } from '@spektrum/shared'
 import { AIFactory } from '@spektrum/shared'
@@ -149,9 +148,13 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       c => c.type === 'avatar' && Number((c as AvatarCard).level) === 1
     )
     const spells = allCards.filter(c => c.type === 'spell' || c.type === 'quickSpell')
+    const items = allCards.filter(c => c.type === 'item')
+    // Shuffle each pool before slicing so the AI deck varies game-to-game, and
+    // mix in a couple of items so item handling actually gets exercised.
     const opponentDeck = cardRegistry.shuffleDeck([
-      ...avatars.slice(0, 12),
-      ...spells.slice(0, 8),
+      ...cardRegistry.shuffleDeck(avatars).slice(0, 12),
+      ...cardRegistry.shuffleDeck(spells).slice(0, 6),
+      ...cardRegistry.shuffleDeck(items).slice(0, 2),
     ])
     const game = startGame(enrichedPlayerDeck as Card[], opponentDeck)
     set({ game, aiDifficulty: difficulty })
