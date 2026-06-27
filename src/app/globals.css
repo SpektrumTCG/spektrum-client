@@ -98,6 +98,54 @@
   --spektrum-accent-glow: rgba(249, 115, 22, 0.3);
   --spektrum-text: #f9fafb;
   --spektrum-text-muted: #9ca3af;
+
+  /* Board: territory + spectrum identity (used by GameBoard2D) */
+  --board-felt: #0c1322;            /* deep playfield, darker than surface */
+  --zone-mine: #16233b;             /* player territory, cool-warm, sits forward */
+  --zone-foe: #2a1820;              /* opponent territory, red-tinted, sits back */
+  --zone-edge: rgba(148, 163, 184, 0.22);  /* neutral slate framing, not orange */
+  --el-fire: #ff4d4d;
+  --el-water: #3b9bff;
+  --el-ground: #c98a3a;
+  --el-air: #5fd0ec;
+  --el-neutral: #b08bff;
+}
+
+/* Board readability + state helpers ------------------------------------------ */
+/* Spectrum divider rail between territories */
+.spektra-rail {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--el-fire), var(--el-water), var(--el-ground), var(--el-air), var(--el-neutral)
+  );
+  opacity: 0.55;
+}
+/* Active vs idle territory — whose turn at a glance */
+.zone-active {
+  filter: none;
+  opacity: 1;
+}
+.zone-idle {
+  filter: saturate(0.6) brightness(0.82);
+  opacity: 0.78;
+}
+.turn-glow-mine { box-shadow: 0 0 0 1px rgba(96,165,250,0.5), 0 0 22px rgba(59,130,246,0.28); }
+.turn-glow-foe  { box-shadow: 0 0 0 1px rgba(248,113,113,0.5), 0 0 22px rgba(239,68,68,0.26); }
+
+/* Idle avatar breathe — draws the eye to the live board piece */
+@keyframes avatar-breathe {
+  0%, 100% { transform: translateZ(0) scale(1); }
+  50%      { transform: translateZ(0) scale(1.025); }
+}
+.avatar-breathe { animation: avatar-breathe 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-breathe,
+  .animate-shake,
+  .animate-pulse { animation: none !important; }
+  * { scroll-behavior: auto !important; }
 }
 
 .dark {

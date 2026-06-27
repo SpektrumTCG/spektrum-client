@@ -8,7 +8,7 @@ import { SafeCardImage } from "@/components/shared/SafeCardImage"
 import { countOwnedCopies } from "@/lib/rarityUtils"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, X } from "lucide-react"
 import { DeckBuilderFeature } from "@/features/deck-builder"
 
 type Tab = "deck" | "library"
@@ -229,36 +229,32 @@ function LibraryTab() {
         <div className="text-center text-gray-400 py-8">No cards found.</div>
       )}
 
-      {/* Card Detail Modal */}
+      {/* Card Detail Modal — card only, no chrome */}
       {selectedCard && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4" onClick={() => setSelectedCard(null)}>
-          <div
-            className="bg-gray-900 border-2 border-orange-500 rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
-            style={{ boxShadow: "0 0 30px rgba(249, 115, 22, 0.3)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-xl font-bold text-white">{selectedCard.name}</h2>
-              <button onClick={() => setSelectedCard(null)} className="text-orange-400 hover:text-orange-300 text-xl font-bold">X</button>
-            </div>
-            {((selectedCard as AvatarCard).imagePath || selectedCard.art) && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div className="relative flex max-h-[90vh] max-w-[92vw] items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedCard(null)}
+              aria-label="Close preview"
+              className="absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-orange-400 bg-gray-900/90 text-orange-300 shadow-lg transition-colors hover:bg-gray-800 hover:text-orange-200"
+            >
+              <X size={18} />
+            </button>
+            {(selectedCard as AvatarCard).imagePath || selectedCard.art ? (
               <SafeCardImage
                 src={(selectedCard as AvatarCard).imagePath || selectedCard.art || ""}
                 alt={selectedCard.name}
-                className="w-full h-auto object-contain rounded mb-4"
+                className="max-h-[90vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
               />
+            ) : (
+              <div className="flex aspect-[3/4] w-[70vw] max-w-[320px] flex-col items-center justify-center rounded-xl border-2 border-orange-500 bg-gray-900 p-6 text-center">
+                <div className="text-xl font-bold text-white">{selectedCard.name}</div>
+                <div className="mt-2 text-sm uppercase tracking-wide text-orange-300">{selectedCard.type} &middot; {selectedCard.element}</div>
+              </div>
             )}
-            <div className="space-y-2 text-sm text-white">
-              <p><span className="font-semibold">Type:</span> {selectedCard.type}</p>
-              <p><span className="font-semibold">Element:</span> {selectedCard.element}</p>
-              {selectedCard.type === "avatar" && (
-                <>
-                  <p><span className="font-semibold">Health:</span> {(selectedCard as AvatarCard).health}</p>
-                  <p><span className="font-semibold">Level:</span> {(selectedCard as AvatarCard).level}</p>
-                </>
-              )}
-              {selectedCard.description && <p><span className="font-semibold">Description:</span> {selectedCard.description}</p>}
-            </div>
           </div>
         </div>
       )}
